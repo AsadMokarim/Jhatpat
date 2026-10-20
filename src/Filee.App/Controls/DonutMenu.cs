@@ -44,6 +44,12 @@ public sealed class DonutItem
 
     /// <summary>A group with something to fan out.</summary>
     public bool CanExpand => Children is { Count: > 0 };
+
+    /// <summary>True when this slice is promoted/frequently used and should render larger.</summary>
+    public bool IsPromoted { get; init; }
+
+    /// <summary>Relative angular weight of this slice (promoted slices get 1.45x weight).</summary>
+    public double Weight => IsPromoted ? 1.45 : 1.0;
 }
 
 /// <summary>Donut-shaped menu control.</summary>
@@ -313,9 +319,9 @@ public sealed partial class DonutMenu : Control
     {
         var n = Count;
         if (_previewSlot < 0)
-            return (DonutGeometry.MidAngle(i, n), DonutGeometry.Span(n));
+            return SliceLayout(i);
         if (i == _previewRemoved)
-            return (i < _mid.Length ? _mid[i].Value : DonutGeometry.MidAngle(i, n), 0); // it becomes the preview
+            return (i < _mid.Length ? _mid[i].Value : SliceMid(i), 0); // it becomes the preview
         var slot = _previewRemoved >= 0 && i > _previewRemoved ? i - 1 : i;
         if (slot >= _previewSlot)
             slot++;
@@ -354,6 +360,40 @@ public sealed partial class DonutMenu : Control
         return active;
     }
 
+    /// <summary>Computes the (mids, spans) for all current items considering slice weights.</summary>
+    internal (double[] Mids, double[] Spans) Layout()
+    {
+        var n = Count;
+        if (n == 0) return ([], []);
+        if (Items is { } items && items.Any(it => it.Weight != 1.0))
+        {
+            var weights = items.Select(it => it.Weight).ToArray();
+            return DonutGeometry.CalculateLayout(n, weights);
+        }
+        var span = DonutGeometry.Span(n);
+        var mids = new double[n];
+        var spans = new double[n];
+        for (var i = 0; i < n; i++)
+        {
+            mids[i] = DonutGeometry.MidAngle(i, n);
+            spans[i] = span;
+        }
+        return (mids, spans);
+    }
+
+    /// <summary>Mid-angle and span for slice <paramref name="i"/>.</summary>
+    internal (double Mid, double Span) SliceLayout(int i)
+    {
+        var n = Count;
+        if (i < 0 || i >= n)
+            return (0, 0);
+        var (mids, spans) = Layout();
+        return (mids[i], spans[i]);
+    }
+
+    internal double SliceMid(int i) => SliceLayout(i).Mid;
+    internal double SliceSpan(int i) => SliceLayout(i).Span;
+
     /// <summary>Hit-tests a point in this control's coordinates.</summary>
     public DonutHit HitTest(Point p)
     {
@@ -362,11 +402,24 @@ public sealed partial class DonutMenu : Control
         if (IsEditMode && _hoverIndex >= 0 && _hoverIndex < Count &&
             Distance(p, EditButtonCenter(_hoverIndex)) <= 13)
             return new DonutHit(DonutHitKind.EditButton, _hoverIndex);
-        var hit = DonutGeometry.HitTest(Center, p, InnerRadius, OuterRadius, Count, PopOut);
+
+        DonutHit hit;
+        if (Items is { } items && items.Any(it => it.Weight != 1.0 || it.IsPromoted))
+        {
+            var (mids, spans) = Layout();
+            var outerDeltas = items.Select(it => it.IsPromoted ? 8.0 : 0.0).ToArray();
+            var innerDeltas = items.Select(it => it.IsPromoted ? -3.0 : 0.0).ToArray();
+            hit = DonutGeometry.HitTest(Center, p, InnerRadius, OuterRadius, mids, spans, outerDeltas, innerDeltas, PopOut);
+        }
+        else
+        {
+            hit = DonutGeometry.HitTest(Center, p, InnerRadius, OuterRadius, Count, PopOut);
+        }
+
         if (ExpandedChildren is { } children)
         {
             var (inner, outer) = SubRadii;
-            var parentMid = DonutGeometry.MidAngle(_expanded, Count);
+            var parentMid = SliceMid(_expanded);
             var subSpan = SubSpanOf(children.Count);
             var sub = DonutGeometry.SubIndexAt(Center, p, inner, outer, parentMid, children.Count, subSpan);
             if (sub >= 0)
@@ -402,8 +455,9 @@ public sealed partial class DonutMenu : Control
         _previewSlot = -1;
         _previewRemoved = -1;
         _previewSpan = default;
-        _mid = Enumerable.Range(0, n).Select(i => new Spring { Value = DonutGeometry.MidAngle(i, n) }).ToArray();
-        _span = Enumerable.Range(0, n).Select(_ => new Spring { Value = DonutGeometry.Span(n) }).ToArray();
+        var (mids, spans) = Layout();
+        _mid = mids.Select(m => new Spring { Value = m }).ToArray();
+        _span = spans.Select(s => new Spring { Value = s }).ToArray();
         _expanded = _shownExpanded = _subHover = -1;
         ClearPending();
         _expand = default;
@@ -815,6 +869,7 @@ public sealed partial class DonutMenu : Control
                 context.DrawGeometry(WithOpacity(AccentBrush, 0.35), null, ring);
         }
 
+        var (defaultMids, defaultSpans) = Layout();
         for (var i = 0; i < n; i++)
         {
             var item = Items![i];
@@ -824,8 +879,8 @@ public sealed partial class DonutMenu : Control
 
             var previewing = IsEditMode && i < _mid.Length;
             var hover = i < _hover.Length && _previewSlot < 0 ? _hover[i].Value : 0;
-            var mid = previewing ? _mid[i].Value : DonutGeometry.MidAngle(i, n);
-            var span = previewing ? _span[i].Value : DonutGeometry.Span(n);
+            var mid = previewing ? _mid[i].Value : defaultMids[i];
+            var span = previewing ? _span[i].Value : defaultSpans[i];
             if (span < 0.01)
                 continue;
             var offset = DonutGeometry.PointAt(new Point(0, 0), hover * PopOut, mid);
@@ -839,10 +894,13 @@ public sealed partial class DonutMenu : Control
                 Matrix.CreateScale(scale * (1 + hover * 0.025), scale * (1 + hover * 0.025)) *
                 Matrix.CreateTranslation(center.X + offset.X, center.Y + offset.Y);
 
+            var r1Slice = item.IsPromoted ? r1 - 3 : r1;
+            var r2Slice = item.IsPromoted ? r2 + 8 : r2;
+
             using (context.PushTransform(transform))
             using (context.PushOpacity(Math.Clamp(open, 0, 1) * (i == _dimmedIndex ? 0.3 : 1)))
             {
-                var wedge = CreateWedge(center, r1, r2, mid, span);
+                var wedge = CreateWedge(center, r1Slice, r2Slice, mid, span);
                 context.DrawGeometry(WithOpacity(SliceBrush, SliceOpacity * (item.IsEnabled ? 1 : 0.55)), BorderPen(), wedge);
 
                 // The accent fades in and out with the highlight (no floor: a floor made it vanish with a jump).
@@ -851,8 +909,8 @@ public sealed partial class DonutMenu : Control
                     context.DrawGeometry(WithOpacity(AccentBrush, 0.82 * Math.Clamp(emphasis, 0, 1)), null, wedge);
 
                 var hot = (i == ActiveIndex || i == _dropTargetIndex) && item.IsEnabled;
-                DrawLabel(context, item, center, (r1 + r2) / 2, mid, span * (r1 + r2) / 2 - 10,
-                    r2 - r1 - 16, typeface, typefaceRegular, hot);
+                DrawLabel(context, item, center, (r1Slice + r2Slice) / 2, mid, span * (r1Slice + r2Slice) / 2 - 10,
+                    r2Slice - r1Slice - 16, typeface, typefaceRegular, hot);
             }
         }
 
@@ -913,8 +971,9 @@ public sealed partial class DonutMenu : Control
         double maxWidth, double maxHeight, Typeface bold, Typeface regular, bool hot)
     {
         var foreground = hot ? OnAccentBrush : item.IsEnabled ? Foreground : SecondaryForeground;
-        var width = Math.Clamp(maxWidth, 30, 120);
-        var label = MakeText(item.Label, bold, 13, foreground, width, maxLines: 2);
+        var width = Math.Clamp(maxWidth, 30, item.IsPromoted ? 140 : 120);
+        var fontSize = item.IsPromoted ? 14.0 : 13.0;
+        var label = MakeText(item.Label, bold, fontSize, foreground, width, maxLines: 2);
         var showCaption = !string.IsNullOrEmpty(item.Caption) &&
                           !string.Equals(item.Caption, item.Label, StringComparison.OrdinalIgnoreCase) &&
                           label.Height + 14 < maxHeight;
@@ -930,8 +989,9 @@ public sealed partial class DonutMenu : Control
 
     private Point EditButtonCenter(int index)
     {
-        var mid = DonutGeometry.MidAngle(index, Count);
-        return DonutGeometry.PointAt(Center, OuterRadius - 14 + PopOut, mid);
+        var mid = SliceMid(index);
+        var extra = (Items is { } items && index < items.Count && items[index].IsPromoted) ? 8.0 : 0.0;
+        return DonutGeometry.PointAt(Center, OuterRadius + extra - 14 + PopOut, mid);
     }
 
     private void DrawEditButton(DrawingContext context, Point at)

@@ -70,8 +70,8 @@ public sealed partial class DonutMenu
     private bool InFan(Point p, int group)
     {
         var count = group >= 0 && group < Count ? Items![group].Children?.Count ?? 0 : 0;
-        return count > 0 && DonutGeometry.SubIndexAt(Center, p, 0, double.MaxValue, DonutGeometry.MidAngle(group, Count),
-            count, SubSpanOf(count)) >= 0;
+        return count > 0 && DonutGeometry.SubIndexAt(Center, p, 0, double.MaxValue, SliceMid(group),
+            count, SubSpanOf(count, group)) >= 0;
     }
 
     /// <summary>
@@ -82,14 +82,18 @@ public sealed partial class DonutMenu
         _expanded >= 0 && Distance(p, Center) > (InnerRadius + OuterRadius) / 2 && InFan(p, _expanded);
 
     /// <summary>Width of each slice of a ring of <paramref name="count"/>.</summary>
-    private double SubSpanOf(int count) =>
-        DonutGeometry.SubSpan(DonutGeometry.Span(Count), count, (SubRadii.Inner + SubRadii.Outer) / 2);
+    private double SubSpanOf(int count, int group = -1)
+    {
+        var target = group >= 0 ? group : _expanded;
+        var parentSpan = target >= 0 && target < Count ? SliceSpan(target) : DonutGeometry.Span(Count);
+        return DonutGeometry.SubSpan(parentSpan, count, (SubRadii.Inner + SubRadii.Outer) / 2);
+    }
 
     /// <summary>The middle of slice <paramref name="sub"/> of group <paramref name="group"/>'s ring (tests).</summary>
     internal Point SubSliceCenter(int group, int sub)
     {
         var count = Items![group].Children!.Count;
-        var mid = DonutGeometry.SubMidAngle(DonutGeometry.MidAngle(group, Count), sub, count, SubSpanOf(count));
+        var mid = DonutGeometry.SubMidAngle(SliceMid(group), sub, count, SubSpanOf(count, group));
         return DonutGeometry.PointAt(Center, (SubRadii.Inner + SubRadii.Outer) / 2, mid);
     }
 
@@ -335,9 +339,9 @@ public sealed partial class DonutMenu
     private void DrawHitBackdrop(DrawingContext context, Point center, int group, int count)
     {
         var reach = SubRadii.Outer + BackdropMargin;
-        var span = Math.Min(2 * Math.PI, SubSpanOf(count) * count + 2 * BackdropMargin / reach);
+        var span = Math.Min(2 * Math.PI, SubSpanOf(count, group) * count + 2 * BackdropMargin / reach);
         context.DrawEllipse(HitBackdrop, null, center, OuterRadius + PopOut, OuterRadius + PopOut);
-        context.DrawGeometry(HitBackdrop, null, CreateWedge(center, OuterRadius, reach, DonutGeometry.MidAngle(group, Count), span, 0));
+        context.DrawGeometry(HitBackdrop, null, CreateWedge(center, OuterRadius, reach, SliceMid(group), span, 0));
     }
 
     /// <summary>
@@ -364,8 +368,8 @@ public sealed partial class DonutMenu
         if (count == 0 || distance > reach - LeaveEdge)
             return false;
         // Inside the backdrop's wedge, and LeaveEdge away from its sides.
-        var halfSpan = Math.Min(2 * Math.PI, SubSpanOf(count) * count + 2 * BackdropMargin / reach) / 2;
-        var inside = halfSpan - Math.Abs(Math.IEEERemainder(DonutGeometry.AngleOf(Center, p) - DonutGeometry.MidAngle(group, Count), 2 * Math.PI));
+        var halfSpan = Math.Min(2 * Math.PI, SubSpanOf(count, group) * count + 2 * BackdropMargin / reach) / 2;
+        var inside = halfSpan - Math.Abs(Math.IEEERemainder(DonutGeometry.AngleOf(Center, p) - SliceMid(group), 2 * Math.PI));
         return inside > 0 && (inside >= Math.PI / 2 || distance * Math.Sin(inside) >= LeaveEdge);
     }
 
@@ -374,8 +378,8 @@ public sealed partial class DonutMenu
     {
         var group = _shownExpanded;
         var children = Items![group].Children!;
-        var parentMid = DonutGeometry.MidAngle(group, Count);
-        var subSpan = SubSpanOf(children.Count);
+        var parentMid = SliceMid(group);
+        var subSpan = SubSpanOf(children.Count, group);
         var (inner, outer) = SubRadii;
         var t = Math.Max(0, _expand.Value);
         var opening = _open.Length == 0 ? 1 : Math.Clamp(_open.Average(), 0, 1);

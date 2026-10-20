@@ -23,7 +23,7 @@ public class CropRadialMenuTests
     }
 
     [AvaloniaFact]
-    public void Contextual_crop_is_present_and_enabled_for_supported_image_files()
+    public void Contextual_crop_is_present_in_image_tools_and_promoted_for_supported_image_files()
     {
         TestServices.EnsureInitialized("en");
         var vm = AppHost.Get<RadialViewModel>();
@@ -31,8 +31,18 @@ public class CropRadialMenuTests
 
         vm.Load(files, clickMode: true);
 
-        // Crop item is present contextually and enabled
-        var crop = Assert.Single(vm.Items, i => i.Id == "tool-crop");
+        // Crop is moved to image options (image-tools) - not directly on root ring
+        Assert.DoesNotContain(vm.Items, i => i.Id == "tool-crop");
+
+        // Image options group is present and promoted (larger slice)
+        var tools = Assert.Single(vm.Items, i => i.Id == "image-tools");
+        Assert.True(tools.IsEnabled);
+        Assert.True(tools.IsPromoted);
+        Assert.Equal("Image Options", tools.Label);
+        Assert.NotNull(tools.Children);
+
+        // Crop item is present inside Image Options and enabled
+        var crop = Assert.Single(tools.Children!, c => c.Id == "tool-crop");
         Assert.True(crop.IsEnabled);
         Assert.Null(crop.DisabledReason);
         Assert.Equal("Crop", crop.Label);
@@ -118,10 +128,12 @@ public class CropRadialMenuTests
         try
         {
             vm.Load([tempFile], clickMode: true);
-            var cropIndex = vm.Items.ToList().FindIndex(i => i.Id == "tool-crop");
-            Assert.True(cropIndex >= 0, "Crop action should be in radial menu");
+            var groupIndex = vm.Items.ToList().FindIndex(i => i.Id == "image-tools");
+            Assert.True(groupIndex >= 0, "Image tools group should be in radial menu");
+            var subIndex = vm.Items[groupIndex].Children!.ToList().FindIndex(c => c.Id == "tool-crop");
+            Assert.True(subIndex >= 0, "Crop action should be in image tools submenu");
 
-            radial.Convert(cropIndex, -1, [tempFile]);
+            radial.Convert(groupIndex, subIndex, [tempFile]);
 
             Assert.NotNull(windows.CropOverlay);
             var overlayVm = Assert.IsType<CropOverlayViewModel>(windows.CropOverlay.DataContext);

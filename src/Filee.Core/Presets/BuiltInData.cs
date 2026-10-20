@@ -53,6 +53,11 @@ public static class BuiltInData
             Id = "tool-frame", NameKey = "preset.frame", TargetFormat = SameAsSource,
             Kind = PresetKind.Tool, Output = { FileNamePattern = "{name}_framed" },
         },
+        new()
+        {
+            Id = "tool-resize", NameKey = "preset.compression", TargetFormat = SameAsSource,
+            Kind = PresetKind.Tool, Output = { FileNamePattern = "{name}_compressed" },
+        },
         .. ImageToolPresets(),
         new()
         {
@@ -304,7 +309,7 @@ public static class BuiltInData
         new()
         {
             Id = "image-tools", NameKey = "preset.group_image_tools", TargetFormat = Preset.GroupTarget, Kind = PresetKind.Group,
-            SubPresetIds = ["tool-crop", "tool-frame", "half-size", "rotate-left", "rotate-right", "flip-horizontal"],
+            SubPresetIds = ["tool-crop", "tool-frame", "tool-resize", "half-size", "rotate-left", "rotate-right"],
         },
     ];
 

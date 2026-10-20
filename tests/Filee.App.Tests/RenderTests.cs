@@ -812,8 +812,10 @@ public class RenderTests
         window.DonutControl.SetExternalHighlight(1);
         Pump();
 
-        Assert.Equal(12, vm.Items.Count); // with contextual Crop, Frame, "Trace to SVG", and "Line art to SVG"
-        Assert.Contains(vm.Items, item => item.Id == "tool-crop" && item.IsEnabled);
+        Assert.Equal(11, vm.Items.Count); // with contextual Frame, promoted Image Options (containing Crop), "Trace to SVG", and "Line art to SVG"
+        Assert.Contains(vm.Items, item => item.Id == "image-tools" && item.IsPromoted);
+        var toolsItem = vm.Items.First(item => item.Id == "image-tools");
+        Assert.Contains(toolsItem.Children!, child => child.Id == "tool-crop" && child.IsEnabled);
         Assert.Contains(vm.Items, item => item.Id == "tool-frame" && item.IsEnabled);
         Assert.Equal("JPG 3개", vm.CenterTitle);
         Save(window, "donut-images-ko.png");

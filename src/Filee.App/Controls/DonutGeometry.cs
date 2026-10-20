@@ -70,6 +70,78 @@ public static class DonutGeometry
         return (int)Math.Floor((angle + span / 2) / span) % count;
     }
 
+    /// <summary>
+    /// Computes the mid-angle and angular span for each slice when slices have relative weights.
+    /// Slices are placed clockwise starting from slice 0 centred at 12 o'clock (mid = 0).
+    /// </summary>
+    public static (double[] Mids, double[] Spans) CalculateLayout(int count, IReadOnlyList<double>? weights = null)
+    {
+        if (count <= 0)
+            return ([], []);
+
+        if (weights is null || weights.Count < count || weights.Take(count).All(w => Math.Abs(w - 1.0) < 0.001))
+        {
+            var equalSpan = Span(count);
+            var equalMids = new double[count];
+            var equalSpans = new double[count];
+            for (var i = 0; i < count; i++)
+            {
+                equalMids[i] = MidAngle(i, count);
+                equalSpans[i] = equalSpan;
+            }
+            return (equalMids, equalSpans);
+        }
+
+        var totalWeight = 0.0;
+        for (var i = 0; i < count; i++)
+            totalWeight += Math.Max(0.1, weights[i]);
+
+        var spans = new double[count];
+        for (var i = 0; i < count; i++)
+            spans[i] = 2 * Math.PI * (Math.Max(0.1, weights[i]) / totalWeight);
+
+        var mids = new double[count];
+        // Slice 0 is centred at 0 (12 o'clock), so its start is -spans[0] / 2
+        var currentStart = -spans[0] / 2.0;
+        for (var i = 0; i < count; i++)
+        {
+            mids[i] = currentStart + spans[i] / 2.0;
+            currentStart += spans[i];
+        }
+
+        return (mids, spans);
+    }
+
+    /// <summary>
+    /// Finds the slice index containing the given angle (0..2π) using custom mids and spans.
+    /// </summary>
+    public static int IndexAt(double angle, IReadOnlyList<double> mids, IReadOnlyList<double> spans)
+    {
+        var count = Math.Min(mids.Count, spans.Count);
+        if (count <= 0)
+            return -1;
+        if (count == 1)
+            return 0;
+
+        var a = angle % (2 * Math.PI);
+        if (a < 0)
+            a += 2 * Math.PI;
+
+        var half0 = spans[0] / 2.0;
+        if (a < half0 || a >= 2 * Math.PI - half0)
+            return 0;
+
+        var boundary = half0;
+        for (var i = 1; i < count; i++)
+        {
+            boundary += spans[i];
+            if (a < boundary)
+                return i;
+        }
+
+        return 0;
+    }
+
     /// <summary>How far a group's fan reaches into each neighbouring slice, as a share of a slice.</summary>
     public const double SubOverhang = 0.25;
 
@@ -123,6 +195,32 @@ public static class DonutGeometry
         if (count == 0)
             return new DonutHit(DonutHitKind.EmptyRing);
         return new DonutHit(DonutHitKind.Segment, IndexAt(AngleOf(center, p), count));
+    }
+
+    /// <summary>Classifies a point when slices have custom mids, spans, or radius deltas.</summary>
+    public static DonutHit HitTest(Point center, Point p, double innerRadius, double outerRadius,
+        IReadOnlyList<double> mids, IReadOnlyList<double> spans, IReadOnlyList<double>? outerDeltas = null,
+        IReadOnlyList<double>? innerDeltas = null, double slack = 0)
+    {
+        var count = Math.Min(mids.Count, spans.Count);
+        if (count == 0)
+            return new DonutHit(DonutHitKind.EmptyRing);
+
+        var distance = Math.Sqrt(Math.Pow(p.X - center.X, 2) + Math.Pow(p.Y - center.Y, 2));
+        var angle = AngleOf(center, p);
+        var index = IndexAt(angle, mids, spans);
+        if (index < 0 || index >= count)
+            return new DonutHit(DonutHitKind.Outside);
+
+        var rInner = innerRadius + (innerDeltas is not null && index < innerDeltas.Count ? innerDeltas[index] : 0);
+        var rOuter = outerRadius + (outerDeltas is not null && index < outerDeltas.Count ? outerDeltas[index] : 0);
+
+        if (distance < rInner)
+            return new DonutHit(DonutHitKind.Center);
+        if (distance > rOuter + slack)
+            return new DonutHit(DonutHitKind.Outside);
+
+        return new DonutHit(DonutHitKind.Segment, index);
     }
 
     /// <summary>Rounding below this (in pixels) is not visible: the slice stays sharp.</summary>
