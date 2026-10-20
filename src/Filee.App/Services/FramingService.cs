@@ -39,6 +39,9 @@ public sealed record FramingOptions
     public string AspectRatio { get; init; } = "original";
     public int CustomWidth { get; init; }
     public int CustomHeight { get; init; }
+
+    public double RelativeOffsetX { get; init; } = 0.0;
+    public double RelativeOffsetY { get; init; } = 0.0;
 }
 
 public enum FramingStatus
@@ -52,6 +55,9 @@ public sealed record FramingResult(FramingStatus Status, string? OutputPath, str
 
 public static class FramingService
 {
+    public const int MinCustomDimension = 32;
+    public const int MaxCustomDimension = 10000;
+
     public static readonly IReadOnlyList<string> AspectRatioPresets =
         ["original", "1:1", "4:5", "9:16", "16:9", "4:3", "3:2", "2:3", "custom"];
 
@@ -87,6 +93,24 @@ public static class FramingService
         return fallback;
     }
 
+    public static bool IsValidHexColor(string? hex)
+    {
+        if (string.IsNullOrWhiteSpace(hex))
+            return false;
+
+        var clean = hex.Trim().TrimStart('#');
+        if (clean.Equals("transparent", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (clean.Length == 6 && uint.TryParse(clean, System.Globalization.NumberStyles.HexNumber, null, out _))
+            return true;
+
+        if (clean.Length == 8 && uint.TryParse(clean, System.Globalization.NumberStyles.HexNumber, null, out _))
+            return true;
+
+        return false;
+    }
+
     /// <summary>
     /// Pure layout calculation: computes canvas dimensions, placement, and target size of inner image.
     /// </summary>
@@ -104,8 +128,8 @@ public static class FramingService
 
         if (options.AspectRatio == "custom" && options.CustomWidth > 0 && options.CustomHeight > 0)
         {
-            canvasW = options.CustomWidth;
-            canvasH = options.CustomHeight;
+            canvasW = Math.Clamp(options.CustomWidth, MinCustomDimension, MaxCustomDimension);
+            canvasH = Math.Clamp(options.CustomHeight, MinCustomDimension, MaxCustomDimension);
 
             int availW = Math.Max(1, canvasW - 2 * pad);
             int availH = Math.Max(1, canvasH - 2 * pad);
@@ -137,8 +161,22 @@ public static class FramingService
             canvasH = targetH + 2 * pad;
         }
 
-        int targetX = (canvasW - targetW) / 2;
-        int targetY = (canvasH - targetH) / 2;
+        int baseX = (canvasW - targetW) / 2;
+        int baseY = (canvasH - targetH) / 2;
+
+        int maxOffsetX = (canvasW - targetW) / 2;
+        int maxOffsetY = (canvasH - targetH) / 2;
+
+        int targetX = maxOffsetX > 0
+            ? baseX + (int)Math.Round(Math.Clamp(options.RelativeOffsetX, -1.0, 1.0) * maxOffsetX)
+            : baseX;
+
+        int targetY = maxOffsetY > 0
+            ? baseY + (int)Math.Round(Math.Clamp(options.RelativeOffsetY, -1.0, 1.0) * maxOffsetY)
+            : baseY;
+
+        targetX = Math.Clamp(targetX, 0, Math.Max(0, canvasW - targetW));
+        targetY = Math.Clamp(targetY, 0, Math.Max(0, canvasH - targetH));
 
         return (canvasW, canvasH, targetX, targetY, targetW, targetH);
     }
@@ -286,7 +324,7 @@ public static class FramingService
     /// <summary>
     /// Generates a fluid in-memory preview bitmap for UI display.
     /// </summary>
-    public static async Task<(Bitmap Bitmap, int Width, int Height)> GeneratePreviewAsync(string inputPath, FramingOptions options)
+    public static async Task<(Bitmap Bitmap, int Width, int Height, int SourceWidth, int SourceHeight)> GeneratePreviewAsync(string inputPath, FramingOptions options)
     {
         return await Task.Run(() =>
         {
@@ -334,7 +372,7 @@ public static class FramingService
 
                 // Full-resolution dimensions for display readout
                 var (fullW, fullH, _, _, _, _) = CalculateLayout(source.Width, source.Height, options);
-                return (avaloniaBitmap, fullW, fullH);
+                return (avaloniaBitmap, fullW, fullH, source.Width, source.Height);
             }
             finally
             {

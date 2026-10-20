@@ -8,10 +8,66 @@ namespace Filee.App.Views;
 
 public partial class FramingOverlayWindow : Window
 {
+    private bool _isDraggingImage;
+    private Point _lastPointerPoint;
+
     public FramingOverlayWindow()
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+
+        PreviewBorder.PointerPressed += OnPreviewPointerPressed;
+        PreviewBorder.PointerMoved += OnPreviewPointerMoved;
+        PreviewBorder.PointerReleased += OnPreviewPointerReleased;
+        PreviewBorder.DoubleTapped += OnPreviewDoubleTapped;
+    }
+
+    private void OnPreviewPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (DataContext is FramingOverlayViewModel vm && vm.IsEditing)
+        {
+            var cp = e.GetCurrentPoint(PreviewBorder);
+            if (cp.Properties.IsLeftButtonPressed)
+            {
+                _isDraggingImage = true;
+                _lastPointerPoint = e.GetPosition(PreviewBorder);
+                e.Pointer.Capture(PreviewBorder);
+                e.Handled = true;
+            }
+        }
+    }
+
+    private void OnPreviewPointerMoved(object? sender, PointerEventArgs e)
+    {
+        if (_isDraggingImage && DataContext is FramingOverlayViewModel vm && vm.IsEditing)
+        {
+            var currentPoint = e.GetPosition(PreviewBorder);
+            var deltaX = currentPoint.X - _lastPointerPoint.X;
+            var deltaY = currentPoint.Y - _lastPointerPoint.Y;
+            _lastPointerPoint = currentPoint;
+
+            vm.MoveImageOffset(deltaX, deltaY, PreviewBorder.Bounds.Width, PreviewBorder.Bounds.Height);
+            e.Handled = true;
+        }
+    }
+
+    private void OnPreviewPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (_isDraggingImage)
+        {
+            _isDraggingImage = false;
+            e.Pointer.Capture(null);
+            e.Handled = true;
+        }
+    }
+
+    private void OnPreviewDoubleTapped(object? sender, TappedEventArgs e)
+    {
+        if (DataContext is FramingOverlayViewModel vm && vm.IsEditing)
+        {
+            vm.ResetPosition();
+            e.Handled = true;
+        }
     }
 
     public void PositionOnScreen(PixelPoint? near = null)

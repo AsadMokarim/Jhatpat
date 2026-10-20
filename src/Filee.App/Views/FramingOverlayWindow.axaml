@@ -103,6 +103,18 @@
             <Button Classes="aspect" Classes.active="{Binding IsAspect916}" Content="9:16" Command="{Binding SetAspectCommand}" CommandParameter="9:16" />
             <Button Classes="aspect" Classes.active="{Binding IsAspect169}" Content="16:9" Command="{Binding SetAspectCommand}" CommandParameter="16:9" />
             <Button Classes="aspect" Classes.active="{Binding IsAspect43}" Content="4:3" Command="{Binding SetAspectCommand}" CommandParameter="4:3" />
+            <Button Classes="aspect" Classes.active="{Binding IsAspectCustom}" Content="{DynamicResource frame.aspect_custom}" Command="{Binding SetAspectCommand}" CommandParameter="custom" />
+
+            <!-- Custom numeric dimensions -->
+            <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" IsVisible="{Binding IsAspectCustom}" Margin="4,0,0,0">
+              <TextBlock Text="{DynamicResource frame.custom_width}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+              <NumericUpDown Value="{Binding CustomWidth}" Minimum="32" Maximum="10000" Increment="50" FormatString="0"
+                             Width="80" Height="28" Padding="4,2" VerticalAlignment="Center" />
+              <TextBlock Text="×" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" Margin="2,0" />
+              <TextBlock Text="{DynamicResource frame.custom_height}" FontSize="11" VerticalAlignment="Center" Foreground="{DynamicResource TextSecondaryBrush}" />
+              <NumericUpDown Value="{Binding CustomHeight}" Minimum="32" Maximum="10000" Increment="50" FormatString="0"
+                             Width="80" Height="28" Padding="4,2" VerticalAlignment="Center" />
+            </StackPanel>
 
             <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="6,0,0,0">
               <TextBlock Text="{Binding DimensionsText}" FontSize="11" FontFamily="Consolas, monospace" Foreground="{DynamicResource TextSecondaryBrush}" />
@@ -130,19 +142,60 @@
                         Command="{Binding BrowseBackgroundImageCommand}" Margin="0,0,4,4" />
               </WrapPanel>
 
-              <!-- Solid color presets -->
-              <StackPanel IsVisible="{Binding IsSolidBg}" Spacing="6" Margin="0,4,0,0">
-                <TextBlock Text="Color Presets" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
+              <!-- Solid color section with picker, swatches, and mixer -->
+              <StackPanel IsVisible="{Binding IsSolidBg}" Spacing="8" Margin="0,4,0,0">
+                <!-- Selected color swatch + Hex input -->
+                <DockPanel VerticalAlignment="Center">
+                  <Border Width="28" Height="28" CornerRadius="6"
+                          Background="{Binding CurrentColorBrush}"
+                          BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1"
+                          Margin="0,0,8,0" BoxShadow="0 1 3 #20000000" />
+                  <Button DockPanel.Dock="Right" Classes="aspect" Content="Reset" Command="{Binding SetSolidColorCommand}" CommandParameter="#1E1E2E" Padding="6,3" FontSize="11" Margin="6,0,0,0" ToolTip.Tip="Reset to default color" />
+                  <TextBox Text="{Binding HexInputText, Mode=TwoWay}"
+                           PlaceholderText="#RRGGBB"
+                           FontFamily="Consolas, monospace"
+                           FontSize="12"
+                           Padding="6,4"
+                           VerticalAlignment="Center" />
+                </DockPanel>
+
+                <!-- Color presets chips -->
+                <TextBlock Text="{DynamicResource frame.color_presets}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
                 <WrapPanel Orientation="Horizontal">
                   <Button Classes="chip" Background="#1E1E2E" Command="{Binding SetSolidColorCommand}" CommandParameter="#1E1E2E" Margin="0,0,6,6" ToolTip.Tip="Slate Dark" />
                   <Button Classes="chip" Background="#FFFFFF" Command="{Binding SetSolidColorCommand}" CommandParameter="#FFFFFF" Margin="0,0,6,6" ToolTip.Tip="Pure White" />
                   <Button Classes="chip" Background="#000000" Command="{Binding SetSolidColorCommand}" CommandParameter="#000000" Margin="0,0,6,6" ToolTip.Tip="Pitch Black" />
                   <Button Classes="chip" Background="#0F172A" Command="{Binding SetSolidColorCommand}" CommandParameter="#0F172A" Margin="0,0,6,6" ToolTip.Tip="Midnight" />
+                  <Button Classes="chip" Background="#2D3748" Command="{Binding SetSolidColorCommand}" CommandParameter="#2D3748" Margin="0,0,6,6" ToolTip.Tip="Charcoal" />
+                  <Button Classes="chip" Background="#4338CA" Command="{Binding SetSolidColorCommand}" CommandParameter="#4338CA" Margin="0,0,6,6" ToolTip.Tip="Indigo" />
                   <Button Classes="chip" Background="#3B82F6" Command="{Binding SetSolidColorCommand}" CommandParameter="#3B82F6" Margin="0,0,6,6" ToolTip.Tip="Sky Blue" />
+                  <Button Classes="chip" Background="#06B6D4" Command="{Binding SetSolidColorCommand}" CommandParameter="#06B6D4" Margin="0,0,6,6" ToolTip.Tip="Cyan" />
                   <Button Classes="chip" Background="#10B981" Command="{Binding SetSolidColorCommand}" CommandParameter="#10B981" Margin="0,0,6,6" ToolTip.Tip="Emerald" />
+                  <Button Classes="chip" Background="#F59E0B" Command="{Binding SetSolidColorCommand}" CommandParameter="#F59E0B" Margin="0,0,6,6" ToolTip.Tip="Amber" />
                   <Button Classes="chip" Background="#F43F5E" Command="{Binding SetSolidColorCommand}" CommandParameter="#F43F5E" Margin="0,0,6,6" ToolTip.Tip="Rose" />
-                  <Button Classes="chip" Background="#F3F4F6" Command="{Binding SetSolidColorCommand}" CommandParameter="#F3F4F6" Margin="0,0,6,6" ToolTip.Tip="Light Gray" />
+                  <Button Classes="chip" Background="#E5E7EB" Command="{Binding SetSolidColorCommand}" CommandParameter="#E5E7EB" Margin="0,0,6,6" ToolTip.Tip="Soft Gray" />
                 </WrapPanel>
+
+                <!-- Interactive RGB Color Mixer -->
+                <Expander Header="{DynamicResource frame.color_mixer}" IsExpanded="False" Margin="0,2,0,0">
+                  <StackPanel Spacing="6" Margin="0,6,0,0">
+                    <DockPanel>
+                      <TextBlock Text="R" Width="14" FontSize="11" Foreground="#EF4444" FontWeight="SemiBold" VerticalAlignment="Center" />
+                      <TextBlock Text="{Binding ColorR}" Width="28" FontSize="11" TextAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}" DockPanel.Dock="Right" VerticalAlignment="Center" />
+                      <Slider Minimum="0" Maximum="255" Value="{Binding ColorR}" SmallChange="1" LargeChange="16" Margin="4,0" />
+                    </DockPanel>
+                    <DockPanel>
+                      <TextBlock Text="G" Width="14" FontSize="11" Foreground="#10B981" FontWeight="SemiBold" VerticalAlignment="Center" />
+                      <TextBlock Text="{Binding ColorG}" Width="28" FontSize="11" TextAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}" DockPanel.Dock="Right" VerticalAlignment="Center" />
+                      <Slider Minimum="0" Maximum="255" Value="{Binding ColorG}" SmallChange="1" LargeChange="16" Margin="4,0" />
+                    </DockPanel>
+                    <DockPanel>
+                      <TextBlock Text="B" Width="14" FontSize="11" Foreground="#3B82F6" FontWeight="SemiBold" VerticalAlignment="Center" />
+                      <TextBlock Text="{Binding ColorB}" Width="28" FontSize="11" TextAlignment="Right" Foreground="{DynamicResource TextSecondaryBrush}" DockPanel.Dock="Right" VerticalAlignment="Center" />
+                      <Slider Minimum="0" Maximum="255" Value="{Binding ColorB}" SmallChange="1" LargeChange="16" Margin="4,0" />
+                    </DockPanel>
+                  </StackPanel>
+                </Expander>
               </StackPanel>
 
               <!-- Gradient presets -->
@@ -179,6 +232,15 @@
               <Slider Minimum="0" Maximum="80" Value="{Binding CornerRadius}" SmallChange="2" LargeChange="8" />
             </StackPanel>
 
+            <!-- Image positioning / Center button -->
+            <StackPanel Spacing="4" Margin="0,2,0,0">
+              <DockPanel>
+                <TextBlock Text="{DynamicResource frame.center_image}" FontWeight="SemiBold" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                <Button Classes="aspect" Content="Reset" Command="{Binding ResetPositionCommand}" IsEnabled="{Binding HasOffset}"
+                        HorizontalAlignment="Right" Padding="8,3" FontSize="11" ToolTip.Tip="Reset image position to center" />
+              </DockPanel>
+            </StackPanel>
+
             <Separator Background="{DynamicResource SubtleBorderBrush}" Height="1" />
 
             <!-- Drop shadow toggle -->
@@ -202,8 +264,10 @@
       <!-- Center image viewport / preview -->
       <Grid Background="{DynamicResource PageBrush}">
         <!-- Checkerboard pattern for transparency clarity -->
-        <Border Margin="24" CornerRadius="8" ClipToBounds="True" BoxShadow="0 2 12 #20000000">
-          <Image Source="{Binding PreviewImage}"
+        <Border x:Name="PreviewBorder" Margin="24" CornerRadius="8" ClipToBounds="True" BoxShadow="0 2 12 #20000000"
+                Background="Transparent" Cursor="SizeAll">
+          <Image x:Name="PreviewImageControl"
+                 Source="{Binding PreviewImage}"
                  Stretch="Uniform"
                  HorizontalAlignment="Center"
                  VerticalAlignment="Center"

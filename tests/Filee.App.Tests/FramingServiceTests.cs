@@ -1,5 +1,6 @@
 using Avalonia.Headless.XUnit;
 using Filee.App.Services;
+using Filee.App.ViewModels;
 using Filee.Core.Presets;
 using Filee.Core.Settings;
 using SkiaSharp;
@@ -83,6 +84,82 @@ public class FramingServiceTests
         Assert.Equal(200, targetH);
         Assert.Equal(50, targetX);
         Assert.Equal(150, targetY);
+    }
+
+    [Fact]
+    public void CalculateLayout_custom_dimensions_clamps_within_min_max_bounds()
+    {
+        var optionsTooSmall = new FramingOptions
+        {
+            Padding = 10,
+            AspectRatio = "custom",
+            CustomWidth = 5,
+            CustomHeight = 10,
+        };
+        var (canvasW1, canvasH1, _, _, _, _) = FramingService.CalculateLayout(100, 100, optionsTooSmall);
+        Assert.Equal(FramingService.MinCustomDimension, canvasW1);
+        Assert.Equal(FramingService.MinCustomDimension, canvasH1);
+
+        var optionsTooLarge = new FramingOptions
+        {
+            Padding = 10,
+            AspectRatio = "custom",
+            CustomWidth = 50000,
+            CustomHeight = 25000,
+        };
+        var (canvasW2, canvasH2, _, _, _, _) = FramingService.CalculateLayout(100, 100, optionsTooLarge);
+        Assert.Equal(FramingService.MaxCustomDimension, canvasW2);
+        Assert.Equal(FramingService.MaxCustomDimension, canvasH2);
+    }
+
+    [Fact]
+    public void CalculateLayout_dragging_relative_offset_shifts_and_clamps()
+    {
+        var optionsCenter = new FramingOptions
+        {
+            Padding = 50,
+            AspectRatio = "original",
+            RelativeOffsetX = 0.0,
+            RelativeOffsetY = 0.0,
+        };
+        var (w, h, txCenter, tyCenter, _, _) = FramingService.CalculateLayout(200, 100, optionsCenter);
+        Assert.Equal(300, w);
+        Assert.Equal(200, h);
+        Assert.Equal(50, txCenter);
+        Assert.Equal(50, tyCenter);
+
+        // Shift fully to the left
+        var optionsLeft = optionsCenter with { RelativeOffsetX = -1.0 };
+        var (_, _, txLeft, tyLeft, _, _) = FramingService.CalculateLayout(200, 100, optionsLeft);
+        Assert.Equal(0, txLeft);
+        Assert.Equal(50, tyLeft);
+
+        // Shift fully to the right (canvas 300 - target 200 = 100 max offset)
+        var optionsRight = optionsCenter with { RelativeOffsetX = 1.0 };
+        var (_, _, txRight, _, _, _) = FramingService.CalculateLayout(200, 100, optionsRight);
+        Assert.Equal(100, txRight);
+
+        // Shift beyond bounds clamps safely to [0, canvas - target]
+        var optionsExtreme = optionsCenter with { RelativeOffsetX = 5.0, RelativeOffsetY = -10.0 };
+        var (_, _, txExtreme, tyExtreme, _, _) = FramingService.CalculateLayout(200, 100, optionsExtreme);
+        Assert.Equal(100, txExtreme);
+        Assert.Equal(0, tyExtreme);
+    }
+
+    [Theory]
+    [InlineData("#1E1E2E", true)]
+    [InlineData("#ffffff", true)]
+    [InlineData("000000", true)]
+    [InlineData("#4F46E5AA", true)]
+    [InlineData("transparent", true)]
+    [InlineData("#ZZZZZZ", false)]
+    [InlineData("#12", false)]
+    [InlineData("", false)]
+    [InlineData(null, false)]
+    [InlineData("invalid", false)]
+    public void IsValidHexColor_validates_correctly(string? hex, bool expected)
+    {
+        Assert.Equal(expected, FramingService.IsValidHexColor(hex));
     }
 
     [Fact]
@@ -261,6 +338,74 @@ public class FramingServiceTests
             using var outBmp = SKBitmap.Decode(result.OutputPath);
             Assert.Equal(120, outBmp.Width);
             Assert.Equal(120, outBmp.Height);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+                Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task FramingOverlayViewModel_custom_dimensions_and_color_picking_and_offset()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-vm-test-").FullName;
+        try
+        {
+            var tempSource = Path.Combine(folder, "sample.png");
+            using (var bmp = CreateBitmap(100, 100, SKColors.Purple))
+            using (var s = File.OpenWrite(tempSource))
+            {
+                bmp.Encode(s, SKEncodedImageFormat.Png, 100);
+            }
+
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+            var preset = BuiltInData.CreatePresets().First(p => p.Id == "tool-frame");
+
+            using var vm = new FramingOverlayViewModel([tempSource], preset, loc, store);
+            await vm.LoadFileAsync(0);
+
+            // 1. Test Custom aspect ratio
+            vm.SetAspectCommand.Execute("custom");
+            Assert.True(vm.IsAspectCustom);
+            vm.CustomWidth = 800;
+            vm.CustomHeight = 600;
+            Assert.Equal(800, vm.CurrentOptions.CustomWidth);
+            Assert.Equal(600, vm.CurrentOptions.CustomHeight);
+
+            // 2. Test Solid color selection & hex validation
+            vm.SetSolidColorCommand.Execute("#3B82F6");
+            Assert.Equal("#3B82F6", vm.SelectedSolidColor);
+            Assert.Equal("#3B82F6", vm.HexInputText);
+            Assert.True(vm.IsHexValid);
+            Assert.Equal(0x3B, vm.ColorR);
+            Assert.Equal(0x82, vm.ColorG);
+            Assert.Equal(0xF6, vm.ColorB);
+
+            // Invalid hex should not crash or overwrite valid selected color
+            vm.HexInputText = "#INVALID";
+            Assert.False(vm.IsHexValid);
+            Assert.Equal("#3B82F6", vm.SelectedSolidColor);
+
+            // RGB slider updates
+            vm.ColorR = 255;
+            vm.ColorG = 0;
+            vm.ColorB = 0;
+            Assert.Equal("#FF0000", vm.SelectedSolidColor);
+            Assert.Equal("#FF0000", vm.HexInputText);
+
+            // 3. Test image dragging offset
+            Assert.False(vm.HasOffset);
+            vm.MoveImageOffset(50, 20, 500, 500);
+            Assert.True(vm.HasOffset);
+            Assert.NotEqual(0.0, vm.RelativeOffsetX);
+
+            vm.ResetPositionCommand.Execute(null);
+            Assert.False(vm.HasOffset);
+            Assert.Equal(0.0, vm.RelativeOffsetX);
+            Assert.Equal(0.0, vm.RelativeOffsetY);
         }
         finally
         {
