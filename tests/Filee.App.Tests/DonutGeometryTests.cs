@@ -175,6 +175,45 @@ public class DonutGeometryTests
         return points;
     }
 
+    [Fact]
+    public void Promoted_slice_with_higher_weight_has_larger_angular_span()
+    {
+        // 10 slices, last slice (e.g. image-tools) has weight 1.45
+        var count = 10;
+        var weights = new double[10];
+        for (var i = 0; i < 9; i++) weights[i] = 1.0;
+        weights[9] = 1.45;
+
+        var (mids, spans) = DonutGeometry.CalculateLayout(count, weights);
+
+        Assert.Equal(10, mids.Length);
+        Assert.Equal(10, spans.Length);
+        Assert.Equal(2 * Math.PI, spans.Sum(), 5);
+
+        // Promoted slice span is 1.45x normal slice span
+        Assert.True(spans[9] > spans[0]);
+        Assert.Equal(spans[0] * 1.45, spans[9], 4);
+
+        // Angle index hit testing returns correct slices
+        for (var i = 0; i < count; i++)
+        {
+            var hit = DonutGeometry.IndexAt(mids[i], mids, spans);
+            Assert.Equal(i, hit);
+        }
+
+        // Test HitTest with radial protrusion
+        var outerDeltas = new double[10];
+        outerDeltas[9] = 8.0;
+        var innerDeltas = new double[10];
+        innerDeltas[9] = -3.0;
+
+        // Point at mid-angle of promoted slice past normal outer radius is still a segment hit
+        var pPromoted = DonutGeometry.PointAt(C, 155, mids[9]);
+        var hitPromoted = DonutGeometry.HitTest(C, pPromoted, 60, 150, mids, spans, outerDeltas, innerDeltas);
+        Assert.Equal(DonutHitKind.Segment, hitPromoted.Kind);
+        Assert.Equal(9, hitPromoted.Index);
+    }
+
     private static bool Near(Point a, Point b, double tolerance = 1e-6) =>
         Math.Abs(a.X - b.X) <= tolerance && Math.Abs(a.Y - b.Y) <= tolerance;
 

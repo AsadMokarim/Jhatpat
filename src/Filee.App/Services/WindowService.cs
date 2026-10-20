@@ -36,6 +36,10 @@ public sealed class WindowService(ILocalizer loc, IServiceProvider services, Mem
 
     internal FramingOverlayWindow? FramingOverlay => _framingOverlay;
 
+    private ResizeOverlayWindow? _resizeOverlay;
+
+    internal ResizeOverlayWindow? ResizeOverlay => _resizeOverlay;
+
     public MainWindow? Main => _main;
 
     /// <summary>Opens the interactive background framing overlay for the files.</summary>
@@ -55,6 +59,27 @@ public sealed class WindowService(ILocalizer loc, IServiceProvider services, Mem
                 _framingOverlay = null;
         };
         _framingOverlay = win;
+        win.Show();
+        win.Activate();
+    }
+
+    /// <summary>Opens the interactive image resize and compression overlay for the files.</summary>
+    public void ShowResizeOverlay(IReadOnlyList<string> files, Preset preset, PixelPoint? near = null)
+    {
+        if (files.Count == 0)
+            return;
+        _resizeOverlay?.Close();
+        var store = services.GetRequiredService<UserDataStore>();
+        var log = services.GetService<ILogger<ResizeOverlayViewModel>>();
+        var vm = new ResizeOverlayViewModel(files, preset, loc, store, log);
+        var win = new ResizeOverlayWindow { DataContext = vm };
+        win.PositionOnScreen(near);
+        win.Closed += (_, _) =>
+        {
+            if (_resizeOverlay == win)
+                _resizeOverlay = null;
+        };
+        _resizeOverlay = win;
         win.Show();
         win.Activate();
     }

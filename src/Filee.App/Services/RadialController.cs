@@ -278,6 +278,8 @@ public sealed class RadialController(
             Close(animate: false);
             if (preset.Id == "tool-frame")
                 windows.ShowFramingOverlay(sources, preset, near);
+            else if (preset.Id == "tool-resize")
+                windows.ShowResizeOverlay(sources, preset, near);
             else
                 windows.ShowCropOverlay(sources, preset, near);
             return;
