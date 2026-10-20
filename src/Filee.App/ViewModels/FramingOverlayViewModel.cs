@@ -28,6 +28,11 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
     private bool _closed;
     private bool _historyRecorded;
     private CancellationTokenSource? _previewCts;
+    private int _sourceWidth;
+    private int _sourceHeight;
+    private int _lastCanvasWidth;
+    private int _lastCanvasHeight;
+    private bool _isSyncingColor;
 
     [ObservableProperty] private int _currentIndex;
     [ObservableProperty] private string _currentFileName = "";
@@ -50,6 +55,13 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
 
     [ObservableProperty] private FramingBackgroundType _backgroundType = FramingBackgroundType.SolidColor;
     [ObservableProperty] private string _selectedSolidColor = "#1E1E2E";
+    [ObservableProperty] private string _hexInputText = "#1E1E2E";
+    [ObservableProperty] private bool _isHexValid = true;
+    [ObservableProperty] private byte _colorR = 0x1E;
+    [ObservableProperty] private byte _colorG = 0x1E;
+    [ObservableProperty] private byte _colorB = 0x2E;
+    [ObservableProperty] private Avalonia.Media.IBrush _currentColorBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(0x1E, 0x1E, 0x2E));
+
     [ObservableProperty] private string _gradientStartColor = "#4F46E5";
     [ObservableProperty] private string _gradientEndColor = "#EC4899";
     [ObservableProperty] private double _gradientAngle = 45.0;
@@ -58,6 +70,11 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
     [ObservableProperty] private string _selectedAspect = "original";
     [ObservableProperty] private int _customWidth = 1200;
     [ObservableProperty] private int _customHeight = 1200;
+
+    [ObservableProperty] private double _relativeOffsetX = 0.0;
+    [ObservableProperty] private double _relativeOffsetY = 0.0;
+
+    public bool HasOffset => Math.Abs(RelativeOffsetX) > 0.001 || Math.Abs(RelativeOffsetY) > 0.001;
 
     public ObservableCollection<string> Problems { get; } = [];
 
@@ -117,6 +134,8 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
         AspectRatio = SelectedAspect,
         CustomWidth = CustomWidth,
         CustomHeight = CustomHeight,
+        RelativeOffsetX = RelativeOffsetX,
+        RelativeOffsetY = RelativeOffsetY,
     };
 
     partial void OnPaddingChanged(int value) => SchedulePreviewUpdate();
@@ -130,7 +149,85 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
         OnPropertyChanged(nameof(IsTransparentBg));
         SchedulePreviewUpdate();
     }
-    partial void OnSelectedSolidColorChanged(string value) => SchedulePreviewUpdate();
+    partial void OnSelectedSolidColorChanged(string value)
+    {
+        SyncFromHex(value, updateInputText: true);
+        SchedulePreviewUpdate();
+    }
+
+    private void SyncFromHex(string hex, bool updateInputText)
+    {
+        if (_isSyncingColor) return;
+        _isSyncingColor = true;
+        try
+        {
+            var sk = FramingService.ParseHexColor(hex, new SkiaSharp.SKColor(0x1E, 0x1E, 0x2E));
+            ColorR = sk.Red;
+            ColorG = sk.Green;
+            ColorB = sk.Blue;
+            CurrentColorBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(sk.Red, sk.Green, sk.Blue));
+            if (updateInputText)
+            {
+                HexInputText = $"#{sk.Red:X2}{sk.Green:X2}{sk.Blue:X2}";
+            }
+            IsHexValid = true;
+        }
+        finally
+        {
+            _isSyncingColor = false;
+        }
+    }
+
+    partial void OnHexInputTextChanged(string value)
+    {
+        if (_isSyncingColor) return;
+        if (FramingService.IsValidHexColor(value))
+        {
+            IsHexValid = true;
+            _isSyncingColor = true;
+            try
+            {
+                var sk = FramingService.ParseHexColor(value, new SkiaSharp.SKColor(0x1E, 0x1E, 0x2E));
+                ColorR = sk.Red;
+                ColorG = sk.Green;
+                ColorB = sk.Blue;
+                CurrentColorBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(sk.Red, sk.Green, sk.Blue));
+                var formatted = $"#{sk.Red:X2}{sk.Green:X2}{sk.Blue:X2}";
+                SelectedSolidColor = formatted;
+            }
+            finally
+            {
+                _isSyncingColor = false;
+            }
+        }
+        else
+        {
+            IsHexValid = false;
+        }
+    }
+
+    partial void OnColorRChanged(byte value) => OnRgbSliderChanged();
+    partial void OnColorGChanged(byte value) => OnRgbSliderChanged();
+    partial void OnColorBChanged(byte value) => OnRgbSliderChanged();
+
+    private void OnRgbSliderChanged()
+    {
+        if (_isSyncingColor) return;
+        _isSyncingColor = true;
+        try
+        {
+            var hex = $"#{ColorR:X2}{ColorG:X2}{ColorB:X2}";
+            HexInputText = hex;
+            IsHexValid = true;
+            CurrentColorBrush = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Color.FromRgb(ColorR, ColorG, ColorB));
+            SelectedSolidColor = hex;
+        }
+        finally
+        {
+            _isSyncingColor = false;
+        }
+    }
+
     partial void OnGradientStartColorChanged(string value) => SchedulePreviewUpdate();
     partial void OnGradientEndColorChanged(string value) => SchedulePreviewUpdate();
     partial void OnBackgroundImagePathChanged(string? value) => SchedulePreviewUpdate();
@@ -147,8 +244,21 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
         OnPropertyChanged(nameof(IsAspectCustom));
         SchedulePreviewUpdate();
     }
-    partial void OnCustomWidthChanged(int value) => SchedulePreviewUpdate();
-    partial void OnCustomHeightChanged(int value) => SchedulePreviewUpdate();
+    partial void OnCustomWidthChanged(int value)
+    {
+        if (value >= FramingService.MinCustomDimension && value <= FramingService.MaxCustomDimension && IsAspectCustom)
+        {
+            SchedulePreviewUpdate();
+        }
+    }
+
+    partial void OnCustomHeightChanged(int value)
+    {
+        if (value >= FramingService.MinCustomDimension && value <= FramingService.MaxCustomDimension && IsAspectCustom)
+        {
+            SchedulePreviewUpdate();
+        }
+    }
 
     public async Task LoadFileAsync(int index)
     {
@@ -203,7 +313,7 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
                 if (token.IsCancellationRequested)
                     return;
 
-                var (bitmap, w, h) = await FramingService.GeneratePreviewAsync(_files[CurrentIndex], CurrentOptions);
+                var (bitmap, w, h, srcW, srcH) = await FramingService.GeneratePreviewAsync(_files[CurrentIndex], CurrentOptions);
                 if (token.IsCancellationRequested)
                 {
                     bitmap.Dispose();
@@ -217,6 +327,10 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
                         bitmap.Dispose();
                         return;
                     }
+                    _sourceWidth = srcW;
+                    _sourceHeight = srcH;
+                    _lastCanvasWidth = w;
+                    _lastCanvasHeight = h;
                     var old = PreviewImage;
                     PreviewImage = bitmap;
                     old?.Dispose();
@@ -237,7 +351,11 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
             return;
 
         var path = _files[CurrentIndex];
-        var (bitmap, w, h) = await FramingService.GeneratePreviewAsync(path, CurrentOptions);
+        var (bitmap, w, h, srcW, srcH) = await FramingService.GeneratePreviewAsync(path, CurrentOptions);
+        _sourceWidth = srcW;
+        _sourceHeight = srcH;
+        _lastCanvasWidth = w;
+        _lastCanvasHeight = h;
         var old = PreviewImage;
         PreviewImage = bitmap;
         old?.Dispose();
@@ -281,7 +399,52 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
     }
 
     [RelayCommand]
-    public void SetAspect(string aspect) => SelectedAspect = aspect;
+    public void SetAspect(string aspect)
+    {
+        if (aspect == "custom" && SelectedAspect != "custom")
+        {
+            if (_lastCanvasWidth > 0 && _lastCanvasHeight > 0)
+            {
+                CustomWidth = Math.Clamp(_lastCanvasWidth, FramingService.MinCustomDimension, FramingService.MaxCustomDimension);
+                CustomHeight = Math.Clamp(_lastCanvasHeight, FramingService.MinCustomDimension, FramingService.MaxCustomDimension);
+            }
+        }
+        SelectedAspect = aspect;
+    }
+
+    public void MoveImageOffset(double deltaX, double deltaY, double displayedCanvasWidth, double displayedCanvasHeight)
+    {
+        if (displayedCanvasWidth <= 0 || displayedCanvasHeight <= 0 || CurrentIndex >= _files.Count)
+            return;
+
+        int srcW = _sourceWidth > 0 ? _sourceWidth : 1000;
+        int srcH = _sourceHeight > 0 ? _sourceHeight : 1000;
+
+        var (canvasW, canvasH, _, _, targetW, targetH) = FramingService.CalculateLayout(srcW, srcH, CurrentOptions);
+        int maxOffsetX = (canvasW - targetW) / 2;
+        int maxOffsetY = (canvasH - targetH) / 2;
+
+        double scale = Math.Min(displayedCanvasWidth / canvasW, displayedCanvasHeight / canvasH);
+        double maxScreenOffsetX = maxOffsetX * scale;
+        double maxScreenOffsetY = maxOffsetY * scale;
+
+        double deltaRelX = maxScreenOffsetX > 1.0 ? (deltaX / maxScreenOffsetX) : 0.0;
+        double deltaRelY = maxScreenOffsetY > 1.0 ? (deltaY / maxScreenOffsetY) : 0.0;
+
+        RelativeOffsetX = Math.Clamp(RelativeOffsetX + deltaRelX, -1.0, 1.0);
+        RelativeOffsetY = Math.Clamp(RelativeOffsetY + deltaRelY, -1.0, 1.0);
+        OnPropertyChanged(nameof(HasOffset));
+        SchedulePreviewUpdate();
+    }
+
+    [RelayCommand]
+    public void ResetPosition()
+    {
+        RelativeOffsetX = 0.0;
+        RelativeOffsetY = 0.0;
+        OnPropertyChanged(nameof(HasOffset));
+        SchedulePreviewUpdate();
+    }
 
     [RelayCommand]
     public async Task FrameAndSaveAsync()
@@ -388,6 +551,9 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
         BackgroundType = FramingBackgroundType.SolidColor;
         SelectedSolidColor = "#1E1E2E";
         SelectedAspect = "original";
+        RelativeOffsetX = 0.0;
+        RelativeOffsetY = 0.0;
+        OnPropertyChanged(nameof(HasOffset));
     }
 
     [RelayCommand]

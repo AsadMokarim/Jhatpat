@@ -174,6 +174,13 @@
   "frame.bg_gradient": "Gradient",
   "frame.bg_image": "Image",
   "frame.bg_transparent": "Transparent",
+  "frame.aspect_custom": "Custom",
+  "frame.custom_width": "Width",
+  "frame.custom_height": "Height",
+  "frame.hex_color": "Hex",
+  "frame.center_image": "Center image",
+  "frame.color_presets": "Presets",
+  "frame.color_mixer": "Color Mixer",
 
   "preset.half_size": "Half size",
   "preset.grayscale": "Grayscale",
