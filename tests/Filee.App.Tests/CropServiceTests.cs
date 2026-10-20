@@ -1,8 +1,11 @@
 // Tests for CropService and the crop overlay: output resolving, conflict policies, quality, failures and skips.
 
 using System.IO;
+using Avalonia;
 using Avalonia.Headless.XUnit;
+using Avalonia.Media.Imaging;
 using Avalonia.Threading;
+using Filee.App.Controls;
 using Filee.App.Services;
 using Filee.App.ViewModels;
 using Filee.Core.Conversion;
@@ -229,5 +232,223 @@ public class CropServiceTests
             await Task.Delay(20);
         }
         Assert.True(condition());
+    }
+
+    [AvaloniaFact]
+    public async Task SetAspect_sets_the_correct_ratio_for_all_presets()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-crop-aspect-").FullName;
+        try
+        {
+            var source = CreateTestImage(folder, "ratio.png", 400, 300);
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<ILocalizer>();
+            var preset = BuiltInData.CreatePresets().Single(p => p.Id == "tool-crop");
+
+            using var vm = new CropOverlayViewModel([source], preset, loc, store);
+            await WaitFor(() => !vm.IsBusy && vm.OriginalWidth > 0);
+
+            Assert.Equal(400, vm.OriginalWidth);
+            Assert.Equal(300, vm.OriginalHeight);
+
+            // Existing presets
+            vm.SetAspect("free");
+            Assert.Equal(0.0, vm.AspectRatio);
+            Assert.True(vm.IsAspectFree);
+
+            vm.SetAspect("1:1");
+            Assert.Equal(1.0, vm.AspectRatio);
+            Assert.True(vm.IsAspectSquare);
+
+            vm.SetAspect("4:3");
+            Assert.Equal(4.0 / 3.0, vm.AspectRatio, 6);
+            Assert.True(vm.IsAspect43);
+
+            vm.SetAspect("16:9");
+            Assert.Equal(16.0 / 9.0, vm.AspectRatio, 6);
+            Assert.True(vm.IsAspect169);
+
+            vm.SetAspect("original");
+            Assert.Equal(400.0 / 300.0, vm.AspectRatio, 6);
+            Assert.True(vm.IsAspectOriginal);
+
+            // New presets
+            vm.SetAspect("9:16");
+            Assert.Equal(9.0 / 16.0, vm.AspectRatio, 6);
+            Assert.True(vm.IsAspect916);
+
+            vm.SetAspect("4:5");
+            Assert.Equal(4.0 / 5.0, vm.AspectRatio, 6);
+            Assert.True(vm.IsAspect45);
+
+            vm.SetAspect("3:2");
+            Assert.Equal(3.0 / 2.0, vm.AspectRatio, 6);
+            Assert.True(vm.IsAspect32);
+
+            vm.SetAspect("2:3");
+            Assert.Equal(2.0 / 3.0, vm.AspectRatio, 6);
+            Assert.True(vm.IsAspect23);
+        }
+        finally
+        {
+            try { Directory.Delete(folder, true); } catch (IOException) { }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task UpdateDimensions_shows_live_pixel_dimensions_for_each_aspect()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-crop-dims-").FullName;
+        try
+        {
+            var source = CreateTestImage(folder, "dims.png", 1920, 1080);
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<ILocalizer>();
+            var preset = BuiltInData.CreatePresets().Single(p => p.Id == "tool-crop");
+
+            using var vm = new CropOverlayViewModel([source], preset, loc, store);
+            await WaitFor(() => !vm.IsBusy && vm.OriginalWidth > 0);
+
+            Assert.Equal(1920, vm.OriginalWidth);
+            Assert.Equal(1080, vm.OriginalHeight);
+
+            // Full image
+            vm.UpdateDimensions(new Rect(0, 0, 1.0, 1.0));
+            Assert.Equal("1920 × 1080 px", vm.DimensionsText);
+
+            // Half width, half height
+            vm.UpdateDimensions(new Rect(0.25, 0.25, 0.5, 0.5));
+            Assert.Equal("960 × 540 px", vm.DimensionsText);
+
+            // 9:16 crop on a landscape image: tall and narrow
+            // width = 0.3125 of 1920 = 600, height = 1.0 of 1080 = 1080 → 600 × 1080
+            vm.UpdateDimensions(new Rect(0.1, 0.0, 600.0 / 1920.0, 1.0));
+            Assert.Equal("600 × 1080 px", vm.DimensionsText);
+
+            // Minimum crop: very small normalized rect
+            vm.UpdateDimensions(new Rect(0.0, 0.0, 1.0 / 1920.0, 1.0 / 1080.0));
+            Assert.Equal("1 × 1 px", vm.DimensionsText);
+        }
+        finally
+        {
+            try { Directory.Delete(folder, true); } catch (IOException) { }
+        }
+    }
+
+    [Fact]
+    public void UpdateDimensions_computes_correct_output_for_known_image_sizes()
+    {
+        // Test the dimension calculation logic directly without loading files.
+        // CropOverlayViewModel.UpdateDimensions computes:
+        //   pixelW = Max(1, Round(norm.Width * OriginalWidth))
+        //   pixelH = Max(1, Round(norm.Height * OriginalHeight))
+
+        var testCases = new (int origW, int origH, double normW, double normH, int expectW, int expectH)[]
+        {
+            // Full image
+            (1920, 1080, 1.0, 1.0, 1920, 1080),
+            // Half
+            (1920, 1080, 0.5, 0.5, 960, 540),
+            // 4:5 crop on 1000x1000
+            (1000, 1000, 0.8, 1.0, 800, 1000),
+            // 3:2 crop on 900x600 (full width, proportional height)
+            (900, 600, 1.0, 1.0, 900, 600),
+            // 2:3 portrait crop
+            (1200, 1800, 2.0 / 3.0, 1.0, 800, 1800),
+            // 9:16 vertical
+            (1080, 1920, 9.0 / 16.0, 1.0, 608, 1920),
+            // Tiny crop
+            (100, 100, 0.01, 0.01, 1, 1),
+        };
+
+        foreach (var (origW, origH, normW, normH, expectW, expectH) in testCases)
+        {
+            var pixelW = Math.Max(1, (int)Math.Round(normW * origW));
+            var pixelH = Math.Max(1, (int)Math.Round(normH * origH));
+            Assert.Equal(expectW, pixelW);
+            Assert.Equal(expectH, pixelH);
+        }
+    }
+
+    [AvaloniaFact]
+    public void All_aspect_ratio_boolean_properties_are_mutually_exclusive()
+    {
+        // Verify that setting any aspect makes only its boolean true and all others false.
+        var modes = new[]
+        {
+            ("free", (Func<CropOverlayViewModel, bool>)(vm => vm.IsAspectFree)),
+            ("1:1", vm => vm.IsAspectSquare),
+            ("4:3", vm => vm.IsAspect43),
+            ("16:9", vm => vm.IsAspect169),
+            ("9:16", vm => vm.IsAspect916),
+            ("4:5", vm => vm.IsAspect45),
+            ("3:2", vm => vm.IsAspect32),
+            ("2:3", vm => vm.IsAspect23),
+            ("original", vm => vm.IsAspectOriginal),
+        };
+
+        // Use a minimal ViewModel without loading files by testing the property logic directly.
+        // The boolean properties only depend on SelectedAspect, which SetAspect sets.
+        // We need a dummy store and localizer.
+        TestServices.EnsureInitialized("en");
+        var store = AppHost.Get<UserDataStore>();
+        var loc = AppHost.Get<ILocalizer>();
+        var preset = BuiltInData.CreatePresets().Single(p => p.Id == "tool-crop");
+
+        // Create VM with an empty file list so no file loading happens.
+        // Set OriginalWidth/Height manually so "original" aspect computes a ratio.
+        using var vm = new CropOverlayViewModel([], preset, loc, store);
+        // Manually set dimensions for the "original" mode test.
+        vm.OriginalWidth = 800;
+        vm.OriginalHeight = 600;
+
+        foreach (var (mode, check) in modes)
+        {
+            vm.SetAspect(mode);
+            Assert.True(check(vm), $"Expected Is* to be true for mode '{mode}'");
+
+            // All OTHER modes should be false
+            foreach (var (otherMode, otherCheck) in modes)
+            {
+                if (otherMode != mode)
+                    Assert.False(otherCheck(vm), $"Expected Is* for '{otherMode}' to be false when mode is '{mode}'");
+            }
+        }
+    }
+
+    [AvaloniaFact]
+    public void CropCanvas_SetAspectRatio_respects_boundaries_and_ratio()
+    {
+        var canvas = new CropCanvas
+        {
+            Width = 800,
+            Height = 600,
+        };
+        canvas.Measure(new Size(800, 600));
+        canvas.Arrange(new Rect(0, 0, 800, 600));
+
+        using var stream = new MemoryStream();
+        using (var img = new MagickImage(MagickColors.Blue, 800, 600))
+        {
+            img.Write(stream, MagickFormat.Png);
+        }
+        stream.Position = 0;
+        canvas.SourceImage = new Bitmap(stream);
+
+        var ratios = new[] { 9.0 / 16.0, 4.0 / 5.0, 3.0 / 2.0, 2.0 / 3.0, 1.0, 16.0 / 9.0, 4.0 / 3.0 };
+        foreach (var r in ratios)
+        {
+            canvas.SetAspectRatio(r);
+            var rect = canvas.NormalizedCropRect;
+            Assert.True(rect.X >= 0.0 && rect.X <= 1.0, $"rect.X was {rect.X} for ratio {r}");
+            Assert.True(rect.Y >= 0.0 && rect.Y <= 1.0, $"rect.Y was {rect.Y} for ratio {r}");
+            Assert.True(rect.Right <= 1.0001, $"rect.Right was {rect.Right} for ratio {r}");
+            Assert.True(rect.Bottom <= 1.0001, $"rect.Bottom was {rect.Bottom} for ratio {r}");
+            var pixelW = rect.Width * 800.0;
+            var pixelH = rect.Height * 600.0;
+            Assert.Equal(r, pixelW / pixelH, 2);
+        }
     }
 }

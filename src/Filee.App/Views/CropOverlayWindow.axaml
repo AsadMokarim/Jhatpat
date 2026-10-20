@@ -99,6 +99,10 @@
             <Button Classes="aspect" Classes.active="{Binding IsAspectSquare}" Content="1:1" Command="{Binding SetAspectCommand}" CommandParameter="1:1" />
             <Button Classes="aspect" Classes.active="{Binding IsAspect43}" Content="4:3" Command="{Binding SetAspectCommand}" CommandParameter="4:3" />
             <Button Classes="aspect" Classes.active="{Binding IsAspect169}" Content="16:9" Command="{Binding SetAspectCommand}" CommandParameter="16:9" />
+            <Button Classes="aspect" Classes.active="{Binding IsAspect916}" Content="9:16" Command="{Binding SetAspectCommand}" CommandParameter="9:16" />
+            <Button Classes="aspect" Classes.active="{Binding IsAspect45}" Content="4:5" Command="{Binding SetAspectCommand}" CommandParameter="4:5" />
+            <Button Classes="aspect" Classes.active="{Binding IsAspect32}" Content="3:2" Command="{Binding SetAspectCommand}" CommandParameter="3:2" />
+            <Button Classes="aspect" Classes.active="{Binding IsAspect23}" Content="2:3" Command="{Binding SetAspectCommand}" CommandParameter="2:3" />
             <Button Classes="aspect" Classes.active="{Binding IsAspectOriginal}" Content="{DynamicResource crop.aspect_original}" Command="{Binding SetAspectCommand}" CommandParameter="original" />
 
             <Border Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,4" Margin="6,0,0,0">
