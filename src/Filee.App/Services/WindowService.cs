@@ -30,6 +30,8 @@ public sealed class WindowService(ILocalizer loc, IServiceProvider services, Mem
 
     private CropOverlayWindow? _cropOverlay;
 
+    internal CropOverlayWindow? CropOverlay => _cropOverlay;
+
     public MainWindow? Main => _main;
 
     /// <summary>Opens the interactive crop overlay for the files.</summary>

@@ -812,7 +812,8 @@ public class RenderTests
         window.DonutControl.SetExternalHighlight(1);
         Pump();
 
-        Assert.Equal(10, vm.Items.Count); // with "Trace to SVG" and "Line art to SVG"
+        Assert.Equal(11, vm.Items.Count); // with contextual Crop, "Trace to SVG", and "Line art to SVG"
+        Assert.Contains(vm.Items, item => item.Id == "tool-crop" && item.IsEnabled);
         Assert.Equal("JPG 3개", vm.CenterTitle);
         Save(window, "donut-images-ko.png");
         window.Close();

@@ -296,6 +296,11 @@ public static class BuiltInData
             Id = "flip", NameKey = "preset.group_flip", TargetFormat = Preset.GroupTarget, Kind = PresetKind.Group,
             SubPresetIds = ["flip-horizontal", "flip-vertical"],
         },
+        new()
+        {
+            Id = "image-tools", NameKey = "preset.group_image_tools", TargetFormat = Preset.GroupTarget, Kind = PresetKind.Group,
+            SubPresetIds = ["tool-crop", "half-size", "rotate-left", "rotate-right", "flip-horizontal"],
+        },
     ];
 
     /// <summary>

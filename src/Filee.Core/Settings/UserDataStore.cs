@@ -244,12 +244,12 @@ public sealed class UserDataStore
         // conversion to "group": still a group, now an empty one, rather than a conversion that can never run.
         foreach (var preset in Presets.Where(p => !p.IsGroup && p.TargetFormat == Preset.GroupTarget))
             preset.Kind = PresetKind.Group;
-        // A group fans out conversions only (no group or tool in a group), each once, at most MaxSubPresets, and has no
+        // A group fans out non-group presets (conversions and tools, no nested groups), each once, at most MaxSubPresets, and has no
         // target format an older Filee could run it with.
-        var conversions = Presets.Where(p => !p.IsGroup && !p.IsTool).Select(p => p.Id).ToHashSet();
+        var allowed = Presets.Where(p => !p.IsGroup).Select(p => p.Id).ToHashSet();
         foreach (var group in Presets.Where(p => p.IsGroup))
         {
-            group.SubPresetIds = group.SubPresetIds.Where(conversions.Contains).Distinct().Take(Preset.MaxSubPresets).ToList();
+            group.SubPresetIds = group.SubPresetIds.Where(allowed.Contains).Distinct().Take(Preset.MaxSubPresets).ToList();
             group.TargetFormat = Preset.GroupTarget;
         }
 

@@ -173,6 +173,7 @@
   "preset.rotate_180": "旋转 180°",
   "preset.rotate_180.short": "180°",
   "preset.group_flip": "翻转",
+  "preset.group_image_tools": "图像工具",
   "preset.flip_horizontal": "水平翻转",
   "preset.flip_horizontal.short": "水平",
   "preset.flip_vertical": "垂直翻转",
