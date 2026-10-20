@@ -49,6 +49,10 @@ public sealed partial class CropOverlayViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(IsAspectSquare))]
     [NotifyPropertyChangedFor(nameof(IsAspect43))]
     [NotifyPropertyChangedFor(nameof(IsAspect169))]
+    [NotifyPropertyChangedFor(nameof(IsAspect916))]
+    [NotifyPropertyChangedFor(nameof(IsAspect45))]
+    [NotifyPropertyChangedFor(nameof(IsAspect32))]
+    [NotifyPropertyChangedFor(nameof(IsAspect23))]
     private string _selectedAspect = "free";
 
     [ObservableProperty]
@@ -77,6 +81,10 @@ public sealed partial class CropOverlayViewModel : ObservableObject, IDisposable
     public bool IsAspectSquare => SelectedAspect == "1:1";
     public bool IsAspect43 => SelectedAspect == "4:3";
     public bool IsAspect169 => SelectedAspect == "16:9";
+    public bool IsAspect916 => SelectedAspect == "9:16";
+    public bool IsAspect45 => SelectedAspect == "4:5";
+    public bool IsAspect32 => SelectedAspect == "3:2";
+    public bool IsAspect23 => SelectedAspect == "2:3";
 
     public event Action? CloseRequested;
     public event Action? ResetRequested;
@@ -254,6 +262,10 @@ public sealed partial class CropOverlayViewModel : ObservableObject, IDisposable
             "1:1" => 1.0,
             "4:3" => 4.0 / 3.0,
             "16:9" => 16.0 / 9.0,
+            "9:16" => 9.0 / 16.0,
+            "4:5" => 4.0 / 5.0,
+            "3:2" => 3.0 / 2.0,
+            "2:3" => 2.0 / 3.0,
             _ => 0,
         };
         AspectRatio = ratio;
