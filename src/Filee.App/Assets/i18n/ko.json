@@ -173,6 +173,7 @@
   "preset.rotate_180": "180° 회전",
   "preset.rotate_180.short": "180°",
   "preset.group_flip": "뒤집기",
+  "preset.group_image_tools": "이미지 도구",
   "preset.flip_horizontal": "좌우 반전",
   "preset.flip_horizontal.short": "좌우",
   "preset.flip_vertical": "상하 반전",

@@ -173,6 +173,7 @@
   "preset.rotate_180": "Rotate 180°",
   "preset.rotate_180.short": "180°",
   "preset.group_flip": "Flip",
+  "preset.group_image_tools": "Image Tools",
   "preset.flip_horizontal": "Flip horizontal",
   "preset.flip_horizontal.short": "Horizontal",
   "preset.flip_vertical": "Flip vertical",

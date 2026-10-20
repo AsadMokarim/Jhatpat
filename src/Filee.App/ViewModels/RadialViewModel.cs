@@ -102,15 +102,64 @@ public sealed partial class RadialViewModel(UserDataStore store, ILocalizer loc,
 
         var profile = ProfileSelector.Select(store.Profiles, files);
         var formats = ProfileSelector.DetectFormats(files);
-        Presets = (profile?.PresetIds ?? [])
+        var presets = (profile?.PresetIds ?? [])
             .Select(store.FindPreset)
             .OfType<Preset>()
             .ToList();
 
+        if (availability.CanCrop(formats))
+        {
+            var alreadyHasCrop = presets.Any(p => p.Id == "tool-crop" || (p.IsGroup && p.SubPresetIds.Contains("tool-crop")));
+            if (!alreadyHasCrop)
+            {
+                var cropPreset = store.FindPreset("tool-crop")
+                    ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "tool-crop");
+                if (cropPreset is not null)
+                {
+                    if (presets.Count < ToolbarProfile.MaxSlices)
+                    {
+                        var pdfIndex = presets.FindIndex(p => p.Id == "to-pdf");
+                        if (pdfIndex >= 0)
+                            presets.Insert(pdfIndex + 1, cropPreset);
+                        else
+                        {
+                            var halfIndex = presets.FindIndex(p => p.Id == "half-size");
+                            if (halfIndex >= 0)
+                                presets.Insert(halfIndex, cropPreset);
+                            else
+                                presets.Add(cropPreset);
+                        }
+                    }
+                    else
+                    {
+                        var toolsGroup = store.FindPreset("image-tools")
+                            ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "image-tools");
+                        if (toolsGroup is not null)
+                        {
+                            var halfIndex = presets.FindIndex(p => p.Id == "half-size");
+                            if (halfIndex >= 0)
+                                presets[halfIndex] = toolsGroup;
+                            else
+                                presets[presets.Count - 1] = toolsGroup;
+                        }
+                    }
+                }
+            }
+        }
+
+        Presets = presets;
+
         _subPresets = Presets
             .Select(p => (IReadOnlyList<Preset>)(p.IsGroup ? p.SubPresetIds : [])
-                .Select(store.FindPreset).OfType<Preset>().Where(c => !c.IsGroup).Take(Preset.MaxSubPresets).ToList())
+                .Select(id => store.FindPreset(id) ?? BuiltInData.CreatePresets().FirstOrDefault(x => x.Id == id))
+                .OfType<Preset>()
+                .Where(c => !c.IsGroup)
+                .Take(Preset.MaxSubPresets)
+                .ToList())
             .ToList();
+
+        if (Presets.Any(p => p.IsGroup))
+            ReserveSubRing = true;
 
         DonutItem ItemOf(Preset p, bool caption = true)
         {

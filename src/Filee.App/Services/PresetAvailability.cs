@@ -13,6 +13,12 @@ public sealed class PresetAvailability(ConverterCatalog catalog, ILocalizer loc,
     [
         "jpg", "png", "webp", "bmp", "avif", "jxl", "jp2", "tga", "qoi", "dds", "pcx",
     ];
+    public static bool IsWritableSingleFrameRaster(string formatId) =>
+        WritableSingleFrameRasterFormats.Contains(formatId.ToLowerInvariant());
+
+    public bool CanCrop(IReadOnlyList<FileFormat> formats) =>
+        formats.Count > 0 && formats.All(f => WritableSingleFrameRasterFormats.Contains(f.Id));
+
     /// <summary>
     /// Returns <c>null</c> when at least one of <paramref name="formats"/> can be converted with the preset,
     /// otherwise a localized reason — naming the optional engine to download when that would help.
@@ -21,7 +27,7 @@ public sealed class PresetAvailability(ConverterCatalog catalog, ILocalizer loc,
     {
         if (preset.IsTool)
         {
-            if (formats.Count > 0 && formats.All(f => WritableSingleFrameRasterFormats.Contains(f.Id)))
+            if (CanCrop(formats))
                 return null;
             return loc["error.unsupported_source"];
         }

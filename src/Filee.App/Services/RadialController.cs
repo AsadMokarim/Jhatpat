@@ -264,7 +264,7 @@ public sealed class RadialController(
     }
 
     /// <summary>Converts with slice <paramref name="index"/>, or with slice <paramref name="sub"/> of that group's ring.</summary>
-    private void Convert(int index, int sub, IReadOnlyList<string> files)
+    internal void Convert(int index, int sub, IReadOnlyList<string> files)
     {
         if (viewModel.PresetAt(index, sub) is not { } preset || SourcesFor(preset, files) is not { Count: > 0 } sources)
         {

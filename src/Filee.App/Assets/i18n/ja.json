@@ -163,6 +163,7 @@
   "preset.rotate_180": "180°回転",
   "preset.rotate_180.short": "180°",
   "preset.group_flip": "反転",
+  "preset.group_image_tools": "画像ツール",
   "preset.flip_horizontal": "水平方向に反転",
   "preset.flip_horizontal.short": "水平",
   "preset.flip_vertical": "垂直方向に反転",

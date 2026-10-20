@@ -173,6 +173,7 @@
   "preset.rotate_180": "Obróć o 180°",
   "preset.rotate_180.short": "180°",
   "preset.group_flip": "Odbij",
+  "preset.group_image_tools": "Narzędzia obrazu",
   "preset.flip_horizontal": "Odbij w poziomie",
   "preset.flip_horizontal.short": "Poziomo",
   "preset.flip_vertical": "Odbij w pionie",
