@@ -110,39 +110,38 @@ public sealed partial class RadialViewModel(UserDataStore store, ILocalizer loc,
         if (availability.CanCrop(formats))
         {
             var alreadyHasCrop = presets.Any(p => p.Id == "tool-crop" || (p.IsGroup && p.SubPresetIds.Contains("tool-crop")));
-            if (!alreadyHasCrop)
+            var alreadyHasFrame = presets.Any(p => p.Id == "tool-frame" || (p.IsGroup && p.SubPresetIds.Contains("tool-frame")));
+
+            if (!alreadyHasCrop || !alreadyHasFrame)
             {
-                var cropPreset = store.FindPreset("tool-crop")
-                    ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "tool-crop");
-                if (cropPreset is not null)
+                var toolsNeeded = (!alreadyHasCrop ? 1 : 0) + (!alreadyHasFrame ? 1 : 0);
+                if (presets.Count + toolsNeeded > ToolbarProfile.MaxSlices)
                 {
-                    if (presets.Count < ToolbarProfile.MaxSlices)
+                    var toolsGroup = store.FindPreset("image-tools")
+                        ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "image-tools");
+                    if (toolsGroup is not null)
                     {
-                        var pdfIndex = presets.FindIndex(p => p.Id == "to-pdf");
-                        if (pdfIndex >= 0)
-                            presets.Insert(pdfIndex + 1, cropPreset);
+                        var halfIndex = presets.FindIndex(p => p.Id == "half-size");
+                        if (halfIndex >= 0)
+                            presets[halfIndex] = toolsGroup;
                         else
-                        {
-                            var halfIndex = presets.FindIndex(p => p.Id == "half-size");
-                            if (halfIndex >= 0)
-                                presets.Insert(halfIndex, cropPreset);
-                            else
-                                presets.Add(cropPreset);
-                        }
+                            presets[presets.Count - 1] = toolsGroup;
                     }
-                    else
-                    {
-                        var toolsGroup = store.FindPreset("image-tools")
-                            ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "image-tools");
-                        if (toolsGroup is not null)
-                        {
-                            var halfIndex = presets.FindIndex(p => p.Id == "half-size");
-                            if (halfIndex >= 0)
-                                presets[halfIndex] = toolsGroup;
-                            else
-                                presets[presets.Count - 1] = toolsGroup;
-                        }
-                    }
+                }
+                else
+                {
+                    var cropPreset = store.FindPreset("tool-crop")
+                        ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "tool-crop");
+                    var framePreset = store.FindPreset("tool-frame")
+                        ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "tool-frame");
+
+                    var pdfIndex = presets.FindIndex(p => p.Id == "to-pdf");
+                    var insertAt = pdfIndex >= 0 ? pdfIndex + 1 : presets.Count;
+
+                    if (!alreadyHasCrop && cropPreset is not null)
+                        presets.Insert(insertAt++, cropPreset);
+                    if (!alreadyHasFrame && framePreset is not null)
+                        presets.Insert(insertAt++, framePreset);
                 }
             }
         }

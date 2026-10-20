@@ -276,7 +276,10 @@ public sealed class RadialController(
         {
             var near = _window?.Position;
             Close(animate: false);
-            windows.ShowCropOverlay(sources, preset, near);
+            if (preset.Id == "tool-frame")
+                windows.ShowFramingOverlay(sources, preset, near);
+            else
+                windows.ShowCropOverlay(sources, preset, near);
             return;
         }
 

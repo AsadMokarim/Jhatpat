@@ -32,7 +32,32 @@ public sealed class WindowService(ILocalizer loc, IServiceProvider services, Mem
 
     internal CropOverlayWindow? CropOverlay => _cropOverlay;
 
+    private FramingOverlayWindow? _framingOverlay;
+
+    internal FramingOverlayWindow? FramingOverlay => _framingOverlay;
+
     public MainWindow? Main => _main;
+
+    /// <summary>Opens the interactive background framing overlay for the files.</summary>
+    public void ShowFramingOverlay(IReadOnlyList<string> files, Preset preset, PixelPoint? near = null)
+    {
+        if (files.Count == 0)
+            return;
+        _framingOverlay?.Close();
+        var store = services.GetRequiredService<UserDataStore>();
+        var log = services.GetService<ILogger<FramingOverlayViewModel>>();
+        var vm = new FramingOverlayViewModel(files, preset, loc, store, log);
+        var win = new FramingOverlayWindow { DataContext = vm };
+        win.PositionOnScreen(near);
+        win.Closed += (_, _) =>
+        {
+            if (_framingOverlay == win)
+                _framingOverlay = null;
+        };
+        _framingOverlay = win;
+        win.Show();
+        win.Activate();
+    }
 
     /// <summary>Opens the interactive crop overlay for the files.</summary>
     public void ShowCropOverlay(IReadOnlyList<string> files, Preset preset, PixelPoint? near = null)
