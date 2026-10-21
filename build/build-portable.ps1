@@ -98,7 +98,7 @@ if ($Runtime.StartsWith('osx-')) {
     $info.Replace('__VERSION__', $bundleVersion).Replace('__BUNDLE_VERSION__', $bundleVersion) |
         Set-Content -LiteralPath (Join-Path $contents 'Info.plist') -Encoding utf8NoBOM
     Invoke-Checked 'Validate Info.plist' { plutil -lint (Join-Path $contents 'Info.plist') }
-    $iconset = Join-Path $stage 'filee.iconset'
+    $iconset = Join-Path $stage 'jhatpat.iconset'
     New-Item -ItemType Directory -Path $iconset | Out-Null
     $sourceIcon = Join-Path $root 'src/Filee.App/Assets/Icons/jhatpat.png'
     foreach ($size in @(16, 32, 128, 256, 512)) {
@@ -109,7 +109,7 @@ if ($Runtime.StartsWith('osx-')) {
             Invoke-Checked 'Render app icon' { sips -z $pixels $pixels $sourceIcon --out $target | Out-Null }
         }
     }
-    Invoke-Checked 'Create app icon' { iconutil -c icns $iconset -o (Join-Path $resources 'filee.icns') }
+    Invoke-Checked 'Create app icon' { iconutil -c icns $iconset -o (Join-Path $resources 'jhatpat.icns') }
     # Translations of the service title ("Convert with Filee") in Finder's right-click menu.
     foreach ($localization in Get-ChildItem -LiteralPath (Join-Path $root 'installer/macos') -Directory -Filter '*.lproj') {
         Copy-Item -LiteralPath $localization.FullName -Destination $resources -Recurse

@@ -29,7 +29,7 @@ try
     var manifestPath = Path.Combine(work.FullName, "AppxManifest.xml");
     File.WriteAllText(manifestPath, ExplorerMenuPackage.CreateManifest(), new UTF8Encoding(false));
     var packagePath = Path.Combine(output, ExplorerMenuPackage.PackageFileName);
-    var logo = Path.Combine(repo, "src", "Filee.App", "Assets", "Icons", "filee.png");
+    var logo = Path.Combine(repo, "src", "Filee.App", "Assets", "Icons", "jhatpat.png");
     Appx.Pack(packagePath, manifestPath, [(ExplorerMenuPackage.LogoPath, logo, "image/png")]);
     Console.WriteLine($"Wrote {packagePath} ({new FileInfo(packagePath).Length:N0} bytes, manifest {ExplorerMenuPackage.ManifestVersion})");
 }
