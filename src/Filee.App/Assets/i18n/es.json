@@ -165,6 +165,7 @@
   "profile.models": "Modelos 3D",
   "profile.geo": "Geoespacial",
   "profile.mixed": "Archivos mixtos",
+  "preset.tool": "Herramienta interactiva",
   "preset.crop": "Recortar",
   "crop.save": "Recortar y guardar",
   "crop.reset": "Restablecer",

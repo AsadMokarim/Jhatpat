@@ -27,9 +27,43 @@ public sealed class PresetAvailability(ConverterCatalog catalog, ILocalizer loc,
     {
         if (preset.IsTool)
         {
-            if (CanCrop(formats))
-                return null;
-            return loc["error.unsupported_source"];
+            if (formats.Count == 0)
+                return loc["error.unsupported_source"];
+
+            switch (preset.Id)
+            {
+                case "tool-video-trim":
+                case "tool-video-tools":
+                    if (formats.All(f => f.Category == FormatCategory.Video))
+                        return null;
+                    return loc["error.unsupported_source"];
+
+                case "tool-audio-tools":
+                    if (formats.All(f => f.Category == FormatCategory.Audio || f.Category == FormatCategory.Video))
+                        return null;
+                    return loc["error.unsupported_source"];
+
+                case "tool-pdf-organize":
+                    if (formats.All(f => f.Id == "pdf" || f.Category == FormatCategory.Pdf || f.Category == FormatCategory.Image || IsWritableSingleFrameRaster(f.Id)))
+                        return null;
+                    return loc["error.unsupported_source"];
+
+                case "tool-crop":
+                case "tool-frame":
+                case "tool-resize":
+                case "tool-compression":
+                    if (CanCrop(formats))
+                        return null;
+                    return loc["error.unsupported_source"];
+
+                case "tool-collage":
+                case "tool-photo-edit":
+                case "tool-annotate":
+                default:
+                    if (CanCrop(formats) || formats.All(f => f.Category == FormatCategory.Image || IsWritableSingleFrameRaster(f.Id)))
+                        return null;
+                    return loc["error.unsupported_source"];
+            }
         }
 
         // "Compress into one archive" packs the files as they are, so any file works, even of an unknown type.
@@ -42,14 +76,14 @@ public sealed class PresetAvailability(ConverterCatalog catalog, ILocalizer loc,
         if (formats.Count == 0)
             return loc["error.unsupported_source"];
 
-        var merge = preset.Pdf.MergeIntoSingle && preset.TargetFormat == "pdf";
+        var merge = (preset.Pdf.MergeIntoSingle || preset.Id is "merge-pdf" or "tool-pdf-merge") && preset.TargetFormat == "pdf";
         var turns = preset.Image.TurnsOrMirrors;
         string TargetFor(FileFormat f) => preset.TargetFormat == BuiltInData.SameAsSource ? f.Id : preset.TargetFormat;
         var copiesUnturned = false;
         bool Possible(RoutePlanner planner) => formats.Any(f =>
         {
             var target = TargetFor(f);
-            if (merge && f.Id == "pdf" && !turns)
+            if (merge && (f.Id == "pdf" || f.Category == FormatCategory.Pdf || f.Category == FormatCategory.Image || IsWritableSingleFrameRaster(f.Id)) && !turns)
                 return true; // merged as it is
             var frames = preset.SavesFramesOf(f.Id);
             if (!turns)

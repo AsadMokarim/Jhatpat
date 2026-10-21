@@ -10,6 +10,7 @@ using Filee.Core.Presets;
 using Filee.Core.Settings;
 using Filee.Engines.Pdf;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace Filee.App.ViewModels;
 
@@ -21,6 +22,7 @@ public sealed partial class PdfMergeItemViewModel : ObservableObject
     [ObservableProperty] private string _fileSizeText = "";
     [ObservableProperty] private int _pageCount;
     [ObservableProperty] private string _detailsText = "";
+    [ObservableProperty] private bool _isPdf = true;
     [ObservableProperty] private bool _isFirst;
     [ObservableProperty] private bool _isLast;
 
@@ -35,10 +37,33 @@ public sealed partial class PdfMergeItemViewModel : ObservableObject
             var fileInfo = new FileInfo(filePath);
             var size = fileInfo.Exists ? fileInfo.Length : 0;
             FileSizeText = EnginePackageState.FormatBytes(size);
-            PageCount = PdfToolEngine.GetPageCount(filePath);
-            DetailsText = PageCount > 0
-                ? $"{PageCount} {(PageCount == 1 ? "page" : "pages")} • {FileSizeText}"
-                : FileSizeText;
+
+            var ext = Path.GetExtension(filePath).ToLowerInvariant();
+            if (ext == ".pdf")
+            {
+                IsPdf = true;
+                PageCount = PdfToolEngine.GetPageCount(filePath);
+                DetailsText = PageCount > 0
+                    ? $"{PageCount} {(PageCount == 1 ? "page" : "pages")} • {FileSizeText}"
+                    : FileSizeText;
+            }
+            else
+            {
+                IsPdf = false;
+                PageCount = 1;
+                try
+                {
+                    using var codec = SKCodec.Create(filePath);
+                    if (codec != null)
+                        DetailsText = $"Image ({codec.Info.Width}×{codec.Info.Height}) • {FileSizeText}";
+                    else
+                        DetailsText = $"Image (1 page) • {FileSizeText}";
+                }
+                catch
+                {
+                    DetailsText = $"Image (1 page) • {FileSizeText}";
+                }
+            }
         }
         catch
         {
@@ -92,11 +117,19 @@ public sealed partial class PdfMergeViewModel : ObservableObject, IDisposable
         AddFilesInternal(initialFiles);
     }
 
+    private static readonly HashSet<string> SupportedMergeExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".pdf", ".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tiff", ".tif", ".gif", ".avif", ".heic", ".ico", ".svg"
+    };
+
+    public static bool IsSupportedMergeFile(string path) =>
+        File.Exists(path) && SupportedMergeExtensions.Contains(Path.GetExtension(path));
+
     public void AddFilesInternal(IEnumerable<string> paths)
     {
         foreach (var path in paths)
         {
-            if (File.Exists(path) && string.Equals(Path.GetExtension(path), ".pdf", StringComparison.OrdinalIgnoreCase))
+            if (IsSupportedMergeFile(path))
             {
                 if (!Items.Any(i => string.Equals(i.FilePath, path, StringComparison.OrdinalIgnoreCase)))
                 {

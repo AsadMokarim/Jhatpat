@@ -165,6 +165,7 @@
   "profile.models": "Modele 3D",
   "profile.geo": "Geoprzestrzenne",
   "profile.mixed": "Różne pliki",
+  "preset.tool": "Narzędzie interaktywne",
   "preset.crop": "Kadruj",
   "crop.save": "Kadruj i zapisz",
   "crop.reset": "Resetuj",

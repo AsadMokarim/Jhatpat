@@ -3,9 +3,13 @@
 using Avalonia.Headless.XUnit;
 using Filee.App.Services;
 using Filee.App.ViewModels;
+using Filee.App.ViewModels.Pages;
+using Filee.Core.Formats;
 using Filee.Core.Localization;
+using Filee.Core.Presets;
 using Filee.Core.Settings;
 using Filee.Engines.Photo;
+using SkiaSharp;
 using Xunit;
 
 namespace Filee.App.Tests;
@@ -216,5 +220,96 @@ public class ExtendedMediaViewModelsTests
         // Podcast preset (-16 LUFS)
         vm.SetStandardLufsCommand.Execute("-16");
         Assert.Equal(-16.0, vm.TargetLufs);
+    }
+
+    [AvaloniaFact]
+    public void PdfMergeViewModel_supports_images_and_pdf_documents()
+    {
+        TestServices.EnsureInitialized("en");
+        var loc = AppHost.Get<ILocalizer>();
+        var store = AppHost.Get<UserDataStore>();
+        var tempPng = Path.GetTempFileName() + ".png";
+        var tempPdf = Path.GetTempFileName() + ".pdf";
+
+        using (var bmp = new SKBitmap(50, 50))
+        using (var img = SKImage.FromBitmap(bmp))
+        using (var data = img.Encode(SKEncodedImageFormat.Png, 100))
+        using (var stream = File.OpenWrite(tempPng))
+        {
+            data.SaveTo(stream);
+        }
+
+        File.WriteAllBytes(tempPdf, [0x25, 0x50, 0x44, 0x46]); // %PDF
+
+        try
+        {
+            var vm = new PdfMergeViewModel([tempPng, tempPdf], null, loc, store);
+
+            Assert.Equal(2, vm.Items.Count);
+            Assert.False(vm.Items[0].IsPdf);
+            Assert.Contains("Image", vm.Items[0].DetailsText);
+            Assert.True(vm.Items[1].IsPdf);
+            Assert.True(vm.CanMerge);
+            Assert.True(PdfMergeViewModel.IsSupportedMergeFile(tempPng));
+            Assert.True(PdfMergeViewModel.IsSupportedMergeFile(tempPdf));
+        }
+        finally
+        {
+            try { File.Delete(tempPng); } catch { }
+            try { File.Delete(tempPdf); } catch { }
+        }
+    }
+
+    [AvaloniaFact]
+    public void PresetAvailability_checks_tools_and_image_merge()
+    {
+        TestServices.EnsureInitialized("en");
+        var availability = AppHost.Get<PresetAvailability>();
+        var videoFmt = FormatRegistry.Get("mp4");
+        var audioFmt = FormatRegistry.Get("mp3");
+        var imageFmt = FormatRegistry.Get("png");
+        var pdfFmt = FormatRegistry.Get("pdf");
+
+        var trim = BuiltInData.CreatePresets().First(p => p.Id == "tool-video-trim");
+        var videoTools = BuiltInData.CreatePresets().First(p => p.Id == "tool-video-tools");
+        var audioTools = BuiltInData.CreatePresets().First(p => p.Id == "tool-audio-tools");
+        var pdfOrganize = BuiltInData.CreatePresets().First(p => p.Id == "tool-pdf-organize");
+        var mergePdf = BuiltInData.CreatePresets().First(p => p.Id == "merge-pdf");
+
+        // Video tools
+        Assert.Null(availability.Check(trim, [videoFmt]));
+        Assert.NotNull(availability.Check(trim, [imageFmt]));
+        Assert.Null(availability.Check(videoTools, [videoFmt]));
+
+        // Audio tools
+        Assert.Null(availability.Check(audioTools, [audioFmt]));
+        Assert.Null(availability.Check(audioTools, [videoFmt])); // audio from video allowed
+
+        // PDF organize
+        Assert.Null(availability.Check(pdfOrganize, [pdfFmt]));
+        Assert.Null(availability.Check(pdfOrganize, [imageFmt]));
+
+        // Merge PDF with multiple images
+        Assert.Null(availability.Check(mergePdf, [imageFmt, imageFmt]));
+        Assert.Null(availability.Check(mergePdf, [imageFmt, pdfFmt]));
+    }
+
+    [AvaloniaFact]
+    public void PresetsPageViewModel_includes_interactive_tools()
+    {
+        TestServices.EnsureInitialized("en");
+        var loc = AppHost.Get<ILocalizer>();
+        var store = AppHost.Get<UserDataStore>();
+        var windows = AppHost.Get<WindowService>();
+
+        var vm = new PresetsPageViewModel(store, loc, windows);
+
+        Assert.Contains(vm.Presets, p => p.Preset.Id == "tool-video-trim");
+        Assert.Contains(vm.Presets, p => p.Preset.Id == "tool-video-tools");
+        Assert.Contains(vm.Presets, p => p.Preset.Id == "tool-audio-tools");
+        Assert.Contains(vm.Presets, p => p.Preset.Id == "tool-pdf-organize");
+
+        var trimItem = vm.Presets.First(p => p.Preset.Id == "tool-video-trim");
+        Assert.Equal("Interactive Tool", trimItem.Target);
     }
 }

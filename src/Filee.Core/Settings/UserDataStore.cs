@@ -253,6 +253,15 @@ public sealed class UserDataStore
     /// <summary>Removes dangling preset references and guarantees at least one mixed-selection profile.</summary>
     private void EnsureConsistency()
     {
+        var builtIns = BuiltInData.CreatePresets();
+        foreach (var bp in builtIns)
+        {
+            if (bp.IsTool && !Presets.Any(p => p.Id == bp.Id))
+            {
+                Presets.Add(bp);
+            }
+        }
+
         var ids = Presets.Select(p => p.Id).ToHashSet();
         foreach (var profile in Profiles)
         {
@@ -737,6 +746,83 @@ internal static class SettingsMigrations
                     else if (images.PresetIds.Count < ToolbarProfile.MaxSlices)
                     {
                         images.PresetIds.Add("image-tools");
+                        changed = true;
+                    }
+                }
+            }
+        }
+        // v30: Extended media tools (Trim Video, Video Tools, Audio Tools, Organize PDF, Edit Photo, Annotate, Collage).
+        if (from < 30)
+        {
+            var builtIns = BuiltInData.CreatePresets();
+            var toolIds = new[]
+            {
+                "tool-video-trim", "tool-video-tools", "tool-audio-tools", "tool-pdf-organize",
+                "tool-photo-edit", "tool-annotate", "tool-collage"
+            };
+
+            foreach (var toolId in toolIds)
+            {
+                if (presets.All(p => p.Id != toolId) && builtIns.FirstOrDefault(p => p.Id == toolId) is { } toolPreset)
+                {
+                    presets.Add(toolPreset);
+                    changed = true;
+                }
+            }
+
+            // Ensure image-tools group contains all new image tools
+            if (presets.FirstOrDefault(p => p.Id == "image-tools") is { } imageToolsGroup)
+            {
+                var expected = new[] { "tool-annotate", "tool-photo-edit", "tool-collage", "tool-crop", "tool-frame", "tool-resize" };
+                foreach (var sub in expected)
+                {
+                    if (!imageToolsGroup.SubPresetIds.Contains(sub))
+                    {
+                        imageToolsGroup.SubPresetIds.Add(sub);
+                        changed = true;
+                    }
+                }
+            }
+
+            // Offer to video profile
+            if (profiles.FirstOrDefault(p => p.Id == "video") is { } video)
+            {
+                if (!video.PresetIds.Contains("tool-video-trim") && video.PresetIds.Count < ToolbarProfile.MaxSlices)
+                {
+                    video.PresetIds.Add("tool-video-trim");
+                    changed = true;
+                }
+                if (!video.PresetIds.Contains("tool-video-tools") && video.PresetIds.Count < ToolbarProfile.MaxSlices)
+                {
+                    video.PresetIds.Add("tool-video-tools");
+                    changed = true;
+                }
+            }
+
+            // Offer to audio profile
+            if (profiles.FirstOrDefault(p => p.Id == "audio") is { } audio)
+            {
+                if (!audio.PresetIds.Contains("tool-audio-tools") && audio.PresetIds.Count < ToolbarProfile.MaxSlices)
+                {
+                    audio.PresetIds.Add("tool-audio-tools");
+                    changed = true;
+                }
+            }
+
+            // Offer to pdf profile
+            if (profiles.FirstOrDefault(p => p.Id == "pdf") is { } pdf)
+            {
+                if (!pdf.PresetIds.Contains("tool-pdf-organize"))
+                {
+                    var splitIdx = pdf.PresetIds.IndexOf("pdf-split");
+                    if (splitIdx >= 0)
+                    {
+                        pdf.PresetIds[splitIdx] = "tool-pdf-organize";
+                        changed = true;
+                    }
+                    else if (pdf.PresetIds.Count < ToolbarProfile.MaxSlices)
+                    {
+                        pdf.PresetIds.Add("tool-pdf-organize");
                         changed = true;
                     }
                 }

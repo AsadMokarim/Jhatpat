@@ -165,6 +165,7 @@
   "profile.models": "3D models",
   "profile.geo": "Geospatial",
   "profile.mixed": "Mixed files",
+  "preset.tool": "Interactive Tool",
   "preset.crop": "Crop",
   "crop.save": "Crop & Save",
   "crop.reset": "Reset",
