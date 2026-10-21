@@ -14,6 +14,7 @@
   "tray.pause": "शॉर्टकट रोकें",
   "tray.resume": "शॉर्टकट फिर शुरू करें",
   "tray.quit": "बंद करें",
+  "tray.start_with_system": "स्टार्टअप पर शुरू करें",
   "tray.update": "{0} पर अपडेट करें",
   "tray.tooltip": "Jhatpat: {0} दबाए रखें और फ़ाइलें खींचें",
   "close.title": "Jhatpat चालू रखें?",

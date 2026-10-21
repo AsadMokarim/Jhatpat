@@ -14,6 +14,7 @@
   "tray.pause": "ショートカットを一時停止",
   "tray.resume": "ショートカットを再開",
   "tray.quit": "終了",
+  "tray.start_with_system": "起動時に開始",
   "tray.update": "{0}に更新",
   "tray.tooltip": "Jhatpat: {0} を押しながらファイルをドラッグ",
   "close.title": "Jhatpat を起動したままにしますか？",

@@ -14,6 +14,7 @@
   "tray.pause": "단축키 일시 중지",
   "tray.resume": "단축키 다시 사용",
   "tray.quit": "종료",
+  "tray.start_with_system": "시작할 때 실행",
   "tray.update": "{0} 버전으로 업데이트",
   "tray.tooltip": "Jhatpat: {0} 누른 채 파일 끌기",
   "close.title": "Jhatpat를 계속 실행할까요?",

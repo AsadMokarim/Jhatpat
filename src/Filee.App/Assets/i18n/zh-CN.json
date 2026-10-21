@@ -14,6 +14,7 @@
   "tray.pause": "暂停快捷操作",
   "tray.resume": "恢复快捷操作",
   "tray.quit": "退出",
+  "tray.start_with_system": "开机时启动",
   "tray.update": "更新到 {0}",
   "tray.tooltip": "Jhatpat：按住 {0} 拖放文件",
   "close.title": "保持 Jhatpat 运行？",
