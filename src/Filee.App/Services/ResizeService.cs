@@ -224,6 +224,11 @@ public static class ResizeService
 
                 // Estimate full-resolution file size based on preview density and resolution ratio
                 long previewBytes = data.Size;
+                if (encodeFormat == SKEncodedImageFormat.Png && quality <= 65)
+                {
+                    double pngFactor = quality <= 40 ? 0.35 : 0.55;
+                    previewBytes = (long)(previewBytes * pngFactor);
+                }
                 double pixelRatio = ((double)targetW * targetH) / Math.Max(1, dispW * dispH);
                 // Sublinear scaling exponent for compression estimation
                 double sizeRatio = Math.Pow(pixelRatio, 0.85);
@@ -332,10 +337,23 @@ public static class ResizeService
                     magick.Alpha(AlphaOption.Remove);
                 }
 
-                // Compression quality
-                if (IsLossyFormat(resolvedExt))
+                // Compression quality for all formats including PNG
+                var q = (uint)Math.Clamp(options.Quality, 10, 100);
+                if (resolvedExt is "png")
                 {
-                    magick.Quality = (uint)Math.Clamp(options.Quality, 10, 100);
+                    if (q <= 40)
+                    {
+                        magick.Quantize(new QuantizeSettings { Colors = 128, DitherMethod = DitherMethod.FloydSteinberg });
+                    }
+                    else if (q <= 65)
+                    {
+                        magick.Quantize(new QuantizeSettings { Colors = 256, DitherMethod = DitherMethod.FloydSteinberg });
+                    }
+                    magick.Quality = 90; // maximum zlib deflate compression
+                }
+                else if (IsLossyFormat(resolvedExt))
+                {
+                    magick.Quality = q;
                 }
 
                 magick.Write(tempOutputPath);

@@ -312,6 +312,22 @@ public sealed class RadialController(
                 windows.ShowFramingOverlay(sources, preset, near);
             else if (preset.Id is "tool-resize" or "tool-compression")
             {
+                if (sources.All(s => s.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)))
+                {
+                    var compressPreset = store.FindPreset("compress-pdf")
+                        ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "compress-pdf");
+                    if (compressPreset is not null)
+                    {
+                        var pdfJob = conversions.Start(sources, compressPreset, showInToast: false);
+                        if (pdfJob is not null)
+                        {
+                            _converted = true;
+                            ShowProgress(pdfJob);
+                            return;
+                        }
+                    }
+                }
+
                 if (sources.Count > 1)
                     windows.ShowBatchResizeWindow(sources, preset, near);
                 else
