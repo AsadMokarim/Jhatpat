@@ -277,6 +277,8 @@ internal static class Program
         var builder = AppBuilder.Configure<App>().UsePlatformDetect();
         if (OperatingSystem.IsMacOS())
             builder = builder.With(new MacOSPlatformOptions { ShowInDock = PreloadedStore?.Settings.ShowInDock ?? true });
+        if (OperatingSystem.IsLinux())
+            builder = builder.With(new X11PlatformOptions { WmClass = "com.jhatpat.app" });
         return builder
             .ConfigureFonts(fonts => fonts.AddFontCollection(new FileeFontCollection()))
 #if DEBUG
