@@ -40,6 +40,8 @@ public sealed partial class CropOverlayViewModel : ObservableObject, IDisposable
     [ObservableProperty] private Bitmap? _previewImage;
     [ObservableProperty] private int _originalWidth;
     [ObservableProperty] private int _originalHeight;
+    [ObservableProperty] private int _cropPixelWidth;
+    [ObservableProperty] private int _cropPixelHeight;
     [ObservableProperty] private string _dimensionsText = "";
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private double _aspectRatio;
@@ -53,6 +55,7 @@ public sealed partial class CropOverlayViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(IsAspect45))]
     [NotifyPropertyChangedFor(nameof(IsAspect32))]
     [NotifyPropertyChangedFor(nameof(IsAspect23))]
+    [NotifyPropertyChangedFor(nameof(IsAspect34))]
     private string _selectedAspect = "free";
 
     [ObservableProperty]
@@ -85,6 +88,7 @@ public sealed partial class CropOverlayViewModel : ObservableObject, IDisposable
     public bool IsAspect45 => SelectedAspect == "4:5";
     public bool IsAspect32 => SelectedAspect == "3:2";
     public bool IsAspect23 => SelectedAspect == "2:3";
+    public bool IsAspect34 => SelectedAspect == "3:4";
 
     public event Action? CloseRequested;
     public event Action? ResetRequested;
@@ -167,9 +171,9 @@ public sealed partial class CropOverlayViewModel : ObservableObject, IDisposable
     public void UpdateDimensions(Rect norm)
     {
         CurrentCropRect = norm;
-        var pixelW = Math.Max(1, (int)Math.Round(norm.Width * OriginalWidth));
-        var pixelH = Math.Max(1, (int)Math.Round(norm.Height * OriginalHeight));
-        DimensionsText = $"{pixelW} × {pixelH} px";
+        CropPixelWidth = Math.Max(1, (int)Math.Round(norm.Width * OriginalWidth));
+        CropPixelHeight = Math.Max(1, (int)Math.Round(norm.Height * OriginalHeight));
+        DimensionsText = $"{CropPixelWidth} × {CropPixelHeight} px";
     }
 
     [RelayCommand]
@@ -297,6 +301,7 @@ public sealed partial class CropOverlayViewModel : ObservableObject, IDisposable
             "16:9" => 16.0 / 9.0,
             "9:16" => 9.0 / 16.0,
             "4:5" => 4.0 / 5.0,
+            "3:4" => 3.0 / 4.0,
             "3:2" => 3.0 / 2.0,
             "2:3" => 2.0 / 3.0,
             _ => 0,
