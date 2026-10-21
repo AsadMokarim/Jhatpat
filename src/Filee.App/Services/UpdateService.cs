@@ -80,8 +80,8 @@ public sealed partial class UpdateService : ObservableObject
     /// <summary>Release page with every file, including the portable zip.</summary>
     public static string LatestReleaseUrl => RepositoryUrl.TrimEnd('/') + "/releases/latest";
 
-    /// <summary>The website: one big download button, friendlier than the GitHub release page.</summary>
-    public const string WebsiteUrl = "https://filee.sh/";
+    /// <summary>Release page or website for downloads.</summary>
+    public static string WebsiteUrl => LatestReleaseUrl;
 
     /// <summary>
     /// True when this copy was installed by Setup (Inno Setup puts its uninstaller next to Filee.exe). Only then can
@@ -133,10 +133,9 @@ public sealed partial class UpdateService : ObservableObject
             .Any(a => a.Key == "FileeRelease" && a.Value == "true");
 
     /// <summary>
-    /// Whether remote update checking is enabled.
-    /// Disabled while rebranded as Jhatpat until a dedicated Jhatpat release repository/channel is configured.
+    /// Whether remote update checking is enabled against the Jhatpat GitHub releases.
     /// </summary>
-    public static bool UpdatesEnabled { get; set; } = false;
+    public static bool UpdatesEnabled { get; set; } = true;
 
     /// <summary>Checks the latest release now. Returns the newer version, or null when up to date or offline.</summary>
     public async Task<string?> CheckAsync(CancellationToken cancellationToken = default)
