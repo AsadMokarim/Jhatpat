@@ -547,8 +547,6 @@ public sealed class JobQueue : IAsyncDisposable
                 return Fail(file, "error.not_enough_space", ex.Message);
             if (FileSystemPaths.IsNotFound(ex))
                 return Fail(file, "error.file_not_found", file.SourcePath);
-            if (FileSystemPaths.IsCorrupt(ex))
-                return Fail(file, "error.corrupt_file", ex.Message);
 
             return Fail(file, "error.conversion_failed", ex.Message);
         }

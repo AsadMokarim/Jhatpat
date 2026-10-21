@@ -2,11 +2,13 @@
 
 using Filee.Engines.Infrastructure;
 using ImageMagick;
-using PDFtoImage;
 using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
+using PDFtoImage;
 using SkiaSharp;
+
+#pragma warning disable CA1416
 
 namespace Filee.Engines.Pdf;
 

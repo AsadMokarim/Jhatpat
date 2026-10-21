@@ -141,134 +141,134 @@ public static class PhotoFilterEngine
                 continue;
             }
 
-                // Luminance (Rec.709)
-                var luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0;
+            // Luminance (Rec.709)
+            var luma = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0;
 
-                // Highlights / Shadows adjustments
-                if (hlFactor != 0 && luma > 0.5)
-                {
-                    var hlWeight = (luma - 0.5) * 2.0; // 0 at 0.5, 1 at 1.0
-                    var shift = hlFactor * hlWeight * 40.0;
-                    r += shift;
-                    g += shift;
-                    b += shift;
-                }
-
-                if (shFactor != 0 && luma < 0.5)
-                {
-                    var shWeight = (0.5 - luma) * 2.0; // 1 at 0.0, 0 at 0.5
-                    var shift = shFactor * shWeight * 40.0;
-                    r += shift;
-                    g += shift;
-                    b += shift;
-                }
-
-                // Whites / Blacks
-                if (whitesFactor != 0 && luma > 0.7)
-                {
-                    var wWeight = (luma - 0.7) / 0.3;
-                    var shift = whitesFactor * wWeight * 35.0;
-                    r += shift;
-                    g += shift;
-                    b += shift;
-                }
-
-                if (blacksFactor != 0 && luma < 0.3)
-                {
-                    var bWeight = (0.3 - luma) / 0.3;
-                    var shift = blacksFactor * bWeight * 35.0;
-                    r += shift;
-                    g += shift;
-                    b += shift;
-                }
-
-                // Dehaze & Clarity
-                if (dehazeFactor > 0)
-                {
-                    // Darken shadows slightly and boost saturation
-                    var dShift = (luma - 0.5) * dehazeFactor * 30.0;
-                    r += dShift;
-                    g += dShift;
-                    b += dShift;
-                }
-
-                if (clarityFactor != 0)
-                {
-                    // Midtone contrast
-                    var midWeight = 1.0 - Math.Abs(luma - 0.5) * 2.0;
-                    var cShift = (luma - 0.5) * midWeight * clarityFactor * 40.0;
-                    r += cShift;
-                    g += cShift;
-                    b += cShift;
-                }
-
-                // Temperature (warm/cool) & Tint (green/magenta)
-                if (tempOffset != 0)
-                {
-                    r += tempOffset;
-                    b -= tempOffset;
-                }
-
-                if (tintOffset != 0)
-                {
-                    r += tintOffset * 0.5;
-                    b += tintOffset * 0.5;
-                    g -= tintOffset;
-                }
-
-                // Clamp before color operations
-                r = Math.Clamp(r, 0.0, 255.0);
-                g = Math.Clamp(g, 0.0, 255.0);
-                b = Math.Clamp(b, 0.0, 255.0);
-
-                // Saturation & Vibrance
-                var currentLuma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-                var maxChroma = Math.Max(r, Math.Max(g, b)) - Math.Min(r, Math.Min(g, b));
-                var currentSat = maxChroma / Math.Max(1.0, currentLuma);
-
-                var effectiveSat = satFactor;
-                if (vibranceFactor != 0)
-                {
-                    // Affect less-saturated pixels more
-                    var vibWeight = Math.Clamp(1.0 - currentSat, 0.0, 1.0);
-                    effectiveSat += vibranceFactor * vibWeight;
-                }
-
-                if (Math.Abs(effectiveSat - 1.0) > 0.01)
-                {
-                    r = currentLuma + (r - currentLuma) * effectiveSat;
-                    g = currentLuma + (g - currentLuma) * effectiveSat;
-                    b = currentLuma + (b - currentLuma) * effectiveSat;
-                }
-
-                // Hue shift
-                if (hasHueShift)
-                {
-                    new SKColor((byte)Math.Clamp(r, 0, 255), (byte)Math.Clamp(g, 0, 255), (byte)Math.Clamp(b, 0, 255)).ToHsv(out var h, out var s, out var v);
-                    h = (h + hueShift) % 360f;
-                    if (h < 0) h += 360f;
-                    var hsvCol = SKColor.FromHsv(h, s, v);
-                    r = hsvCol.Red;
-                    g = hsvCol.Green;
-                    b = hsvCol.Blue;
-                }
-
-                // Film Grain
-                if (grainFactor > 0)
-                {
-                    // Fast deterministic hash noise per pixel index
-                    var hash = (p * 1664525 + 1013904223) & 0x7FFFFFFF;
-                    var noise = ((hash % 1000) / 500.0 - 1.0) * (grainFactor * 35.0);
-                    r += noise;
-                    g += noise;
-                    b += noise;
-                }
-
-                dstSpan[offset + 0] = (byte)Math.Clamp((int)Math.Round(r), 0, 255);
-                dstSpan[offset + 1] = (byte)Math.Clamp((int)Math.Round(g), 0, 255);
-                dstSpan[offset + 2] = (byte)Math.Clamp((int)Math.Round(b), 0, 255);
-                dstSpan[offset + 3] = a;
+            // Highlights / Shadows adjustments
+            if (hlFactor != 0 && luma > 0.5)
+            {
+                var hlWeight = (luma - 0.5) * 2.0; // 0 at 0.5, 1 at 1.0
+                var shift = hlFactor * hlWeight * 40.0;
+                r += shift;
+                g += shift;
+                b += shift;
             }
+
+            if (shFactor != 0 && luma < 0.5)
+            {
+                var shWeight = (0.5 - luma) * 2.0; // 1 at 0.0, 0 at 0.5
+                var shift = shFactor * shWeight * 40.0;
+                r += shift;
+                g += shift;
+                b += shift;
+            }
+
+            // Whites / Blacks
+            if (whitesFactor != 0 && luma > 0.7)
+            {
+                var wWeight = (luma - 0.7) / 0.3;
+                var shift = whitesFactor * wWeight * 35.0;
+                r += shift;
+                g += shift;
+                b += shift;
+            }
+
+            if (blacksFactor != 0 && luma < 0.3)
+            {
+                var bWeight = (0.3 - luma) / 0.3;
+                var shift = blacksFactor * bWeight * 35.0;
+                r += shift;
+                g += shift;
+                b += shift;
+            }
+
+            // Dehaze & Clarity
+            if (dehazeFactor > 0)
+            {
+                // Darken shadows slightly and boost saturation
+                var dShift = (luma - 0.5) * dehazeFactor * 30.0;
+                r += dShift;
+                g += dShift;
+                b += dShift;
+            }
+
+            if (clarityFactor != 0)
+            {
+                // Midtone contrast
+                var midWeight = 1.0 - Math.Abs(luma - 0.5) * 2.0;
+                var cShift = (luma - 0.5) * midWeight * clarityFactor * 40.0;
+                r += cShift;
+                g += cShift;
+                b += cShift;
+            }
+
+            // Temperature (warm/cool) & Tint (green/magenta)
+            if (tempOffset != 0)
+            {
+                r += tempOffset;
+                b -= tempOffset;
+            }
+
+            if (tintOffset != 0)
+            {
+                r += tintOffset * 0.5;
+                b += tintOffset * 0.5;
+                g -= tintOffset;
+            }
+
+            // Clamp before color operations
+            r = Math.Clamp(r, 0.0, 255.0);
+            g = Math.Clamp(g, 0.0, 255.0);
+            b = Math.Clamp(b, 0.0, 255.0);
+
+            // Saturation & Vibrance
+            var currentLuma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+            var maxChroma = Math.Max(r, Math.Max(g, b)) - Math.Min(r, Math.Min(g, b));
+            var currentSat = maxChroma / Math.Max(1.0, currentLuma);
+
+            var effectiveSat = satFactor;
+            if (vibranceFactor != 0)
+            {
+                // Affect less-saturated pixels more
+                var vibWeight = Math.Clamp(1.0 - currentSat, 0.0, 1.0);
+                effectiveSat += vibranceFactor * vibWeight;
+            }
+
+            if (Math.Abs(effectiveSat - 1.0) > 0.01)
+            {
+                r = currentLuma + (r - currentLuma) * effectiveSat;
+                g = currentLuma + (g - currentLuma) * effectiveSat;
+                b = currentLuma + (b - currentLuma) * effectiveSat;
+            }
+
+            // Hue shift
+            if (hasHueShift)
+            {
+                new SKColor((byte)Math.Clamp(r, 0, 255), (byte)Math.Clamp(g, 0, 255), (byte)Math.Clamp(b, 0, 255)).ToHsv(out var h, out var s, out var v);
+                h = (h + hueShift) % 360f;
+                if (h < 0) h += 360f;
+                var hsvCol = SKColor.FromHsv(h, s, v);
+                r = hsvCol.Red;
+                g = hsvCol.Green;
+                b = hsvCol.Blue;
+            }
+
+            // Film Grain
+            if (grainFactor > 0)
+            {
+                // Fast deterministic hash noise per pixel index
+                var hash = (p * 1664525 + 1013904223) & 0x7FFFFFFF;
+                var noise = ((hash % 1000) / 500.0 - 1.0) * (grainFactor * 35.0);
+                r += noise;
+                g += noise;
+                b += noise;
+            }
+
+            dstSpan[offset + 0] = (byte)Math.Clamp((int)Math.Round(r), 0, 255);
+            dstSpan[offset + 1] = (byte)Math.Clamp((int)Math.Round(g), 0, 255);
+            dstSpan[offset + 2] = (byte)Math.Clamp((int)Math.Round(b), 0, 255);
+            dstSpan[offset + 3] = a;
+        }
 
         if (srcConverted != source)
             srcConverted.Dispose();

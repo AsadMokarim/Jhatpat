@@ -49,102 +49,102 @@ public static class CollageEngine
         switch (options.Layout)
         {
             case CollageLayout.Row:
-            {
-                var totalGaps = space * (imageCount - 1);
-                var cellW = Math.Max(1.0f, (innerW - totalGaps) / (float)imageCount);
-                for (var i = 0; i < imageCount; i++)
                 {
-                    var x = pad + i * (cellW + space);
-                    rects.Add(new SKRect(x, pad, x + cellW, pad + innerH));
-                }
-                break;
-            }
-
-            case CollageLayout.Column:
-            {
-                var totalGaps = space * (imageCount - 1);
-                var cellH = Math.Max(1.0f, (innerH - totalGaps) / (float)imageCount);
-                for (var i = 0; i < imageCount; i++)
-                {
-                    var y = pad + i * (cellH + space);
-                    rects.Add(new SKRect(pad, y, pad + innerW, y + cellH));
-                }
-                break;
-            }
-
-            case CollageLayout.Featured when imageCount > 1:
-            {
-                // Left 55% is hero image, Right 45% is remaining images
-                var heroW = (innerW - space) * 0.55f;
-                var heroRect = new SKRect(pad, pad, pad + heroW, pad + innerH);
-                rects.Add(heroRect);
-
-                var remaining = imageCount - 1;
-                var rightX = pad + heroW + space;
-                var rightW = innerW - heroW - space;
-
-                var cols = remaining switch
-                {
-                    1 => 1,
-                    2 or 3 or 4 => 1,
-                    _ => 2
-                };
-                var rows = (int)Math.Ceiling(remaining / (double)cols);
-                var cellW = (rightW - space * (cols - 1)) / cols;
-                var cellH = (innerH - space * (rows - 1)) / rows;
-
-                for (var i = 0; i < remaining; i++)
-                {
-                    var r = i / cols;
-                    var c = i % cols;
-                    var x = rightX + c * (cellW + space);
-                    var y = pad + r * (cellH + space);
-                    rects.Add(new SKRect(x, y, x + cellW, y + cellH));
-                }
-                break;
-            }
-
-            case CollageLayout.Grid:
-            default:
-            {
-                if (imageCount == 1)
-                {
-                    rects.Add(new SKRect(pad, pad, pad + innerW, pad + innerH));
+                    var totalGaps = space * (imageCount - 1);
+                    var cellW = Math.Max(1.0f, (innerW - totalGaps) / (float)imageCount);
+                    for (var i = 0; i < imageCount; i++)
+                    {
+                        var x = pad + i * (cellW + space);
+                        rects.Add(new SKRect(x, pad, x + cellW, pad + innerH));
+                    }
                     break;
                 }
 
-                // Determine best column / row count
-                var cols = imageCount switch
+            case CollageLayout.Column:
                 {
-                    2 => canvasW >= canvasH ? 2 : 1,
-                    3 => canvasW >= canvasH ? 3 : 1,
-                    4 => 2,
-                    5 or 6 => 3,
-                    7 or 8 => 4,
-                    9 => 3,
-                    _ => (int)Math.Ceiling(Math.Sqrt(imageCount * ((double)canvasW / canvasH)))
-                };
-                cols = Math.Clamp(cols, 1, imageCount);
-                var rows = (int)Math.Ceiling(imageCount / (double)cols);
-
-                var cellW = (innerW - space * (cols - 1)) / (float)cols;
-                var cellH = (innerH - space * (rows - 1)) / (float)rows;
-
-                for (var i = 0; i < imageCount; i++)
-                {
-                    var r = i / cols;
-                    var c = i % cols;
-
-                    // If last row has only 1 item and columns > 1, center it
-                    var itemsInThisRow = (r == rows - 1) ? (imageCount - r * cols) : cols;
-                    var rowOffsetX = (cols - itemsInThisRow) * (cellW + space) / 2f;
-
-                    var x = pad + rowOffsetX + c * (cellW + space);
-                    var y = pad + r * (cellH + space);
-                    rects.Add(new SKRect(x, y, x + cellW, y + cellH));
+                    var totalGaps = space * (imageCount - 1);
+                    var cellH = Math.Max(1.0f, (innerH - totalGaps) / (float)imageCount);
+                    for (var i = 0; i < imageCount; i++)
+                    {
+                        var y = pad + i * (cellH + space);
+                        rects.Add(new SKRect(pad, y, pad + innerW, y + cellH));
+                    }
+                    break;
                 }
-                break;
-            }
+
+            case CollageLayout.Featured when imageCount > 1:
+                {
+                    // Left 55% is hero image, Right 45% is remaining images
+                    var heroW = (innerW - space) * 0.55f;
+                    var heroRect = new SKRect(pad, pad, pad + heroW, pad + innerH);
+                    rects.Add(heroRect);
+
+                    var remaining = imageCount - 1;
+                    var rightX = pad + heroW + space;
+                    var rightW = innerW - heroW - space;
+
+                    var cols = remaining switch
+                    {
+                        1 => 1,
+                        2 or 3 or 4 => 1,
+                        _ => 2
+                    };
+                    var rows = (int)Math.Ceiling(remaining / (double)cols);
+                    var cellW = (rightW - space * (cols - 1)) / cols;
+                    var cellH = (innerH - space * (rows - 1)) / rows;
+
+                    for (var i = 0; i < remaining; i++)
+                    {
+                        var r = i / cols;
+                        var c = i % cols;
+                        var x = rightX + c * (cellW + space);
+                        var y = pad + r * (cellH + space);
+                        rects.Add(new SKRect(x, y, x + cellW, y + cellH));
+                    }
+                    break;
+                }
+
+            case CollageLayout.Grid:
+            default:
+                {
+                    if (imageCount == 1)
+                    {
+                        rects.Add(new SKRect(pad, pad, pad + innerW, pad + innerH));
+                        break;
+                    }
+
+                    // Determine best column / row count
+                    var cols = imageCount switch
+                    {
+                        2 => canvasW >= canvasH ? 2 : 1,
+                        3 => canvasW >= canvasH ? 3 : 1,
+                        4 => 2,
+                        5 or 6 => 3,
+                        7 or 8 => 4,
+                        9 => 3,
+                        _ => (int)Math.Ceiling(Math.Sqrt(imageCount * ((double)canvasW / canvasH)))
+                    };
+                    cols = Math.Clamp(cols, 1, imageCount);
+                    var rows = (int)Math.Ceiling(imageCount / (double)cols);
+
+                    var cellW = (innerW - space * (cols - 1)) / (float)cols;
+                    var cellH = (innerH - space * (rows - 1)) / (float)rows;
+
+                    for (var i = 0; i < imageCount; i++)
+                    {
+                        var r = i / cols;
+                        var c = i % cols;
+
+                        // If last row has only 1 item and columns > 1, center it
+                        var itemsInThisRow = (r == rows - 1) ? (imageCount - r * cols) : cols;
+                        var rowOffsetX = (cols - itemsInThisRow) * (cellW + space) / 2f;
+
+                        var x = pad + rowOffsetX + c * (cellW + space);
+                        var y = pad + r * (cellH + space);
+                        rects.Add(new SKRect(x, y, x + cellW, y + cellH));
+                    }
+                    break;
+                }
         }
 
         return rects;
