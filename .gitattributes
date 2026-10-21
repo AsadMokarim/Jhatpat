@@ -16,6 +16,7 @@
 *.ico     binary
 *.png     binary
 *.jpg     binary
+*.webp    binary
 *.pdf     binary
 *.docx    binary
 *.hwpx    binary
@@ -24,3 +25,4 @@
 *.shx     binary
 *.dbf     binary
 *.kmz     binary
+*.onnx    binary

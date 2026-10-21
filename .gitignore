@@ -3,12 +3,21 @@ bin/
 obj/
 artifacts/
 publish/
+build/publish/
 Releases/
 build/dist/
+build/deb-staging/
+build/tarball-staging/
+*.partial
+*.tmp
 
 # Downloaded conversion engines (see build/fetch-engines.ps1)
 engines/
 build/.cache/
+
+# Logs
+logs/
+*.log
 
 # IDE
 .vs/
@@ -23,10 +32,17 @@ build/.cache/
 TestResults/
 *.trx
 coverage*/
+*.coverage
+*.coverage.*
 
-# OS
+# OS and Editor backups
 Thumbs.db
+ehthumbs.db
 .DS_Store
+desktop.ini
+*.swp
+*.swo
+*~
 
 # Fonts are downloaded by build/fetch-fonts.ps1
 src/Filee.App/Assets/Fonts/*.ttf
