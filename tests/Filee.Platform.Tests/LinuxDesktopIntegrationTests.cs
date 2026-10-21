@@ -19,16 +19,16 @@ public sealed class LinuxDesktopIntegrationTests : IDisposable
         File.WriteAllText(path, "<actions>" + existing + "</actions>");
         var integration = new LinuxDesktopIntegration(configuration, data);
 
-        integration.SetContextMenu(true, "/opt/Filee's app/Filee.App", "Filee로 변환 & test");
-        integration.SetContextMenu(true, "/opt/new/Filee.App", "Updated");
+        integration.SetContextMenu(true, "/opt/Jhatpat's app/jhatpat", "Jhatpat로 변환 & test");
+        integration.SetContextMenu(true, "/opt/new/jhatpat", "Updated");
 
         var document = XDocument.Load(path);
         Assert.Equal(2, document.Root!.Elements("action").Count());
         Assert.Equal("echo unchanged", document.Root.Elements("action")
             .Single(action => (string?)action.Element("unique-id") == "other").Element("command")!.Value);
-        Assert.Equal("'/opt/new/Filee.App' --convert %F", document.Root.Elements("action")
+        Assert.Equal("'/opt/new/jhatpat' --convert %F", document.Root.Elements("action")
             .Single(action => (string?)action.Element("unique-id") == LinuxDesktopIntegration.ThunarActionId).Element("command")!.Value);
-        Assert.Contains("exec '/opt/new/Filee.App' --convert \"$@\"", File.ReadAllText(Path.Combine(data, "nautilus", "scripts", "Jhatpat")));
+        Assert.Contains("exec '/opt/new/jhatpat' --convert \"$@\"", File.ReadAllText(Path.Combine(data, "nautilus", "scripts", "Jhatpat")));
 
         integration.SetContextMenu(false, "", "");
 
@@ -48,7 +48,7 @@ public sealed class LinuxDesktopIntegrationTests : IDisposable
 
         Assert.Throws<System.Xml.XmlException>(() =>
             new LinuxDesktopIntegration(configuration, Path.Combine(_root, "data"))
-                .SetContextMenu(true, "/opt/Filee.App", "Convert"));
+                .SetContextMenu(true, "/opt/jhatpat", "Convert"));
         Assert.Equal("<actions><action>", File.ReadAllText(path));
         Assert.False(Directory.Exists(Path.Combine(_root, "data")));
     }
@@ -57,11 +57,11 @@ public sealed class LinuxDesktopIntegrationTests : IDisposable
     public void AutostartEscapesLineBreaksAndKeepsTheExecutableAsOneArgument()
     {
         var integration = new LinuxDesktopIntegration(_root, Path.Combine(_root, "data"));
-        integration.SetAutostart(true, "/opt/Filee test/Filee.App");
+        integration.SetAutostart(true, "/opt/Jhatpat test/jhatpat");
         var path = Path.Combine(_root, "autostart", "jhatpat.desktop");
-        Assert.Contains("Exec=\"/opt/Filee test/Filee.App\" --background\n", File.ReadAllText(path));
+        Assert.Contains("Exec=\"/opt/Jhatpat test/jhatpat\" --background\n", File.ReadAllText(path));
         Assert.Throws<ArgumentException>(() => integration.SetAutostart(true, "/opt/Filee\nExec=bad"));
-        Assert.Contains("Exec=\"/opt/Filee test/Filee.App\" --background\n", File.ReadAllText(path));
+        Assert.Contains("Exec=\"/opt/Jhatpat test/jhatpat\" --background\n", File.ReadAllText(path));
         integration.SetAutostart(false, "");
         Assert.False(File.Exists(path));
     }

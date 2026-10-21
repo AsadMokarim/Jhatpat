@@ -39,7 +39,7 @@ libwayland-client0 on Ubuntu). To turn it on:
 3. Install the KWin script and enable it, so it loads at every login (you can
    also enable "Filee donut at the cursor" in System Settings > Window
    Management > KWin Scripts):
-     kpackagetool6 --type=KWin/Script --install "${XDG_DATA_HOME:-$HOME/.local/share}/filee/application/kwin/filee-donut"
+     kpackagetool6 --type=KWin/Script --install "${XDG_DATA_HOME:-$HOME/.local/share}/jhatpat/application/kwin/filee-donut"
      kwriteconfig6 --file kwinrc --group Plugins --key filee-donutEnabled true
      qdbus6 org.kde.KWin /KWin reconfigure
 Limits: Wayland cannot say which window is under the cursor, so a Ctrl+drag in

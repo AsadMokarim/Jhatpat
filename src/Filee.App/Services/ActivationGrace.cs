@@ -1,6 +1,6 @@
 // macOS: a click-mode donut opened for another process (a later launch handing over files, the Services menu) can
 // lose focus right after it opens, before the user did anything: Filee becomes the active app while the donut shows,
-// and AppKit may make another of its windows key on the way (issue #160: `open -n -a Filee.app --args --convert`
+// and AppKit may make another of its windows key on the way (issue #160: `open -n -a Jhatpat.app --args --convert`
 // logged the files but no donut stayed up). The click-mode donut closes when it loses focus, so it closed at once.
 // The first focus loss within a moment of opening is forgiven instead.
 

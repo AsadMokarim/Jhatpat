@@ -28,7 +28,7 @@ internal static class TestServices
     private static Application? _initializedFor;
 
     public static string DataDirectory { get; } =
-        Path.Combine(Path.GetTempPath(), "filee-app-tests", Guid.NewGuid().ToString("N")[..8]);
+        Path.Combine(Path.GetTempPath(), "jhatpat-app-tests", Guid.NewGuid().ToString("N")[..8]);
 
     /// <summary>
     /// The headless runner may create a new Application per test, so services (and the localization

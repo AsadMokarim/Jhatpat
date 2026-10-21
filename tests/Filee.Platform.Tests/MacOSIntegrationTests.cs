@@ -8,7 +8,7 @@ public sealed class MacOSIntegrationTests
     [Fact]
     public void LaunchAgentKeepsExecutableAndArgumentsSeparate()
     {
-        const string executable = "/Users/a & b/도구 '$(touch nope)'/Filee.app/Contents/MacOS/Filee";
+        const string executable = "/Users/a & b/도구 '$(touch nope)'/Jhatpat.app/Contents/MacOS/Filee";
         var root = ReadPlist(MacOSIntegrationFiles.LaunchAgent(executable));
         Assert.Equal([executable, "--background"], Property(root, "ProgramArguments").Elements().Select(x => x.Value));
         Assert.Equal("true", Property(root, "RunAtLoad").Name.LocalName);
@@ -19,7 +19,7 @@ public sealed class MacOSIntegrationTests
     [Fact]
     public void ServiceSwitchWritesTheEntrySystemSettingsUses()
     {
-        Assert.Equal($"\"com.filee.app - {MacOSServicesProvider.MenuItem} - convertFiles\"", MacOSIntegrationFiles.ServiceStatusKey);
+        Assert.Equal($"\"com.jhatpat.app - {MacOSServicesProvider.MenuItem} - convertFiles\"", MacOSIntegrationFiles.ServiceStatusKey);
         Assert.Contains("\"enabled_context_menu\" = 0;", MacOSIntegrationFiles.ServiceStatus(false));
         Assert.Contains("\"ContextMenu\" = 1;", MacOSIntegrationFiles.ServiceStatus(true));
     }
