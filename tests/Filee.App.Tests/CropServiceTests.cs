@@ -451,4 +451,98 @@ public class CropServiceTests
             Assert.Equal(r, pixelW / pixelH, 2);
         }
     }
+
+    [AvaloniaFact]
+    public async Task CropFileAsync_rejects_empty_file()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-crop-empty-").FullName;
+        try
+        {
+            var emptyFile = Path.Combine(folder, "empty.png");
+            File.WriteAllBytes(emptyFile, []);
+
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<ILocalizer>();
+            var preset = BuiltInData.CreatePresets().Single(p => p.Id == "tool-crop");
+
+            var result = await CropService.CropFileAsync(emptyFile, 0, 0, 10, 10, preset, store, loc);
+            Assert.Equal(CropStatus.Failed, result.Status);
+            Assert.Equal("error.empty_file", result.ErrorKey);
+        }
+        finally
+        {
+            try { Directory.Delete(folder, true); } catch { }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task CropFileAsync_rejects_missing_file()
+    {
+        TestServices.EnsureInitialized("en");
+        var missingFile = Path.Combine(Path.GetTempPath(), $"missing_{Guid.NewGuid():N}.png");
+        var store = AppHost.Get<UserDataStore>();
+        var loc = AppHost.Get<ILocalizer>();
+        var preset = BuiltInData.CreatePresets().Single(p => p.Id == "tool-crop");
+
+        var result = await CropService.CropFileAsync(missingFile, 0, 0, 10, 10, preset, store, loc);
+        Assert.Equal(CropStatus.Failed, result.Status);
+        Assert.Equal("error.file_not_found", result.ErrorKey);
+    }
+
+    [AvaloniaFact]
+    public async Task CropFileAsync_prevents_source_file_overwrite()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-crop-overwrite-").FullName;
+        try
+        {
+            var source = CreateTestImage(folder, "source.png", 100, 100);
+            var initialBytes = File.ReadAllBytes(source);
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<ILocalizer>();
+            var preset = BuiltInData.CreatePresets().Single(p => p.Id == "tool-crop");
+
+            // Attempt to crop directly into the exact same source file
+            var result = await CropService.CropFileAsync(source, 0, 0, 50, 50, preset, store, loc, customOutputPath: source);
+            Assert.Equal(CropStatus.Failed, result.Status);
+            Assert.Equal("error.overwrite_source_prevented", result.ErrorKey);
+
+            // Source file must remain completely intact and uncorrupted
+            Assert.True(File.Exists(source));
+            var currentBytes = File.ReadAllBytes(source);
+            Assert.Equal(initialBytes, currentBytes);
+        }
+        finally
+        {
+            try { Directory.Delete(folder, true); } catch { }
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task CropFileAsync_uses_atomic_staging_and_cleans_temporary_files()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-crop-atomic-").FullName;
+        try
+        {
+            var source = CreateTestImage(folder, "test.png", 100, 100);
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<ILocalizer>();
+            var preset = BuiltInData.CreatePresets().Single(p => p.Id == "tool-crop");
+
+            var result = await CropService.CropFileAsync(source, 10, 10, 40, 40, preset, store, loc);
+            Assert.Equal(CropStatus.Success, result.Status);
+            Assert.NotNull(result.OutputPath);
+            Assert.True(File.Exists(result.OutputPath));
+
+            // Ensure no leftover .tmp_* files exist in the folder
+            var strayTemps = Directory.GetFiles(folder, ".tmp_*");
+            Assert.Empty(strayTemps);
+        }
+        finally
+        {
+            try { Directory.Delete(folder, true); } catch { }
+        }
+    }
 }

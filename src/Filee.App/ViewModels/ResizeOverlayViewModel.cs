@@ -87,6 +87,7 @@ public sealed partial class ResizeOverlayViewModel : ObservableObject, IDisposab
 
     public event Action? CloseRequested;
     public event Func<string, Task<string?>>? SaveAsRequested;
+    public event Action<IReadOnlyList<string>, Preset>? SwitchToBatchRequested;
 
     public ResizeOverlayViewModel(
         IReadOnlyList<string> files,
@@ -101,6 +102,10 @@ public sealed partial class ResizeOverlayViewModel : ObservableObject, IDisposab
         _store = store;
         _log = log;
         _hasMultipleFiles = files.Count > 1;
+
+        MaintainAspectRatio = store.Settings.DefaultMaintainAspectRatio;
+        TargetFormat = store.Settings.DefaultImageFormat;
+        Quality = store.Settings.EffectiveDefaultCompressionQuality;
 
         _ = LoadFileAsync(0);
     }
@@ -341,6 +346,13 @@ public sealed partial class ResizeOverlayViewModel : ObservableObject, IDisposab
     }
 
     [RelayCommand]
+    public void SwitchToBatch()
+    {
+        CloseRequested?.Invoke();
+        SwitchToBatchRequested?.Invoke(_files, _preset);
+    }
+
+    [RelayCommand]
     public void ToggleAspectRatio() => MaintainAspectRatio = !MaintainAspectRatio;
 
     [RelayCommand]
@@ -392,6 +404,42 @@ public sealed partial class ResizeOverlayViewModel : ObservableObject, IDisposab
     }
 
     [RelayCommand]
+    public async Task CopyToClipboardAsync()
+    {
+        if (IsBusy || IsFinished || _closed || CurrentIndex >= _files.Count)
+            return;
+
+        IsBusy = true;
+        try
+        {
+            var path = _files[CurrentIndex];
+            using var source = ResizeService.LoadSourceBitmap(path);
+            using var resized = ResizeService.ResizeBitmap(source, TargetWidth, TargetHeight);
+            using var image = SkiaSharp.SKImage.FromBitmap(resized);
+            using var data = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+            using var ms = new MemoryStream();
+            data.SaveTo(ms);
+            ms.Position = 0;
+            var bmp = new Avalonia.Media.Imaging.Bitmap(ms);
+
+            var clipboard = AppHost.Get<IClipboardService>();
+            var copied = await clipboard.CopyBitmapToClipboardAsync(bmp);
+            if (copied)
+            {
+                AppHost.Get<WindowService>().ShowToastNotification(_loc["clipboard.copied_to_clipboard"]);
+            }
+        }
+        catch (Exception ex)
+        {
+            _log?.LogError(ex, "Failed to copy resized image to clipboard.");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
     public async Task SaveAsAsync()
     {
         if (IsBusy || IsFinished || _closed || CurrentIndex >= _files.Count || SaveAsRequested is null)
@@ -403,6 +451,13 @@ public sealed partial class ResizeOverlayViewModel : ObservableObject, IDisposab
         var dest = await SaveAsRequested.Invoke(defaultName);
         if (string.IsNullOrEmpty(dest))
             return;
+
+        var chosenDir = Path.GetDirectoryName(dest);
+        if (!string.IsNullOrEmpty(chosenDir) && Directory.Exists(chosenDir))
+        {
+            _store.Settings.LastOutputDirectory = chosenDir;
+            _store.SaveSettings();
+        }
 
         IsBusy = true;
         _processedSources.Add(path);

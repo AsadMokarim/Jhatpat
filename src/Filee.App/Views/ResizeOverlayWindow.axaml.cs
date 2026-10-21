@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Platform.Storage;
+using Filee.App.Services;
 using Filee.App.ViewModels;
 
 namespace Filee.App.Views;
@@ -37,6 +38,11 @@ public partial class ResizeOverlayWindow : Window
         if (DataContext is ResizeOverlayViewModel vm)
         {
             vm.CloseRequested += Close;
+            vm.SwitchToBatchRequested += (files, preset) =>
+            {
+                var windows = AppHost.Get<WindowService>();
+                windows.ShowBatchResizeWindow(files, preset);
+            };
             vm.SaveAsRequested += async defaultName =>
             {
                 var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions

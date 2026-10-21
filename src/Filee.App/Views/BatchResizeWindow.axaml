@@ -1,0 +1,330 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Filee.App.ViewModels"
+        xmlns:services="using:Filee.App.Services"
+        x:Class="Filee.App.Views.BatchResizeWindow"
+        x:DataType="vm:BatchResizeViewModel"
+        Title="{DynamicResource batch.title}"
+        Icon="avares://Filee/Assets/Icons/jhatpat.ico"
+        Width="1140" Height="780" MinWidth="900" MinHeight="620"
+        WindowDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        Topmost="True"
+        CanResize="True">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Escape" Command="{Binding CancelBatchCommand}" />
+  </Window.KeyBindings>
+
+  <Window.Styles>
+    <Style Selector="Button.aspect">
+      <Setter Property="Padding" Value="9,5" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SubtleBorderBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.aspect:pointerover">
+      <Setter Property="Opacity" Value="0.85" />
+    </Style>
+    <Style Selector="Button.aspect.active">
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="Button.chip">
+      <Setter Property="Padding" Value="10,4" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SubtleBorderBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.chip.active">
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+  </Window.Styles>
+
+  <!-- Overlay card with soft rounded corners and theme styling -->
+  <Border Margin="16" CornerRadius="{DynamicResource SoftRadius}"
+          Background="{DynamicResource GlassPanelBrush}"
+          BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1"
+          ClipToBounds="True"
+          BoxShadow="{DynamicResource GlassShadow}">
+    <DockPanel>
+      <!-- Top header bar -->
+      <Border DockPanel.Dock="Top" Height="48" Padding="16,0" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,0,0,1"
+              Background="{DynamicResource GlassHeaderBrush}">
+        <DockPanel VerticalAlignment="Center">
+          <Button DockPanel.Dock="Right" Classes="icon" Command="{Binding CancelBatchCommand}"
+                  ToolTip.Tip="{DynamicResource common.close}" Margin="4,0,0,0">
+            <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Close}" Foreground="{DynamicResource TextSecondaryBrush}" />
+          </Button>
+
+          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <PathIcon Width="16" Height="16" Data="{StaticResource Icon.Crop}" Foreground="{DynamicResource AccentBrush}" />
+            <TextBlock Text="{DynamicResource batch.title}" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" />
+
+            <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="10" Padding="8,2" IsVisible="{Binding HasItems}">
+              <TextBlock Text="{Binding QueueCount, StringFormat='{}{0} files'}" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold" />
+            </Border>
+
+            <Border IsVisible="{Binding IsFinished}" Background="{DynamicResource GlassCardBrush}"
+                    BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="8,2">
+              <TextBlock Text="{Binding StatusNotice}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
+            </Border>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- Bottom action and progress bar -->
+      <Border DockPanel.Dock="Bottom" Padding="16,12" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,1,0,0"
+              Background="{DynamicResource GlassHeaderBrush}">
+        <DockPanel>
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+            <Button Content="{DynamicResource common.close}" Command="{Binding CancelBatchCommand}"
+                    IsVisible="{Binding !IsProcessing}" Classes="aspect" />
+            <Button Content="{DynamicResource batch.cancel}" Command="{Binding CancelBatchCommand}"
+                    IsVisible="{Binding IsProcessing}" Classes="aspect" Foreground="#E06C75" />
+            <Button Content="Open Output Folder" Command="{Binding OpenOutputFolderCommand}"
+                    IsVisible="{Binding IsFinished}" Classes="aspect" />
+            <Button Content="{DynamicResource batch.start}" Command="{Binding StartBatchCommand}"
+                    IsEnabled="{Binding CanStart}" IsVisible="{Binding !IsProcessing}"
+                    Classes="accent" FontWeight="SemiBold" Padding="16,7" CornerRadius="6" />
+          </StackPanel>
+
+          <!-- Overall batch progress indicator -->
+          <StackPanel Orientation="Vertical" Spacing="4" VerticalAlignment="Center" Margin="0,0,16,0">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="{Binding ProgressText}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}"
+                         IsVisible="{Binding IsProcessing}" />
+              <TextBlock Text="{Binding SummaryText}" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}"
+                         IsVisible="{Binding IsFinished}" />
+            </StackPanel>
+            <ProgressBar Value="{Binding OverallProgress}" Maximum="100" Height="5" CornerRadius="2"
+                         IsVisible="{Binding IsProcessing}" Foreground="{DynamicResource AccentBrush}" />
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- Main content: Left Settings Panel, Right Queue Panel -->
+      <Grid ColumnDefinitions="360,*">
+        <!-- Settings sidebar -->
+        <Border Grid.Column="0" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="0,0,1,0"
+                Background="{DynamicResource SurfaceBrush}" Padding="16">
+          <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="16" IsEnabled="{Binding CanEdit}">
+              <!-- Notice banner -->
+              <Border Background="{DynamicResource AccentSoftBrush}" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" CornerRadius="8" Padding="10,8">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="{DynamicResource batch.settings_header}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
+                  <TextBlock Text="{DynamicResource batch.settings_notice}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+              </Border>
+
+              <!-- Mode Selection -->
+              <StackPanel Spacing="6">
+                <TextBlock Text="Resize Mode" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <WrapPanel Orientation="Horizontal">
+                  <Button Content="{DynamicResource batch.mode_scale}" Command="{Binding SetModeCommand}" CommandParameter="Scale"
+                          Classes="chip" Classes.active="{Binding IsModeScale}" Margin="0,0,6,6" />
+                  <Button Content="{DynamicResource batch.mode_fit}" Command="{Binding SetModeCommand}" CommandParameter="Fit"
+                          Classes="chip" Classes.active="{Binding IsModeFit}" Margin="0,0,6,6" />
+                </WrapPanel>
+              </StackPanel>
+
+              <!-- Scale Controls (When Scale mode active) -->
+              <StackPanel Spacing="6" IsVisible="{Binding IsModeScale}">
+                <TextBlock Text="{DynamicResource resize.scale}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <WrapPanel Orientation="Horizontal">
+                  <Button Content="25%" Command="{Binding SetScaleCommand}" CommandParameter="0.25"
+                          Classes="chip" Classes.active="{Binding IsScale25}" Margin="0,0,6,6" />
+                  <Button Content="50%" Command="{Binding SetScaleCommand}" CommandParameter="0.50"
+                          Classes="chip" Classes.active="{Binding IsScale50}" Margin="0,0,6,6" />
+                  <Button Content="75%" Command="{Binding SetScaleCommand}" CommandParameter="0.75"
+                          Classes="chip" Classes.active="{Binding IsScale75}" Margin="0,0,6,6" />
+                  <Button Content="100%" Command="{Binding SetScaleCommand}" CommandParameter="1.00"
+                          Classes="chip" Classes.active="{Binding IsScale100}" Margin="0,0,6,6" />
+                </WrapPanel>
+                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                  <Slider Grid.Column="0" Minimum="10" Maximum="200" Value="{Binding ScalePercent}" />
+                  <TextBlock Grid.Column="1" Text="{Binding ScalePercent, StringFormat='{}{0:F0}%'}" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" />
+                </Grid>
+              </StackPanel>
+
+              <!-- Fit Bounding Box Controls (When Fit mode active) -->
+              <StackPanel Spacing="6" IsVisible="{Binding IsModeFit}">
+                <TextBlock Text="Max Bounds (px)" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <Grid ColumnDefinitions="*,*,Auto">
+                  <TextBox Grid.Column="0" Text="{Binding MaxWidth}" Margin="0,0,6,0" PlaceholderText="Max Width" />
+                  <TextBox Grid.Column="1" Text="{Binding MaxHeight}" Margin="0,0,6,0" PlaceholderText="Max Height" />
+                  <CheckBox Grid.Column="2" IsChecked="{Binding MaintainAspectRatio}" ToolTip.Tip="{DynamicResource resize.lock_aspect}" Content="Aspect" FontSize="11" />
+                </Grid>
+              </StackPanel>
+
+              <!-- Format Controls -->
+              <StackPanel Spacing="6">
+                <TextBlock Text="{DynamicResource resize.format}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <WrapPanel Orientation="Horizontal">
+                  <Button Content="Original" Command="{Binding SetFormatCommand}" CommandParameter="same"
+                          Classes="chip" Classes.active="{Binding IsFormatSame}" Margin="0,0,6,6" />
+                  <Button Content="PNG" Command="{Binding SetFormatCommand}" CommandParameter="png"
+                          Classes="chip" Classes.active="{Binding IsFormatPng}" Margin="0,0,6,6" />
+                  <Button Content="JPEG" Command="{Binding SetFormatCommand}" CommandParameter="jpg"
+                          Classes="chip" Classes.active="{Binding IsFormatJpg}" Margin="0,0,6,6" />
+                  <Button Content="WebP" Command="{Binding SetFormatCommand}" CommandParameter="webp"
+                          Classes="chip" Classes.active="{Binding IsFormatWebp}" Margin="0,0,6,6" />
+                </WrapPanel>
+              </StackPanel>
+
+              <!-- Quality Controls -->
+              <StackPanel Spacing="6">
+                <TextBlock Text="{DynamicResource resize.quality}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <WrapPanel Orientation="Horizontal">
+                  <Button Content="{DynamicResource resize.quality_low}" Command="{Binding SetQualityCommand}" CommandParameter="60"
+                          Classes="chip" Classes.active="{Binding IsQualityLow}" Margin="0,0,6,6" />
+                  <Button Content="{DynamicResource resize.quality_balanced}" Command="{Binding SetQualityCommand}" CommandParameter="80"
+                          Classes="chip" Classes.active="{Binding IsQualityBalanced}" Margin="0,0,6,6" />
+                  <Button Content="{DynamicResource resize.quality_high}" Command="{Binding SetQualityCommand}" CommandParameter="92"
+                          Classes="chip" Classes.active="{Binding IsQualityHigh}" Margin="0,0,6,6" />
+                </WrapPanel>
+                <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
+                  <Slider Grid.Column="0" Minimum="10" Maximum="100" Value="{Binding Quality}" />
+                  <TextBlock Grid.Column="1" Text="{Binding Quality, StringFormat='{}{0}%'}" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" />
+                </Grid>
+              </StackPanel>
+
+              <!-- Output Directory -->
+              <StackPanel Spacing="6">
+                <TextBlock Text="{DynamicResource batch.output_folder}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <Border Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1" CornerRadius="6" Padding="8,6">
+                  <TextBlock Text="{Binding OutputDirectoryText}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                             TextTrimming="CharacterEllipsis" MaxWidth="300" />
+                </Border>
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Button Content="{DynamicResource batch.browse}" Command="{Binding BrowseOutputDirectoryAsync}" Classes="aspect" />
+                  <Button Content="Reset" Command="{Binding ResetOutputDirectory}" IsVisible="{Binding HasCustomOutputDirectory}" Classes="aspect" />
+                </StackPanel>
+              </StackPanel>
+
+              <!-- File Collision Policy -->
+              <StackPanel Spacing="6">
+                <TextBlock Text="{DynamicResource batch.collision}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <WrapPanel Orientation="Horizontal">
+                  <Button Content="{DynamicResource batch.collision_rename}" Command="{Binding SetCollisionPolicyCommand}" CommandParameter="Rename"
+                          Classes="chip" Classes.active="{Binding IsCollisionRename}" Margin="0,0,6,6" />
+                  <Button Content="{DynamicResource batch.collision_skip}" Command="{Binding SetCollisionPolicyCommand}" CommandParameter="Skip"
+                          Classes="chip" Classes.active="{Binding IsCollisionSkip}" Margin="0,0,6,6" />
+                </WrapPanel>
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+        </Border>
+
+        <!-- Queue Panel -->
+        <DockPanel Grid.Column="1" Margin="16">
+          <!-- Queue action bar -->
+          <Border DockPanel.Dock="Top" Margin="0,0,0,12">
+            <DockPanel>
+              <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8">
+                <Button Content="{DynamicResource batch.add_files}" Command="{Binding AddFilesAsync}"
+                        IsEnabled="{Binding CanEdit}" Classes="aspect" />
+                <Button Content="{DynamicResource batch.add_folder}" Command="{Binding AddFolderAsync}"
+                        IsEnabled="{Binding CanEdit}" Classes="aspect" />
+                <Button Content="{DynamicResource batch.clear}" Command="{Binding ClearQueueCommand}"
+                        IsEnabled="{Binding CanEdit}" IsVisible="{Binding HasItems}" Classes="aspect" />
+              </StackPanel>
+              <TextBlock Text="Processing Queue" FontWeight="SemiBold" FontSize="14" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+            </DockPanel>
+          </Border>
+
+          <!-- Empty queue placeholder -->
+          <Border IsVisible="{Binding IsQueueEmpty}" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="32">
+            <StackPanel Spacing="12" HorizontalAlignment="Center">
+              <PathIcon Width="48" Height="48" Data="{StaticResource Icon.Crop}" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" Opacity="0.5" />
+              <TextBlock Text="{DynamicResource batch.queue_empty}" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" TextAlignment="Center" MaxWidth="360" TextWrapping="Wrap" />
+              <Button Content="{DynamicResource batch.add_files}" Command="{Binding AddFilesAsync}" Classes="accent" HorizontalAlignment="Center" Margin="0,8,0,0" />
+            </StackPanel>
+          </Border>
+
+          <!-- Queue list -->
+          <ScrollViewer IsVisible="{Binding HasItems}" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Queue}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="services:BatchResizeItem">
+                  <Border Margin="0,0,0,8" Padding="12,10" Background="{DynamicResource SurfaceAltBrush}"
+                          BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1" CornerRadius="8">
+                    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                      <!-- File Icon / Bullet -->
+                      <PathIcon Grid.Column="0" Width="14" Height="14" Data="{StaticResource Icon.Crop}"
+                                Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0" />
+
+                      <!-- File Info -->
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="2">
+                        <TextBlock Text="{Binding FileName}" FontWeight="SemiBold" FontSize="13"
+                                   Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" MaxWidth="440" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                          <TextBlock Text="{Binding SourceDimensionsText, StringFormat='Original: {0}'}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
+                          <TextBlock Text="{Binding SourceFileSizeText, StringFormat='({0})'}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
+                          <TextBlock Text="→" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
+                          <TextBlock Text="{Binding TargetDimensionsText, StringFormat='Target: {0}'}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
+                        </StackPanel>
+                        <!-- Output path or error message -->
+                        <TextBlock Text="{Binding OutputPath}" FontSize="10" Foreground="{DynamicResource AccentBrush}"
+                                   IsVisible="{Binding IsSuccess}" TextTrimming="CharacterEllipsis" MaxWidth="440" />
+                        <TextBlock Text="{Binding ErrorMessage}" FontSize="10" Foreground="#E06C75"
+                                   IsVisible="{Binding IsFailed}" TextTrimming="CharacterEllipsis" MaxWidth="440" />
+                      </StackPanel>
+
+                      <!-- Status Badge -->
+                      <Border Grid.Column="2" VerticalAlignment="Center" Margin="12,0" Padding="8,4" CornerRadius="6">
+                        <Border.Styles>
+                          <Style Selector="Border">
+                            <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                          </Style>
+                        </Border.Styles>
+                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                          <TextBlock Text="Queued" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                     IsVisible="{Binding !IsProcessing, Converter={x:Null}}" />
+                          <TextBlock Text="Completed" FontSize="11" FontWeight="SemiBold" Foreground="#98C379"
+                                     IsVisible="{Binding IsSuccess}" />
+                          <TextBlock Text="Processing..." FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}"
+                                     IsVisible="{Binding IsProcessing}" />
+                          <TextBlock Text="Skipped" FontSize="11" Foreground="#E5C07B"
+                                     IsVisible="{Binding IsSkipped}" />
+                          <TextBlock Text="Failed" FontSize="11" Foreground="#E06C75"
+                                     IsVisible="{Binding IsFailed}" />
+                          <TextBlock Text="Cancelled" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
+                                     IsVisible="{Binding IsCancelled}" />
+                        </StackPanel>
+                      </Border>
+
+                      <!-- Remove item button -->
+                      <Button Grid.Column="3" Classes="icon"
+                              Command="{Binding ((vm:BatchResizeViewModel)DataContext).RemoveItemCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                              CommandParameter="{Binding}"
+                              IsEnabled="{Binding ((vm:BatchResizeViewModel)DataContext).CanEdit, RelativeSource={RelativeSource AncestorType=Window}}"
+                              VerticalAlignment="Center">
+                        <PathIcon Width="10" Height="10" Data="{StaticResource Icon.Close}" Foreground="{DynamicResource TextSecondaryBrush}" />
+                      </Button>
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </ScrollViewer>
+        </DockPanel>
+      </Grid>
+    </DockPanel>
+  </Border>
+</Window>

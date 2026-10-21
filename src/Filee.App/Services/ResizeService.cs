@@ -3,6 +3,7 @@
 using System.IO;
 using Avalonia.Media.Imaging;
 using Filee.Core.Localization;
+using Filee.Core.Platform;
 using Filee.Core.Presets;
 using Filee.Core.Settings;
 using ImageMagick;
@@ -122,6 +123,10 @@ public static class ResizeService
         if (!File.Exists(inputPath))
             throw new FileNotFoundException("Image file not found.", inputPath);
 
+        var fi = new FileInfo(inputPath);
+        if (fi.Length == 0)
+            throw new InvalidDataException("The file is empty (0 bytes).");
+
         using var magick = new MagickImage(inputPath);
         magick.AutoOrient();
 
@@ -130,8 +135,19 @@ public static class ResizeService
         mem.Position = 0;
         var bitmap = SKBitmap.Decode(mem);
         if (bitmap is null)
-            throw new InvalidOperationException($"Could not decode image at {inputPath}");
+            throw new InvalidDataException($"Could not decode image at {inputPath}");
         return bitmap;
+    }
+
+    /// <summary>
+    /// Resizes an SKBitmap to the target dimensions using high quality linear sampling.
+    /// </summary>
+    public static SKBitmap ResizeBitmap(SKBitmap source, int targetWidth, int targetHeight)
+    {
+        var clampedW = Math.Clamp(targetWidth, MinDimension, MaxDimension);
+        var clampedH = Math.Clamp(targetHeight, MinDimension, MaxDimension);
+        return source.Resize(new SKImageInfo(clampedW, clampedH), new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear))
+            ?? new SKBitmap(clampedW, clampedH);
     }
 
     public static bool CheckHasTransparency(SKBitmap bitmap)
@@ -245,10 +261,22 @@ public static class ResizeService
     {
         return await Task.Run(() =>
         {
+            string? tempOutputPath = null;
             try
             {
                 if (!File.Exists(inputPath))
                     return new ResizeResult(ResizeStatus.Failed, null, "error.file_not_found", inputPath);
+
+                try
+                {
+                    var fi = new FileInfo(inputPath);
+                    if (fi.Length == 0)
+                        return new ResizeResult(ResizeStatus.Failed, null, "error.empty_file", inputPath);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    return new ResizeResult(ResizeStatus.Failed, null, "error.permission_denied", ex.Message);
+                }
 
                 var resolvedExt = ResolveFormat(inputPath, options.TargetFormat);
                 var appliedPreset = store.Settings.WithDefaultOutput(preset);
@@ -261,9 +289,18 @@ public static class ResizeService
                     return new ResizeResult(ResizeStatus.SkippedExists, null, "toast.skipped", Path.GetFileName(inputPath));
                 }
 
+                // Prevent accidental overwriting of source file
+                if (FileSystemPaths.PathsEqual(outputPath, inputPath))
+                {
+                    log?.LogWarning("Attempted to overwrite source file during resize: {Path}", inputPath);
+                    return new ResizeResult(ResizeStatus.Failed, null, "error.overwrite_source_prevented", inputPath);
+                }
+
                 var outDir = Path.GetDirectoryName(outputPath);
                 if (!string.IsNullOrEmpty(outDir))
                     Directory.CreateDirectory(outDir);
+
+                tempOutputPath = Path.Combine(outDir ?? ".", $".tmp_{Guid.NewGuid():N}_{Path.GetFileName(outputPath)}");
 
                 using var magick = new MagickImage(inputPath);
                 magick.AutoOrient();
@@ -301,7 +338,14 @@ public static class ResizeService
                     magick.Quality = (uint)Math.Clamp(options.Quality, 10, 100);
                 }
 
-                magick.Write(outputPath);
+                magick.Write(tempOutputPath);
+
+                var writtenInfo = new FileInfo(tempOutputPath);
+                if (!writtenInfo.Exists || writtenInfo.Length == 0)
+                    throw new IOException("Resize produced an empty output file.");
+
+                // Atomic replacement of target file
+                File.Move(tempOutputPath, outputPath, overwrite: true);
 
                 if (appliedPreset.Output.KeepDates || store.Settings.KeepFileDates)
                 {
@@ -318,10 +362,37 @@ public static class ResizeService
 
                 return new ResizeResult(ResizeStatus.Success, outputPath, null, null);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                log?.LogError(ex, "Permission denied resizing image {File}", inputPath);
+                return new ResizeResult(ResizeStatus.Failed, null, "error.permission_denied", ex.Message);
+            }
+            catch (IOException ex) when (FileSystemPaths.IsDiskFull(ex))
+            {
+                log?.LogError(ex, "Disk full resizing image {File}", inputPath);
+                return new ResizeResult(ResizeStatus.Failed, null, "error.not_enough_space", ex.Message);
+            }
+            catch (FileNotFoundException ex)
+            {
+                log?.LogError(ex, "Input file not found resizing {File}", inputPath);
+                return new ResizeResult(ResizeStatus.Failed, null, "error.file_not_found", ex.Message);
+            }
+            catch (Exception ex) when (FileSystemPaths.IsCorrupt(ex))
+            {
+                log?.LogError(ex, "Corrupt file resizing image {File}", inputPath);
+                return new ResizeResult(ResizeStatus.Failed, null, "error.corrupt_file", ex.Message);
+            }
             catch (Exception ex)
             {
                 log?.LogError(ex, "Failed to resize image {File}", inputPath);
                 return new ResizeResult(ResizeStatus.Failed, null, "error.conversion_failed", ex.Message);
+            }
+            finally
+            {
+                if (tempOutputPath is not null && File.Exists(tempOutputPath))
+                {
+                    try { File.Delete(tempOutputPath); } catch { }
+                }
             }
         });
     }

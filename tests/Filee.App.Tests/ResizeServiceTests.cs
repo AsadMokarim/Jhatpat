@@ -390,4 +390,125 @@ public class ResizeServiceTests
                 Directory.Delete(folder, recursive: true);
         }
     }
+
+    [AvaloniaFact]
+    public async Task ResizeFileAsync_rejects_empty_file()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-resize-empty-").FullName;
+        try
+        {
+            var emptyFile = Path.Combine(folder, "empty.png");
+            File.WriteAllBytes(emptyFile, []);
+
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+            var preset = BuiltInData.CreatePresets().First(p => p.Id == "tool-resize");
+
+            var result = await ResizeService.ResizeFileAsync(emptyFile, new ResizeOptions(), preset, store, loc);
+            Assert.Equal(ResizeStatus.Failed, result.Status);
+            Assert.Equal("error.empty_file", result.ErrorKey);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+                Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task ResizeFileAsync_rejects_missing_file()
+    {
+        TestServices.EnsureInitialized("en");
+        var missingFile = Path.Combine(Path.GetTempPath(), $"missing_{Guid.NewGuid():N}.png");
+        var store = AppHost.Get<UserDataStore>();
+        var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+        var preset = BuiltInData.CreatePresets().First(p => p.Id == "tool-resize");
+
+        var result = await ResizeService.ResizeFileAsync(missingFile, new ResizeOptions(), preset, store, loc);
+        Assert.Equal(ResizeStatus.Failed, result.Status);
+        Assert.Equal("error.file_not_found", result.ErrorKey);
+    }
+
+    [AvaloniaFact]
+    public async Task ResizeFileAsync_prevents_source_file_overwrite()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-resize-overwrite-").FullName;
+        try
+        {
+            var source = Path.Combine(folder, "source.png");
+            using (var bmp = CreateBitmap(100, 100, SKColors.Green))
+            using (var s = File.OpenWrite(source))
+            {
+                bmp.Encode(s, SKEncodedImageFormat.Png, 100);
+            }
+            var initialBytes = File.ReadAllBytes(source);
+
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+            var preset = BuiltInData.CreatePresets().First(p => p.Id == "tool-resize");
+
+            var result = await ResizeService.ResizeFileAsync(
+                source,
+                new ResizeOptions { TargetWidth = 50, TargetHeight = 50 },
+                preset,
+                store,
+                loc,
+                customOutputPath: source);
+
+            Assert.Equal(ResizeStatus.Failed, result.Status);
+            Assert.Equal("error.overwrite_source_prevented", result.ErrorKey);
+
+            // Source file must remain untouched
+            Assert.True(File.Exists(source));
+            var currentBytes = File.ReadAllBytes(source);
+            Assert.Equal(initialBytes, currentBytes);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+                Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task ResizeFileAsync_uses_atomic_staging_and_cleans_temporary_files()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-resize-atomic-").FullName;
+        try
+        {
+            var source = Path.Combine(folder, "source.png");
+            using (var bmp = CreateBitmap(100, 100, SKColors.Green))
+            using (var s = File.OpenWrite(source))
+            {
+                bmp.Encode(s, SKEncodedImageFormat.Png, 100);
+            }
+
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+            var preset = BuiltInData.CreatePresets().First(p => p.Id == "tool-resize");
+
+            var result = await ResizeService.ResizeFileAsync(
+                source,
+                new ResizeOptions { TargetWidth = 50, TargetHeight = 50 },
+                preset,
+                store,
+                loc);
+
+            Assert.Equal(ResizeStatus.Success, result.Status);
+            Assert.NotNull(result.OutputPath);
+            Assert.True(File.Exists(result.OutputPath));
+
+            // Ensure no leftover .tmp_* files exist in the folder
+            var strayTemps = Directory.GetFiles(folder, ".tmp_*");
+            Assert.Empty(strayTemps);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+                Directory.Delete(folder, recursive: true);
+        }
+    }
 }

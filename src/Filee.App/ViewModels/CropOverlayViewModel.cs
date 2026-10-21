@@ -235,6 +235,39 @@ public sealed partial class CropOverlayViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand]
+    public async Task CopyToClipboardAsync()
+    {
+        if (IsBusy || IsFinished || _closed || CurrentIndex >= _files.Count)
+            return;
+
+        IsBusy = true;
+        try
+        {
+            var path = _files[CurrentIndex];
+            var x = (int)Math.Round(CurrentCropRect.X * OriginalWidth);
+            var y = (int)Math.Round(CurrentCropRect.Y * OriginalHeight);
+            var w = (int)Math.Round(CurrentCropRect.Width * OriginalWidth);
+            var h = (int)Math.Round(CurrentCropRect.Height * OriginalHeight);
+
+            using var bmp = await Task.Run(() => CropService.CropToBitmap(path, x, y, w, h));
+            var clipboard = AppHost.Get<IClipboardService>();
+            var copied = await clipboard.CopyBitmapToClipboardAsync(bmp);
+            if (copied)
+            {
+                AppHost.Get<WindowService>().ShowToastNotification(_loc["clipboard.copied_to_clipboard"]);
+            }
+        }
+        catch (Exception ex)
+        {
+            _log?.LogError(ex, "Failed to copy cropped image to clipboard.");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
     public void Reset()
     {
         SelectedAspect = "free";
