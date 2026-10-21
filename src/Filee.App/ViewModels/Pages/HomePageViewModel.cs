@@ -1,6 +1,10 @@
 // Home: drop zone (handled in the view) and recent conversions.
 
 using System.Collections.ObjectModel;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,12 +22,14 @@ public sealed partial class HistoryItemViewModel : ObservableObject
     private readonly HistoryEntry _entry;
     private readonly IPlatformServices _platform;
     private readonly ConversionService? _conversions;
+    private readonly Action<HistoryEntry>? _onRemove;
 
-    public HistoryItemViewModel(HistoryEntry entry, ILocalizer loc, IPlatformServices platform, ConversionService? conversions = null)
+    public HistoryItemViewModel(HistoryEntry entry, ILocalizer loc, IPlatformServices platform, ConversionService? conversions = null, Action<HistoryEntry>? onRemove = null)
     {
         _entry = entry;
         _platform = platform;
         _conversions = conversions;
+        _onRemove = onRemove;
         Title = entry.PresetName;
         Subtitle = entry.Sources.Count == 1 ? Path.GetFileName(entry.Sources[0]) : loc.Format("home.files", entry.Sources.Count);
         Time = entry.FinishedAt.Date == DateTime.Today ? entry.FinishedAt.ToString("t") : entry.FinishedAt.ToString("d");
@@ -33,6 +39,8 @@ public sealed partial class HistoryItemViewModel : ObservableObject
         HasErrors = Failures.Count > 0 || entry.State == JobState.Failed;
         FailureSummary = loc.Format("home.failed_files", Failures.Count);
         HasOutputs = entry.Outputs.Any(ConversionService.Exists);
+        PrimaryOutput = entry.Outputs.FirstOrDefault(ConversionService.Exists);
+        CanOpenOutput = PrimaryOutput is not null && File.Exists(PrimaryOutput);
         // Only entries that remember their preset (Filee 1.8 and later) and still have a failed file to convert.
         CanRetry = conversions is not null && entry.Preset is not null && entry.Failures.Any(f => ConversionService.Exists(f.Source));
     }
@@ -42,6 +50,8 @@ public sealed partial class HistoryItemViewModel : ObservableObject
     public string Time { get; }
     public bool HasErrors { get; }
     public bool HasOutputs { get; }
+    public string? PrimaryOutput { get; }
+    public bool CanOpenOutput { get; }
 
     /// <summary>The files that failed and why.</summary>
     public IReadOnlyList<FailureItem> Failures { get; }
@@ -74,6 +84,37 @@ public sealed partial class HistoryItemViewModel : ObservableObject
         if (output is not null)
             _platform.RevealInFileManager(output);
     }
+
+    internal static System.Diagnostics.ProcessStartInfo CreateOpenProcessStartInfo(string path)
+    {
+        if (OperatingSystem.IsWindows())
+            return new System.Diagnostics.ProcessStartInfo(path) { UseShellExecute = true };
+
+        var opener = OperatingSystem.IsMacOS() ? "open" : "xdg-open";
+        var start = new System.Diagnostics.ProcessStartInfo(opener) { UseShellExecute = false };
+        start.ArgumentList.Add(path);
+        return start;
+    }
+
+    [RelayCommand]
+    private void OpenOutput()
+    {
+        if (PrimaryOutput is not null && File.Exists(PrimaryOutput))
+        {
+            try
+            {
+                var start = CreateOpenProcessStartInfo(PrimaryOutput);
+                System.Diagnostics.Process.Start(start)?.Dispose();
+            }
+            catch
+            {
+                _platform.RevealInFileManager(PrimaryOutput);
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void Remove() => _onRemove?.Invoke(_entry);
 }
 
 public sealed partial class HomePageViewModel : ObservableObject, IDisposable
@@ -164,6 +205,161 @@ public sealed partial class HomePageViewModel : ObservableObject, IDisposable
     /// <summary>A search that matches nothing.</summary>
     [ObservableProperty] private bool _noMatches;
 
+    [ObservableProperty] private bool _isCapturing;
+    [ObservableProperty] private bool _isPasting;
+    [ObservableProperty] private bool _isBrowsing;
+
+    public bool IsScreenshotSupported => AppHost.Get<IScreenshotService>().IsSupported;
+
+    private static PixelPoint GetMainWindowCenter(out Window? mainWindow)
+    {
+        mainWindow = (Avalonia.Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+        if (mainWindow is not null && mainWindow.IsVisible)
+        {
+            return mainWindow.PointToScreen(new Point(mainWindow.Bounds.Width / 2, mainWindow.Bounds.Height / 2));
+        }
+        return new PixelPoint(0, 0);
+    }
+
+    [RelayCommand]
+    public async Task PasteImageAsync()
+    {
+        if (IsPasting)
+            return;
+
+        IsPasting = true;
+        try
+        {
+            var clipboard = AppHost.Get<IClipboardService>();
+            var path = await clipboard.PasteImageToTempFileAsync();
+            if (path is not null && File.Exists(path))
+            {
+                var radial = AppHost.Get<RadialController>();
+                var center = GetMainWindowCenter(out _);
+                radial.ShowForFiles(center.X, center.Y, [path]);
+            }
+            else
+            {
+                AppHost.Get<WindowService>().ShowToastNotification(_loc["clipboard.no_image_in_clipboard"]);
+            }
+        }
+        catch (Exception)
+        {
+            AppHost.Get<WindowService>().ShowToastNotification(_loc["clipboard.paste_failed"]);
+        }
+        finally
+        {
+            IsPasting = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task CaptureScreenshotAsync()
+    {
+        if (IsCapturing)
+            return;
+
+        IsCapturing = true;
+        var desktop = Avalonia.Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
+        var main = desktop?.MainWindow;
+        var previousState = main?.WindowState ?? WindowState.Normal;
+
+        try
+        {
+            if (main is not null && main.IsVisible)
+            {
+                main.WindowState = WindowState.Minimized;
+                await Task.Delay(300);
+            }
+
+            var screenshot = AppHost.Get<IScreenshotService>();
+            var path = await screenshot.CaptureInteractiveAsync();
+
+            if (main is not null && main.IsVisible)
+            {
+                main.WindowState = previousState;
+                main.Show();
+                main.Activate();
+            }
+
+            if (path is not null && File.Exists(path))
+            {
+                var radial = AppHost.Get<RadialController>();
+                var center = GetMainWindowCenter(out _);
+                radial.ShowForFiles(center.X, center.Y, [path]);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            if (main is not null && main.IsVisible)
+            {
+                main.WindowState = previousState;
+                main.Show();
+                main.Activate();
+            }
+        }
+        catch (Exception)
+        {
+            if (main is not null && main.IsVisible)
+            {
+                main.WindowState = previousState;
+                main.Show();
+                main.Activate();
+            }
+            AppHost.Get<WindowService>().ShowToastNotification(_loc["screenshot.failed"]);
+        }
+        finally
+        {
+            IsCapturing = false;
+        }
+    }
+
+    [RelayCommand]
+    public async Task BrowseFilesAsync()
+    {
+        if (IsBrowsing)
+            return;
+
+        IsBrowsing = true;
+        try
+        {
+            var desktop = Avalonia.Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime;
+            var main = desktop?.MainWindow;
+            var topLevel = main is not null ? TopLevel.GetTopLevel(main) : null;
+            if (topLevel is null)
+                return;
+
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                Title = _loc["home.browse_title"],
+                AllowMultiple = true
+            });
+
+            if (files is { Count: > 0 })
+            {
+                var paths = files
+                    .Select(f => f.Path.LocalPath)
+                    .Where(p => !string.IsNullOrWhiteSpace(p) && (File.Exists(p) || Directory.Exists(p)))
+                    .ToList();
+
+                if (paths.Count > 0)
+                {
+                    var radial = AppHost.Get<RadialController>();
+                    var center = GetMainWindowCenter(out _);
+                    radial.ShowForFiles(center.X, center.Y, paths);
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // Cancelled or dismissed
+        }
+        finally
+        {
+            IsBrowsing = false;
+        }
+    }
+
     private void Reload()
     {
         var query = Search.Trim();
@@ -174,7 +370,7 @@ public sealed partial class HomePageViewModel : ObservableObject, IDisposable
             .ToList();
         History.Clear();
         foreach (var entry in entries)
-            History.Add(new HistoryItemViewModel(entry, _loc, _platform, _conversions));
+            History.Add(new HistoryItemViewModel(entry, _loc, _platform, _conversions, e => { _store.RemoveHistory(e.JobId); Reload(); }));
         IsEmpty = _store.History.Count == 0;
         NoMatches = !IsEmpty && History.Count == 0;
     }

@@ -4,18 +4,27 @@
              xmlns:app="using:Filee.App.ViewModels"
              x:Class="Filee.App.Views.Pages.HomePage"
              x:DataType="vm:HomePageViewModel">
+  <UserControl.KeyBindings>
+    <KeyBinding Gesture="Ctrl+V" Command="{Binding PasteImageCommand}" />
+    <KeyBinding Gesture="Cmd+V" Command="{Binding PasteImageCommand}" />
+    <KeyBinding Gesture="Ctrl+O" Command="{Binding BrowseFilesCommand}" />
+    <KeyBinding Gesture="Cmd+O" Command="{Binding BrowseFilesCommand}" />
+  </UserControl.KeyBindings>
   <UserControl.Styles>
     <Style Selector="Border#DropZone">
       <Setter Property="Transitions">
         <Transitions>
           <BrushTransition Property="Background" Duration="0:0:0.2" />
+          <BrushTransition Property="BorderBrush" Duration="0:0:0.2" />
+          <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.25" />
           <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.3" Easing="BackEaseOut" />
         </Transitions>
       </Setter>
     </Style>
     <Style Selector="Border#DropZone.over">
-      <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+      <Setter Property="Background" Value="{DynamicResource AccentFaintBrush}" />
       <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="BoxShadow" Value="{DynamicResource GlassGlowShadow}" />
       <Setter Property="RenderTransform" Value="scale(1.015)" />
     </Style>
     <Style Selector="PathIcon.chevron">
@@ -56,15 +65,37 @@
 
     <!-- Drop zone: files dropped here open the donut toolbar at the cursor. -->
     <Border x:Name="DropZone" DragDrop.AllowDrop="True" MinHeight="220"
-            Background="{DynamicResource AccentFaintBrush}" BorderBrush="{DynamicResource AccentSoftBrush}"
-            BorderThickness="2" CornerRadius="{DynamicResource SoftRadiusLarge}" Padding="24">
-      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
-        <Border Width="64" Height="64" CornerRadius="999" Background="{DynamicResource AccentSoftBrush}" HorizontalAlignment="Center">
+            Background="{DynamicResource GlassCardBrush}" BorderBrush="{DynamicResource GlassBorderBrush}"
+            BorderThickness="1.5" CornerRadius="{DynamicResource SoftRadiusLarge}" Padding="26"
+            BoxShadow="{DynamicResource GlassShadow}">
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+        <Border Width="64" Height="64" CornerRadius="18" Background="{DynamicResource AccentSoftBrush}" HorizontalAlignment="Center"
+                BoxShadow="0 4 16 0 #28FF7418">
           <PathIcon Width="28" Height="28" Data="{StaticResource Icon.Upload}" Foreground="{DynamicResource AccentStrongBrush}" />
         </Border>
         <TextBlock Classes="h2" HorizontalAlignment="Center" Text="{DynamicResource home.drop_title}" />
         <TextBlock Classes="muted" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="460"
                    Text="{Binding DropHint}" />
+        <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center" Margin="0,6,0,0">
+          <Button Classes="accent" Command="{Binding PasteImageCommand}" Padding="15,8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <PathIcon Width="14" Height="14" Data="{StaticResource Icon.Copy}" />
+              <TextBlock Text="{DynamicResource clipboard.paste_image}" FontWeight="SemiBold" />
+            </StackPanel>
+          </Button>
+          <Button Classes="glass" Command="{Binding BrowseFilesCommand}" Padding="15,8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <PathIcon Width="14" Height="14" Data="{StaticResource Icon.Folder}" />
+              <TextBlock Text="{DynamicResource home.browse_files}" />
+            </StackPanel>
+          </Button>
+          <Button Classes="glass" Command="{Binding CaptureScreenshotCommand}" IsVisible="{Binding IsScreenshotSupported}" Padding="15,8">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <PathIcon Width="14" Height="14" Data="{StaticResource Icon.Camera}" />
+              <TextBlock Text="{DynamicResource screenshot.capture}" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
       </StackPanel>
     </Border>
 
@@ -93,12 +124,23 @@
             <Border Classes="card" Padding="14,10">
               <StackPanel Spacing="8">
                 <DockPanel>
-                  <Button DockPanel.Dock="Right" Command="{Binding OpenFolderCommand}" IsVisible="{Binding HasOutputs}" Padding="10,5">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                      <PathIcon Width="13" Height="13" Data="{StaticResource Icon.Folder}" />
-                      <TextBlock Text="{DynamicResource home.open_folder}" />
-                    </StackPanel>
-                  </Button>
+                  <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
+                    <Button Classes="glass" Command="{Binding OpenOutputCommand}" IsVisible="{Binding CanOpenOutput}" Padding="10,5">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Width="13" Height="13" Data="{StaticResource Icon.Check}" />
+                        <TextBlock Text="{DynamicResource home.open_file}" />
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="glass" Command="{Binding OpenFolderCommand}" IsVisible="{Binding HasOutputs}" Padding="10,5">
+                      <StackPanel Orientation="Horizontal" Spacing="6">
+                        <PathIcon Width="13" Height="13" Data="{StaticResource Icon.Folder}" />
+                        <TextBlock Text="{DynamicResource home.open_folder}" />
+                      </StackPanel>
+                    </Button>
+                    <Button Classes="ghost" Command="{Binding RemoveCommand}" ToolTip.Tip="{DynamicResource home.remove_entry}" Padding="8,5">
+                      <PathIcon Width="13" Height="13" Data="{StaticResource Icon.Delete}" Foreground="{DynamicResource TextSecondaryBrush}" />
+                    </Button>
+                  </StackPanel>
                   <Border DockPanel.Dock="Left" Width="32" Height="32" CornerRadius="999" Margin="0,0,12,0"
                           Background="{DynamicResource AccentSoftBrush}">
                     <Panel>
