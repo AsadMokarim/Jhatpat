@@ -970,14 +970,14 @@ public class RenderTests
             Assert.Equal(Avalonia.Media.Color.Parse("#101820"), Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(window.Background).Color);
             Assert.Equal(Avalonia.Media.Color.Parse("#E8E4D8"), BrushColor(window, "TextPrimaryBrush"));
             // Colours the file does not set, and the other variant, keep Filee's own.
-            Assert.Equal(Avalonia.Media.Color.Parse("#AEACA4"), BrushColor(window, "TextSecondaryBrush"));
-            Assert.Equal(Avalonia.Media.Color.Parse("#F6F5F1"), BrushColor(window, "PageBrush", Avalonia.Styling.ThemeVariant.Light));
+            Assert.Equal(Avalonia.Media.Color.Parse("#ADA498"), BrushColor(window, "TextSecondaryBrush"));
+            Assert.Equal(Avalonia.Media.Color.Parse("#FAF5ED"), BrushColor(window, "PageBrush", Avalonia.Styling.ThemeVariant.Light));
             Save(window, "page-theme-custom.png");
 
             // Applying without a theme file (deleted, or emptied) restores the built-in colours on the open window.
             service.Apply(dark, "en");
             Pump();
-            Assert.Equal(Avalonia.Media.Color.Parse("#1B1B19"), Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(window.Background).Color);
+            Assert.Equal(Avalonia.Media.Color.Parse("#161311"), Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(window.Background).Color);
             window.Close();
 
             service.Apply(dark, "en", custom);
@@ -987,7 +987,8 @@ public class RenderTests
             donut.Show();
             donut.DonutControl.SetExternalHighlight(1);
             Pump();
-            Assert.Equal(Avalonia.Media.Color.Parse("#18222C"), Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(donut.DonutControl.SliceBrush).Color);
+            Assert.Equal(Avalonia.Media.Color.Parse("#B82B241F"), Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(donut.DonutControl.SliceBrush).Color);
+            Assert.Equal(Avalonia.Media.Color.Parse("#E8E4D8"), Assert.IsAssignableFrom<Avalonia.Media.ISolidColorBrush>(donut.DonutControl.Foreground).Color);
             Save(donut, "donut-custom-theme.png");
             donut.Close();
         }
