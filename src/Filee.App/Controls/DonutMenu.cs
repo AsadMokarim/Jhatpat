@@ -332,8 +332,29 @@ public sealed partial class DonutMenu : Control
     {
         if (_externalHighlight == index && _externalCenterHot == centerHot)
             return;
+        var prev = _externalHighlight;
         _externalHighlight = index;
         _externalCenterHot = centerHot;
+
+        // When switching directly from one dial to another, immediately clear the previous dial
+        // and seamlessly transfer active hover state so moving across dials is smooth with zero delay.
+        if (index >= 0)
+        {
+            for (var i = 0; i < _hover.Length; i++)
+            {
+                if (i != index)
+                {
+                    _hover[i].Value = 0;
+                    _hover[i].Velocity = 0;
+                }
+            }
+            if (prev >= 0 && prev < _hover.Length && index < _hover.Length)
+            {
+                _hover[index].Value = Math.Max(_hover[index].Value, 1.0);
+                _hover[index].Velocity = 0;
+            }
+        }
+
         ActiveIndexChanged?.Invoke(this, ActiveIndex);
         StartAnimation();
     }
@@ -693,7 +714,28 @@ public sealed partial class DonutMenu : Control
     {
         if (_hoverIndex == index)
             return;
+        var prev = _hoverIndex;
         _hoverIndex = index;
+
+        // When switching directly from one dial to another, immediately clear the previous dial
+        // and seamlessly transfer active hover state so moving across dials is smooth with zero delay.
+        if (index >= 0)
+        {
+            for (var i = 0; i < _hover.Length; i++)
+            {
+                if (i != index)
+                {
+                    _hover[i].Value = 0;
+                    _hover[i].Velocity = 0;
+                }
+            }
+            if (prev >= 0 && prev < _hover.Length && index < _hover.Length)
+            {
+                _hover[index].Value = Math.Max(_hover[index].Value, 1.0);
+                _hover[index].Velocity = 0;
+            }
+        }
+
         ActiveIndexChanged?.Invoke(this, ActiveIndex);
         StartAnimation();
     }
@@ -873,10 +915,31 @@ public sealed partial class DonutMenu : Control
         }
         else
         {
-            // Popping out bounces; letting go settles without a bounce: one below zero would make the faded accent
-            // flash once more on its way back.
+            // Popping out bounces; letting go settles without a bounce.
+            // When moving directly between dials, non-active dials clear with zero delay.
             for (var i = 0; i < _hover.Length; i++)
-                active |= i == ActiveIndex ? _hover[i].Step(1, dt) : _hover[i].Step(0, dt, 320, CriticalDamping);
+            {
+                if (i == ActiveIndex)
+                {
+                    active |= _hover[i].Step(1, dt, 420, 26);
+                }
+                else
+                {
+                    if (ActiveIndex >= 0)
+                    {
+                        if (_hover[i].Value > 0 || _hover[i].Velocity != 0)
+                        {
+                            _hover[i].Value = 0;
+                            _hover[i].Velocity = 0;
+                            active = true;
+                        }
+                    }
+                    else
+                    {
+                        active |= _hover[i].Step(0, dt, 360, CriticalDamping);
+                    }
+                }
+            }
             active |= _centerPulse.Step(0, dt, 260, 12);
             // A soft bounce opening, like the slices popping out; folding away settles without one. The bounce grows the
             // ring by about a pixel, well inside the room kept for it (SubRingSpace).
@@ -999,11 +1062,11 @@ public sealed partial class DonutMenu : Control
                 var emphasis = i == _dropTargetIndex ? 1.0 : hover;
                 if (emphasis > 0.01 && item.IsEnabled)
                 {
-                    var highlightBrush = WithOpacity(GetHoverBrush(), 0.95 * Math.Clamp(emphasis, 0, 1));
-                    context.DrawGeometry(highlightBrush, null, wedge);
+                    using (context.PushOpacity(0.95 * Math.Clamp(emphasis, 0, 1)))
+                        context.DrawGeometry(GetHoverBrush(), null, wedge);
                 }
 
-                var hot = (i == ActiveIndex || i == _dropTargetIndex) && item.IsEnabled;
+                var hot = ((i == ActiveIndex && emphasis > 0.1) || i == _dropTargetIndex) && item.IsEnabled;
                 DrawLabel(context, item, center, (r1Slice + r2Slice) / 2, mid, span * (r1Slice + r2Slice) / 2 - 10,
                     r2Slice - r1Slice - 16, typeface, typefaceRegular, hot);
             }
@@ -1243,6 +1306,14 @@ public sealed partial class DonutMenu : Control
     private static IBrush? WithOpacity(IBrush? brush, double opacity) => brush switch
     {
         ISolidColorBrush solid => new SolidColorBrush(solid.Color, solid.Opacity * opacity),
+        LinearGradientBrush lgb => new LinearGradientBrush
+        {
+            StartPoint = lgb.StartPoint,
+            EndPoint = lgb.EndPoint,
+            SpreadMethod = lgb.SpreadMethod,
+            Opacity = lgb.Opacity * opacity,
+            GradientStops = lgb.GradientStops
+        },
         _ => brush,
     };
 
