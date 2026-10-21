@@ -14,7 +14,9 @@ public sealed class TrayService(UserDataStore store, ILocalizer loc, IPlatformSe
     UpdateService updates)
 {
     private TrayIcon? _tray;
-    private NativeMenuItem? _open, _pause, _quit, _update;
+    private NativeMenuItem? _open, _pause, _startWithSystem, _quit, _update;
+
+    internal NativeMenuItem? StartWithSystemMenuItem => _startWithSystem;
 
     public void Create(Application app)
     {
@@ -27,6 +29,15 @@ public sealed class TrayService(UserDataStore store, ILocalizer loc, IPlatformSe
             store.Settings.Paused = !store.Settings.Paused;
             store.SaveSettings();
         };
+        _startWithSystem = new NativeMenuItem
+        {
+            ToggleType = MenuItemToggleType.CheckBox,
+        };
+        _startWithSystem.Click += (_, _) =>
+        {
+            store.Settings.StartWithSystem = !store.Settings.StartWithSystem;
+            store.SaveSettings();
+        };
         _quit = new NativeMenuItem();
         _quit.Click += (_, _) => (app.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.Shutdown();
         _update = new NativeMenuItem();
@@ -37,7 +48,7 @@ public sealed class TrayService(UserDataStore store, ILocalizer loc, IPlatformSe
             Icon = new WindowIcon(iconStream),
             // Set before the icon is attached: on macOS Avalonia passes the tooltip to native code, which can't take null.
             ToolTipText = "Jhatpat",
-            Menu = new NativeMenu { Items = { _open, _pause, new NativeMenuItemSeparator(), _quit } },
+            Menu = new NativeMenu { Items = { _open, _pause, _startWithSystem, new NativeMenuItemSeparator(), _quit } },
             IsVisible = platform.SupportsDockVisibility ? store.Settings.ShowMenuBarIcon : true,
         };
         _tray.Clicked += (_, _) => windows.ShowMain();
@@ -73,6 +84,8 @@ public sealed class TrayService(UserDataStore store, ILocalizer loc, IPlatformSe
         }
         _open!.Header = loc["tray.open"];
         _pause!.Header = store.Settings.Paused ? loc["tray.resume"] : loc["tray.pause"];
+        _startWithSystem!.Header = loc["tray.start_with_system"];
+        _startWithSystem.IsChecked = store.Settings.StartWithSystem;
         _quit!.Header = loc["tray.quit"];
         var drag = store.Settings.Triggers.FirstOrDefault(t => t.Enabled && t.Kind == TriggerKind.Drag);
         _tray.ToolTipText = store.Settings.Paused

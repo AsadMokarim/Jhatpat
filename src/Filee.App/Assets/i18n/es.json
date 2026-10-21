@@ -14,6 +14,7 @@
   "tray.pause": "Pausar atajos",
   "tray.resume": "Reanudar atajos",
   "tray.quit": "Salir",
+  "tray.start_with_system": "Iniciar en el arranque",
   "tray.update": "Actualizar a {0}",
   "tray.tooltip": "Jhatpat: mantén presionado {0} y arrastra archivos",
   "close.title": "¿Mantener Jhatpat en ejecución?",

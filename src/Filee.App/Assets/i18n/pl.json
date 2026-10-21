@@ -14,6 +14,7 @@
   "tray.pause": "Wstrzymaj skróty",
   "tray.resume": "Wznów skróty",
   "tray.quit": "Zakończ",
+  "tray.start_with_system": "Uruchamiaj przy starcie",
   "tray.update": "Aktualizuj do {0}",
   "tray.tooltip": "Jhatpat: przytrzymaj {0} i przeciągnij pliki",
   "close.title": "Pozostawić Jhatpat uruchomione?",
