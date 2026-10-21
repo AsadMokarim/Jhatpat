@@ -3,6 +3,7 @@
 using System.IO;
 using Avalonia.Media.Imaging;
 using Filee.Core.Localization;
+using Filee.Core.Platform;
 using Filee.Core.Presets;
 using Filee.Core.Settings;
 using Filee.Engines.Magick;
@@ -308,6 +309,10 @@ public static class FramingService
         if (!File.Exists(inputPath))
             throw new FileNotFoundException("Image file not found.", inputPath);
 
+        var fi = new FileInfo(inputPath);
+        if (fi.Length == 0)
+            throw new InvalidDataException("The file is empty (0 bytes).");
+
         // Read through Magick to ensure proper EXIF orientation and format support
         using var magick = new MagickImage(inputPath);
         magick.AutoOrient();
@@ -317,7 +322,7 @@ public static class FramingService
         mem.Position = 0;
         var bitmap = SKBitmap.Decode(mem);
         if (bitmap is null)
-            throw new InvalidOperationException($"Could not decode image at {inputPath}");
+            throw new InvalidDataException($"Could not decode image at {inputPath}");
         return bitmap;
     }
 
@@ -396,8 +401,23 @@ public static class FramingService
     {
         return await Task.Run(() =>
         {
+            string? tempOutputPath = null;
             try
             {
+                if (!File.Exists(inputPath))
+                    return new FramingResult(FramingStatus.Failed, null, "error.file_not_found", inputPath);
+
+                try
+                {
+                    var fi = new FileInfo(inputPath);
+                    if (fi.Length == 0)
+                        return new FramingResult(FramingStatus.Failed, null, "error.empty_file", inputPath);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    return new FramingResult(FramingStatus.Failed, null, "error.permission_denied", ex.Message);
+                }
+
                 var ext = Path.GetExtension(inputPath).TrimStart('.');
                 if (options.BackgroundType == FramingBackgroundType.Transparent &&
                     (ext.Equals("jpg", StringComparison.OrdinalIgnoreCase) || ext.Equals("jpeg", StringComparison.OrdinalIgnoreCase)))
@@ -415,9 +435,18 @@ public static class FramingService
                     return new FramingResult(FramingStatus.SkippedExists, null, "toast.skipped", Path.GetFileName(inputPath));
                 }
 
+                // Prevent accidental overwriting of source file
+                if (FileSystemPaths.PathsEqual(outputPath, inputPath))
+                {
+                    log?.LogWarning("Attempted to overwrite source file during framing: {Path}", inputPath);
+                    return new FramingResult(FramingStatus.Failed, null, "error.overwrite_source_prevented", inputPath);
+                }
+
                 var outDir = Path.GetDirectoryName(outputPath);
                 if (!string.IsNullOrEmpty(outDir))
                     Directory.CreateDirectory(outDir);
+
+                tempOutputPath = Path.Combine(outDir ?? ".", $".tmp_{Guid.NewGuid():N}_{Path.GetFileName(outputPath)}");
 
                 using var source = LoadSourceBitmap(inputPath);
                 using var framed = RenderFramedBitmap(source, options);
@@ -432,10 +461,20 @@ public static class FramingService
                             : SKEncodedImageFormat.Png,
                     95);
 
-                using (var fileStream = File.Open(outputPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                if (data is null)
+                    throw new InvalidOperationException("Failed to encode framed image.");
+
+                using (var fileStream = File.Open(tempOutputPath, FileMode.Create, FileAccess.Write, FileShare.None))
                 {
                     data.SaveTo(fileStream);
                 }
+
+                var writtenInfo = new FileInfo(tempOutputPath);
+                if (!writtenInfo.Exists || writtenInfo.Length == 0)
+                    throw new IOException("Framing produced an empty output file.");
+
+                // Atomic replacement of target file
+                File.Move(tempOutputPath, outputPath, overwrite: true);
 
                 if (appliedPreset.Output.KeepDates || store.Settings.KeepFileDates)
                 {
@@ -452,10 +491,37 @@ public static class FramingService
 
                 return new FramingResult(FramingStatus.Success, outputPath, null, null);
             }
+            catch (UnauthorizedAccessException ex)
+            {
+                log?.LogError(ex, "Permission denied framing image {File}", inputPath);
+                return new FramingResult(FramingStatus.Failed, null, "error.permission_denied", ex.Message);
+            }
+            catch (IOException ex) when (FileSystemPaths.IsDiskFull(ex))
+            {
+                log?.LogError(ex, "Disk full framing image {File}", inputPath);
+                return new FramingResult(FramingStatus.Failed, null, "error.not_enough_space", ex.Message);
+            }
+            catch (FileNotFoundException ex)
+            {
+                log?.LogError(ex, "Input file not found framing {File}", inputPath);
+                return new FramingResult(FramingStatus.Failed, null, "error.file_not_found", ex.Message);
+            }
+            catch (Exception ex) when (FileSystemPaths.IsCorrupt(ex))
+            {
+                log?.LogError(ex, "Corrupt file framing image {File}", inputPath);
+                return new FramingResult(FramingStatus.Failed, null, "error.corrupt_file", ex.Message);
+            }
             catch (Exception ex)
             {
                 log?.LogError(ex, "Failed to frame image {File}", inputPath);
                 return new FramingResult(FramingStatus.Failed, null, "error.conversion_failed", ex.Message);
+            }
+            finally
+            {
+                if (tempOutputPath is not null && File.Exists(tempOutputPath))
+                {
+                    try { File.Delete(tempOutputPath); } catch { }
+                }
             }
         });
     }

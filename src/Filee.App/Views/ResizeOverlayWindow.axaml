@@ -4,13 +4,18 @@
         x:Class="Filee.App.Views.ResizeOverlayWindow"
         x:DataType="vm:ResizeOverlayViewModel"
         Title="{DynamicResource resize.title}"
-        Icon="avares://Filee/Assets/Icons/filee.ico"
+        Icon="avares://Filee/Assets/Icons/jhatpat.ico"
         Width="1080" Height="740" MinWidth="820" MinHeight="580"
         WindowDecorations="None"
         Background="Transparent"
         TransparencyLevelHint="Transparent"
         Topmost="True"
         CanResize="True">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Escape" Command="{Binding CancelCommand}" />
+    <KeyBinding Gesture="Ctrl+C" Command="{Binding CopyToClipboardCommand}" />
+  </Window.KeyBindings>
 
   <Window.Styles>
     <Style Selector="Button.aspect">
@@ -52,14 +57,14 @@
 
   <!-- Overlay card with soft rounded corners and theme styling -->
   <Border Margin="16" CornerRadius="{DynamicResource SoftRadius}"
-          Background="{DynamicResource SurfaceBrush}"
-          BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1"
+          Background="{DynamicResource GlassPanelBrush}"
+          BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1"
           ClipToBounds="True"
-          BoxShadow="{DynamicResource CardShadow}">
+          BoxShadow="{DynamicResource GlassShadow}">
     <DockPanel>
       <!-- Top header bar -->
-      <Border DockPanel.Dock="Top" Height="48" Padding="16,0" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="0,0,0,1"
-              Background="{DynamicResource SurfaceAltBrush}">
+      <Border DockPanel.Dock="Top" Height="48" Padding="16,0" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,0,0,1"
+              Background="{DynamicResource GlassHeaderBrush}">
         <DockPanel VerticalAlignment="Center">
           <Button DockPanel.Dock="Right" Classes="icon" Command="{Binding CancelCommand}"
                   ToolTip.Tip="{DynamicResource common.cancel}" Margin="4,0,0,0">
@@ -76,8 +81,8 @@
               <TextBlock Text="{Binding CounterText}" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" />
             </Border>
 
-            <Border IsVisible="{Binding HasStatusNotice}" Background="{DynamicResource SurfaceBrush}"
-                    BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="8,2">
+            <Border IsVisible="{Binding HasStatusNotice}" Background="{DynamicResource GlassCardBrush}"
+                    BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1" CornerRadius="10" Padding="8,2">
               <TextBlock Text="{Binding StatusNotice}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"
                          TextTrimming="CharacterEllipsis" MaxWidth="320" />
             </Border>
@@ -86,14 +91,21 @@
       </Border>
 
       <!-- Bottom action bar -->
-      <Border DockPanel.Dock="Bottom" Padding="16,12" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="0,1,0,0"
-              Background="{DynamicResource SurfaceAltBrush}">
+      <Border DockPanel.Dock="Bottom" Padding="16,12" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,1,0,0"
+              Background="{DynamicResource GlassHeaderBrush}">
         <DockPanel>
           <Button DockPanel.Dock="Right" Content="{DynamicResource common.close}" Command="{Binding CancelCommand}"
                   IsVisible="{Binding IsFinished}" IsDefault="{Binding IsFinished}" Classes="accent" FontWeight="SemiBold" Padding="14,6" CornerRadius="6" />
           <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsVisible="{Binding IsEditing}">
+            <Button Content="{DynamicResource batch.switch_button}" Command="{Binding SwitchToBatchCommand}" Classes="aspect" />
             <Button Content="{DynamicResource frame.reset}" Command="{Binding ResetCommand}" Classes="aspect" />
             <Button Content="{DynamicResource crop.skip}" Command="{Binding SkipCommand}" IsVisible="{Binding HasMultipleFiles}" Classes="aspect" />
+            <Button Command="{Binding CopyToClipboardCommand}" Classes="aspect" ToolTip.Tip="{DynamicResource clipboard.copy_image}">
+              <StackPanel Orientation="Horizontal" Spacing="4">
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Copy}" />
+                <TextBlock Text="{DynamicResource clipboard.copy_image}" />
+              </StackPanel>
+            </Button>
             <Button Content="Save As..." Command="{Binding SaveAsCommand}" Classes="aspect" />
             <Button Content="{DynamicResource common.cancel}" Command="{Binding CancelCommand}" IsCancel="True" Classes="aspect" />
             <Button Content="{DynamicResource resize.save}" Command="{Binding ResizeAndSaveCommand}"

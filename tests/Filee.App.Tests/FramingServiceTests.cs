@@ -413,4 +413,119 @@ public class FramingServiceTests
                 Directory.Delete(folder, recursive: true);
         }
     }
+
+    [AvaloniaFact]
+    public async Task FrameFileAsync_rejects_empty_file()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-frame-empty-").FullName;
+        try
+        {
+            var emptyFile = Path.Combine(folder, "empty.png");
+            File.WriteAllBytes(emptyFile, []);
+
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+            var preset = BuiltInData.CreatePresets().First(p => p.Id == "tool-frame");
+
+            var result = await FramingService.FrameFileAsync(emptyFile, new FramingOptions(), preset, store, loc);
+            Assert.Equal(FramingStatus.Failed, result.Status);
+            Assert.Equal("error.empty_file", result.ErrorKey);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+                Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task FrameFileAsync_rejects_missing_file()
+    {
+        TestServices.EnsureInitialized("en");
+        var missingFile = Path.Combine(Path.GetTempPath(), $"missing_{Guid.NewGuid():N}.png");
+        var store = AppHost.Get<UserDataStore>();
+        var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+        var preset = BuiltInData.CreatePresets().First(p => p.Id == "tool-frame");
+
+        var result = await FramingService.FrameFileAsync(missingFile, new FramingOptions(), preset, store, loc);
+        Assert.Equal(FramingStatus.Failed, result.Status);
+        Assert.Equal("error.file_not_found", result.ErrorKey);
+    }
+
+    [AvaloniaFact]
+    public async Task FrameFileAsync_prevents_source_file_overwrite()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-frame-overwrite-").FullName;
+        try
+        {
+            var source = Path.Combine(folder, "source.png");
+            using (var bmp = CreateBitmap(100, 100, SKColors.Purple))
+            using (var s = File.OpenWrite(source))
+            {
+                bmp.Encode(s, SKEncodedImageFormat.Png, 100);
+            }
+            var initialBytes = File.ReadAllBytes(source);
+
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+            var preset = BuiltInData.CreatePresets().First(p => p.Id == "tool-frame");
+
+            var result = await FramingService.FrameFileAsync(
+                source,
+                new FramingOptions(),
+                preset,
+                store,
+                loc,
+                customOutputPath: source);
+
+            Assert.Equal(FramingStatus.Failed, result.Status);
+            Assert.Equal("error.overwrite_source_prevented", result.ErrorKey);
+
+            // Source file must remain untouched
+            Assert.True(File.Exists(source));
+            var currentBytes = File.ReadAllBytes(source);
+            Assert.Equal(initialBytes, currentBytes);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+                Directory.Delete(folder, recursive: true);
+        }
+    }
+
+    [AvaloniaFact]
+    public async Task FrameFileAsync_uses_atomic_staging_and_cleans_temporary_files()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-frame-atomic-").FullName;
+        try
+        {
+            var source = Path.Combine(folder, "source.png");
+            using (var bmp = CreateBitmap(100, 100, SKColors.Purple))
+            using (var s = File.OpenWrite(source))
+            {
+                bmp.Encode(s, SKEncodedImageFormat.Png, 100);
+            }
+
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+            var preset = BuiltInData.CreatePresets().First(p => p.Id == "tool-frame");
+
+            var result = await FramingService.FrameFileAsync(source, new FramingOptions(), preset, store, loc);
+            Assert.Equal(FramingStatus.Success, result.Status);
+            Assert.NotNull(result.OutputPath);
+            Assert.True(File.Exists(result.OutputPath));
+
+            // Ensure no leftover .tmp_* files exist in the folder
+            var strayTemps = Directory.GetFiles(folder, ".tmp_*");
+            Assert.Empty(strayTemps);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+                Directory.Delete(folder, recursive: true);
+        }
+    }
 }

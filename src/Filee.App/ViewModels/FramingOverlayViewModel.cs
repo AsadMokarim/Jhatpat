@@ -489,6 +489,42 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
     }
 
     [RelayCommand]
+    public async Task CopyToClipboardAsync()
+    {
+        if (IsBusy || IsFinished || _closed || CurrentIndex >= _files.Count)
+            return;
+
+        IsBusy = true;
+        try
+        {
+            var path = _files[CurrentIndex];
+            using var source = FramingService.LoadSourceBitmap(path);
+            using var framed = FramingService.RenderFramedBitmap(source, CurrentOptions);
+            using var image = SkiaSharp.SKImage.FromBitmap(framed);
+            using var data = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+            using var ms = new MemoryStream();
+            data.SaveTo(ms);
+            ms.Position = 0;
+            var bmp = new Avalonia.Media.Imaging.Bitmap(ms);
+
+            var clipboard = AppHost.Get<IClipboardService>();
+            var copied = await clipboard.CopyBitmapToClipboardAsync(bmp);
+            if (copied)
+            {
+                AppHost.Get<WindowService>().ShowToastNotification(_loc["clipboard.copied_to_clipboard"]);
+            }
+        }
+        catch (Exception ex)
+        {
+            _log?.LogError(ex, "Failed to copy framed image to clipboard.");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
     public async Task SaveAsAsync()
     {
         if (IsBusy || IsFinished || _closed || CurrentIndex >= _files.Count || SaveAsRequested is null)
