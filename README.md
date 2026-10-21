@@ -141,7 +141,7 @@ For detailed instructions, layout details, and uninstallation procedures, see th
 ### Building and Running
 ```bash
 # Clone the repository
-git clone https://github.com/KnifeLemon/Filee.git Jhatpat
+git clone https://github.com/AsadMokarim/Jhatpat.git Jhatpat
 cd Jhatpat
 
 # Build the solution

@@ -126,7 +126,7 @@ filee watch D:\Inbox --to pdf --move-originals
 Windows, macOS, Linux에서 .NET 10 SDK로 빌드해요.
 
 ```bash
-git clone https://github.com/KnifeLemon/Filee.git
+git clone https://github.com/AsadMokarim/Jhatpat.git
 cd Filee
 pwsh build/fetch-engines.ps1 -Only rhwp,pandoc   # optional engines
 dotnet run --project src/Filee.App
