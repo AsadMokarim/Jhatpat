@@ -9,6 +9,7 @@ using Filee.Core.Settings;
 using Microsoft.Extensions.Logging;
 using SharpHook;
 using SharpHook.Data;
+using SharpHook.Providers;
 
 namespace Filee.App.Services.Triggers;
 
@@ -64,8 +65,9 @@ public sealed class TriggerService : IDisposable
     public string? Error { get; private set; }
 
     /// <summary>
-    /// Linux: libuiohook could not load its X11 back end (libuiohook-xrecord.so), usually a missing X library
-    /// (libXtst, libXt) or not an X11 session. <see cref="Error"/> keeps the raw message.
+    /// Linux: libuiohook could not load its input back end, usually a missing library or insufficient permissions.
+    /// On X11: missing libXtst/libXt. On Wayland: user not in the "input" group.
+    /// <see cref="Error"/> keeps the raw message.
     /// </summary>
     public bool LinuxBackendMissing { get; private set; }
 
@@ -105,6 +107,12 @@ public sealed class TriggerService : IDisposable
         LinuxBackendMissing = false;
         try
         {
+            // On Linux, enable the libinput/uinput backend so SharpHook automatically selects the
+            // Wayland backend (libuiohook-wayland.so) on Wayland sessions and the libinput-based
+            // X11 backend otherwise. This call is a no-op on Windows and macOS.
+            if (OperatingSystem.IsLinux())
+                UioHookProvider.Instance.SetLinuxMode(LinuxMode.AutoLowLevel);
+
             // Background threads: a hook that fails to stop can never keep Filee running after it quits.
             _hook = _createHook();
             _hook.HookEnabled += (_, _) => { _log.LogInformation("Global input hook started"); NotifyStatus(); };

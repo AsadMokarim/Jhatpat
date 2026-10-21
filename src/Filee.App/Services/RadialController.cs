@@ -86,8 +86,13 @@ public sealed class RadialController(
         _dragReachedDonut = false;
         _converted = false;
         viewModel.ResetForDrag();
+        if (!platform.PressCarriesPosition)
+        {
+            viewModel.DonutOpacity = 1;
+            window.DonutControl.PlayOpenAnimation();
+        }
         window.DonutControl.AllowContextEdit = false;
-        PlaceAndShow(window, x, y, activate: false);
+        PlaceAndShow(window, platform.PressCarriesPosition ? x : 0, platform.PressCarriesPosition ? y : 0, activate: !OperatingSystem.IsWindows());
 
         var generation = ++_dragGeneration;
         DispatcherTimer.RunOnce(() =>
@@ -519,6 +524,7 @@ public sealed class RadialController(
         var position = WindowPosition(cursor, screen?.WorkingArea, sidePx);
 
         Motion.Refresh();
+        window.ShowActivated = activate;
         window.Position = position;
         if (!window.IsVisible)
             window.Show();

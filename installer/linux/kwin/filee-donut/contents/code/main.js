@@ -3,7 +3,10 @@
 // whenever it is mapped. Install it with kpackagetool6 and enable it; see installer/linux/INSTALL.txt.
 
 function isDonut(w) {
-    return String(w.resourceClass).toLowerCase() === "filee" && w.caption === "Filee Donut";
+    var title = String(w.caption || "");
+    var res = String(w.resourceClass || "").toLowerCase();
+    return (res.indexOf("filee") !== -1 || res.indexOf("jhatpat") !== -1) &&
+           (title.indexOf("Donut") !== -1 || title === "Jhatpat Donut" || title === "Filee Donut");
 }
 
 function centreOnCursor(w) {
