@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>filee-cli</AssemblyName>
     <RootNamespace>Filee.Cli</RootNamespace>
-    <ApplicationIcon>..\Filee.App\Assets\Icons\filee.ico</ApplicationIcon>
+    <ApplicationIcon>..\Filee.App\Assets\Icons\jhatpat.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,4 +24,17 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Filee.Cli.Tests" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\models\**" Link="models\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Strip debug symbols (.pdb) and XML doc files from release publish directory -->
+  <Target Name="FileeCleanCliPublishArtifacts" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release'">
+    <ItemGroup>
+      <_PublishSymbols Include="$(PublishDir)*.pdb" />
+      <_PublishXmlDocs Include="$(PublishDir)*.xml" />
+    </ItemGroup>
+    <Delete Files="@(_PublishSymbols);@(_PublishXmlDocs)" />
+  </Target>
 </Project>
