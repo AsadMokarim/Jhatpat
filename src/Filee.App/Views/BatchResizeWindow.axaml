@@ -195,16 +195,16 @@
               <StackPanel Spacing="6">
                 <TextBlock Text="{DynamicResource resize.quality}" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
                 <WrapPanel Orientation="Horizontal">
-                  <Button Content="{DynamicResource resize.quality_low}" Command="{Binding SetQualityCommand}" CommandParameter="60"
+                  <Button Content="{DynamicResource resize.quality_low}" Command="{Binding SetCompressionCommand}" CommandParameter="20"
                           Classes="chip" Classes.active="{Binding IsQualityLow}" Margin="0,0,6,6" />
-                  <Button Content="{DynamicResource resize.quality_balanced}" Command="{Binding SetQualityCommand}" CommandParameter="80"
+                  <Button Content="{DynamicResource resize.quality_balanced}" Command="{Binding SetCompressionCommand}" CommandParameter="50"
                           Classes="chip" Classes.active="{Binding IsQualityBalanced}" Margin="0,0,6,6" />
-                  <Button Content="{DynamicResource resize.quality_high}" Command="{Binding SetQualityCommand}" CommandParameter="92"
+                  <Button Content="{DynamicResource resize.quality_high}" Command="{Binding SetCompressionCommand}" CommandParameter="80"
                           Classes="chip" Classes.active="{Binding IsQualityHigh}" Margin="0,0,6,6" />
                 </WrapPanel>
                 <Grid ColumnDefinitions="*,Auto" Margin="0,4,0,0">
-                  <Slider Grid.Column="0" Minimum="10" Maximum="100" Value="{Binding Quality}" />
-                  <TextBlock Grid.Column="1" Text="{Binding Quality, StringFormat='{}{0}%'}" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" />
+                  <Slider Grid.Column="0" Minimum="10" Maximum="100" Value="{Binding Compression}" />
+                  <TextBlock Grid.Column="1" Text="{Binding Compression, StringFormat='{}{0}%'}" FontSize="11" Margin="8,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold" />
                 </Grid>
               </StackPanel>
 

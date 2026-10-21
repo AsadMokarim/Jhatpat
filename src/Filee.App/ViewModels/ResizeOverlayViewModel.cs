@@ -52,11 +52,24 @@ public sealed partial class ResizeOverlayViewModel : ObservableObject, IDisposab
     [ObservableProperty] private string _dimensionsText = "";
     [ObservableProperty] private bool _maintainAspectRatio = true;
 
-    // Quality & Format
+    // Compression & Format
     [ObservableProperty] private string _targetFormat = "same"; // "same", "png", "jpg", "webp"
     [ObservableProperty] private int _quality = 85;
     [ObservableProperty] private string _estimatedSizeText = "";
     [ObservableProperty] private bool _hasTransparency;
+
+    public int Compression
+    {
+        get => Math.Clamp(100 - Quality, 5, 95);
+        set
+        {
+            var q = Math.Clamp(100 - value, 10, 100);
+            if (Quality != q)
+            {
+                Quality = q;
+            }
+        }
+    }
 
     public bool WillLoseTransparency => HasTransparency && (ResolvedFormat is "jpg" or "jpeg" or "bmp");
 
@@ -70,15 +83,15 @@ public sealed partial class ResizeOverlayViewModel : ObservableObject, IDisposab
     public bool IsFormatJpg => TargetFormat == "jpg";
     public bool IsFormatWebp => TargetFormat == "webp";
 
-    public bool IsLossySupported => ResizeService.IsLossyFormat(ResolvedFormat);
+    public bool IsLossySupported => true;
 
     public string ResolvedFormat => CurrentIndex < _files.Count
         ? ResizeService.ResolveFormat(_files[CurrentIndex], TargetFormat)
         : TargetFormat;
 
-    public bool IsQualityLow => Quality == 60;
-    public bool IsQualityBalanced => Quality == 80;
-    public bool IsQualityHigh => Quality == 92;
+    public bool IsQualityLow => Quality == 60 || Compression <= 25;
+    public bool IsQualityBalanced => Quality == 80 || (Compression > 25 && Compression <= 60);
+    public bool IsQualityHigh => Quality == 92 || Compression > 60;
 
     public bool IsScale25 => OriginalWidth > 0 && Math.Abs((double)TargetWidth / OriginalWidth - 0.25) < 0.02;
     public bool IsScale50 => OriginalWidth > 0 && Math.Abs((double)TargetWidth / OriginalWidth - 0.50) < 0.02;
@@ -202,6 +215,7 @@ public sealed partial class ResizeOverlayViewModel : ObservableObject, IDisposab
 
     partial void OnQualityChanged(int value)
     {
+        OnPropertyChanged(nameof(Compression));
         OnPropertyChanged(nameof(IsQualityLow));
         OnPropertyChanged(nameof(IsQualityBalanced));
         OnPropertyChanged(nameof(IsQualityHigh));
@@ -357,6 +371,9 @@ public sealed partial class ResizeOverlayViewModel : ObservableObject, IDisposab
 
     [RelayCommand]
     public void SetFormat(string format) => TargetFormat = format;
+
+    [RelayCommand]
+    public void SetCompression(int compression) => Compression = compression;
 
     [RelayCommand]
     public void SetQuality(int quality) => Quality = quality;

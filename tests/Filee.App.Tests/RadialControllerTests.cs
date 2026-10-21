@@ -5,6 +5,7 @@
 using Avalonia.Headless.XUnit;
 using Filee.App.Controls;
 using Filee.App.Services;
+using Filee.App.ViewModels;
 using Filee.Core.Presets;
 
 namespace Filee.App.Tests;
@@ -109,5 +110,31 @@ public class RadialControllerTests
 
         radial.Close(animate: false);
         Assert.False(radial.IsVisible);
+    }
+
+    [AvaloniaFact]
+    public void RadialViewModel_loads_pdf_compression_for_pdf_files()
+    {
+        TestServices.EnsureInitialized("en");
+        var store = AppHost.Get<Filee.Core.Settings.UserDataStore>();
+        var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+        var availability = AppHost.Get<PresetAvailability>();
+
+        var vm = new RadialViewModel(store, loc, availability);
+        var fakePdf = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "test-file.pdf");
+        System.IO.File.WriteAllText(fakePdf, "%PDF-1.4 dummy");
+        try
+        {
+            vm.Load([fakePdf], clickMode: true);
+            Assert.Contains(vm.Presets, p => p.Id == "compress-pdf");
+            var item = vm.Items.FirstOrDefault(i => i.Id == "compress-pdf");
+            Assert.NotNull(item);
+            Assert.True(item.IsEnabled);
+        }
+        finally
+        {
+            if (System.IO.File.Exists(fakePdf))
+                System.IO.File.Delete(fakePdf);
+        }
     }
 }

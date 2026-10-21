@@ -34,6 +34,19 @@ public sealed partial class BatchResizeViewModel : ObservableObject, IDisposable
     [ObservableProperty] private string? _outputDirectory;
     [ObservableProperty] private FileCollisionPolicy _collisionPolicy = FileCollisionPolicy.RenameWithSuffix;
 
+    public int Compression
+    {
+        get => Math.Clamp(100 - Quality, 5, 95);
+        set
+        {
+            var q = Math.Clamp(100 - value, 10, 100);
+            if (Quality != q)
+            {
+                Quality = q;
+            }
+        }
+    }
+
     // Execution State
     [ObservableProperty] private bool _isProcessing;
     [ObservableProperty] private bool _isFinished;
@@ -67,9 +80,9 @@ public sealed partial class BatchResizeViewModel : ObservableObject, IDisposable
     public bool IsFormatJpg => TargetFormat == "jpg";
     public bool IsFormatWebp => TargetFormat == "webp";
 
-    public bool IsQualityLow => Quality == 60;
-    public bool IsQualityBalanced => Quality == 80;
-    public bool IsQualityHigh => Quality == 92;
+    public bool IsQualityLow => Quality == 60 || Compression <= 25;
+    public bool IsQualityBalanced => Quality == 80 || (Compression > 25 && Compression <= 60);
+    public bool IsQualityHigh => Quality == 92 || Compression > 60;
 
     public bool IsCollisionRename => CollisionPolicy == FileCollisionPolicy.RenameWithSuffix;
     public bool IsCollisionSkip => CollisionPolicy == FileCollisionPolicy.Skip;
@@ -199,6 +212,7 @@ public sealed partial class BatchResizeViewModel : ObservableObject, IDisposable
 
     partial void OnQualityChanged(int value)
     {
+        OnPropertyChanged(nameof(Compression));
         OnPropertyChanged(nameof(IsQualityLow));
         OnPropertyChanged(nameof(IsQualityBalanced));
         OnPropertyChanged(nameof(IsQualityHigh));
@@ -254,6 +268,9 @@ public sealed partial class BatchResizeViewModel : ObservableObject, IDisposable
 
     [RelayCommand]
     public void SetFormat(string format) => TargetFormat = format;
+
+    [RelayCommand]
+    public void SetCompression(int compression) => Compression = compression;
 
     [RelayCommand]
     public void SetQuality(int q) => Quality = q;

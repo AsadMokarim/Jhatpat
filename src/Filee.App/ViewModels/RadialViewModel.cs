@@ -144,6 +144,19 @@ public sealed partial class RadialViewModel(UserDataStore store, ILocalizer loc,
         }
         else if (formats.Any(f => f.Id == "pdf"))
         {
+            if (!presets.Any(p => p.Id is "compress-pdf" or "tool-compression" or "tool-resize"))
+            {
+                var compressPreset = store.FindPreset("compress-pdf")
+                    ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "compress-pdf");
+                if (compressPreset is not null)
+                {
+                    if (presets.Count >= ToolbarProfile.MaxSlices)
+                        presets[presets.Count - 1] = compressPreset;
+                    else
+                        presets.Add(compressPreset);
+                }
+            }
+
             if (files.Count > 1 && !presets.Any(p => p.Id is "merge-pdf" or "tool-pdf-merge"))
             {
                 var mergePreset = store.FindPreset("merge-pdf")
@@ -151,7 +164,7 @@ public sealed partial class RadialViewModel(UserDataStore store, ILocalizer loc,
                 if (mergePreset is not null)
                 {
                     if (presets.Count >= ToolbarProfile.MaxSlices)
-                        presets[presets.Count - 1] = mergePreset;
+                        presets[presets.Count - 2] = mergePreset;
                     else
                         presets.Add(mergePreset);
                 }

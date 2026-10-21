@@ -511,4 +511,56 @@ public class ResizeServiceTests
                 Directory.Delete(folder, recursive: true);
         }
     }
+
+    [AvaloniaFact]
+    public void ResizeOverlayViewModel_universal_compression_on_png_and_reversed_bar_fix()
+    {
+        TestServices.EnsureInitialized("en");
+        var folder = Directory.CreateTempSubdirectory("filee-resize-universal-").FullName;
+        try
+        {
+            var sourcePath = Path.Combine(folder, "test.png");
+            using (var bmp = CreateBitmap(400, 300, SKColors.DodgerBlue))
+            using (var stream = File.OpenWrite(sourcePath))
+            {
+                bmp.Encode(stream, SKEncodedImageFormat.Png, 100);
+            }
+
+            var store = AppHost.Get<UserDataStore>();
+            var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+            var preset = BuiltInData.CreatePresets().First(p => p.Id == "tool-resize");
+
+            using var vm = new ResizeOverlayViewModel([sourcePath], preset, loc, store);
+
+            // Universal compression active on PNG (not hidden)
+            Assert.True(vm.IsLossySupported);
+
+            // Setting compression to 20% (Low compression)
+            vm.SetCompressionCommand.Execute(20);
+            Assert.Equal(20, vm.Compression);
+            Assert.True(vm.IsQualityLow);
+            Assert.False(vm.IsQualityHigh);
+            var lowQuality = vm.Quality;
+
+            // Setting compression to 80% (High compression)
+            vm.SetCompressionCommand.Execute(80);
+            Assert.Equal(80, vm.Compression);
+            Assert.True(vm.IsQualityHigh);
+            Assert.False(vm.IsQualityLow);
+            var highQuality = vm.Quality;
+
+            // Higher compression means smaller quality number (stronger compression)
+            Assert.True(highQuality < lowQuality);
+
+            // Setting compression to 50% (Balanced)
+            vm.SetCompressionCommand.Execute(50);
+            Assert.Equal(50, vm.Compression);
+            Assert.True(vm.IsQualityBalanced);
+        }
+        finally
+        {
+            if (Directory.Exists(folder))
+                Directory.Delete(folder, recursive: true);
+        }
+    }
 }

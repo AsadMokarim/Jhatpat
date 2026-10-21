@@ -50,9 +50,13 @@ public sealed class PresetAvailability(ConverterCatalog catalog, ILocalizer loc,
 
                 case "tool-crop":
                 case "tool-frame":
+                    if (CanCrop(formats))
+                        return null;
+                    return loc["error.unsupported_source"];
+
                 case "tool-resize":
                 case "tool-compression":
-                    if (CanCrop(formats))
+                    if (CanCrop(formats) || formats.All(f => f.Id == "pdf" || f.Category == FormatCategory.Pdf))
                         return null;
                     return loc["error.unsupported_source"];
 
