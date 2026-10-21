@@ -31,9 +31,9 @@ $smoke = (Resolve-Path -LiteralPath $WorkDir).Path
 Invoke-Checked 'Archive extraction' { tar -xzf $archive.FullName -C $smoke }
 $package = Join-Path $smoke ($archive.Name.Replace('.tar.gz', ''))
 if ($IsMacOS) {
-    Invoke-Checked 'Extracted app signature' { codesign --verify --deep --strict (Join-Path $package 'Filee.app') }
+    Invoke-Checked 'Extracted app signature' { codesign --verify --deep --strict (Join-Path $package 'Jhatpat.app') }
 }
-$bin = if ($IsMacOS) { Join-Path $package 'Filee.app/Contents/MacOS' } else { $package }
+$bin = if ($IsMacOS) { Join-Path $package 'Jhatpat.app/Contents/MacOS' } else { $package }
 $cli = Join-Path $bin 'filee-cli'
 
 Invoke-Checked 'CLI start' { & $cli version }

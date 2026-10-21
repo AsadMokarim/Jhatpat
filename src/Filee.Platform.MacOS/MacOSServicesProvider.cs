@@ -1,4 +1,4 @@
-// "Convert with Filee" in Finder's right-click menu, as a service Filee.app provides itself (NSServices in its
+// "Convert with Jhatpat" in Finder's right-click menu, as a service Jhatpat.app provides itself (NSServices in its
 // Info.plist). macOS hands the selected files straight to the running Filee: no Automator workflow, no shell, no
 // second process. Info.plist names the message (convertFiles) and the port (Filee); this registers the object
 // that answers it, an NSObject subclass made at run time with one method, convertFiles:userData:error:.

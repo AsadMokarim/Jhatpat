@@ -65,13 +65,16 @@ public sealed class MacOSPlatformServices : IPlatformServices
 
     public void SetStartWithSystem(bool enabled, string executablePath)
     {
-        var path = Path.Combine(UserLibrary, "LaunchAgents", "com.filee.app.plist");
+        var path = Path.Combine(UserLibrary, "LaunchAgents", "com.jhatpat.app.plist");
+        var legacyPath = Path.Combine(UserLibrary, "LaunchAgents", "com.filee.app.plist");
         if (!enabled)
         {
-            File.Delete(path);
+            if (File.Exists(path)) File.Delete(path);
+            if (File.Exists(legacyPath)) File.Delete(legacyPath);
             return;
         }
 
+        if (File.Exists(legacyPath)) File.Delete(legacyPath);
         RequireExecutable(executablePath);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, MacOSIntegrationFiles.LaunchAgent(executablePath), new UTF8Encoding(false));

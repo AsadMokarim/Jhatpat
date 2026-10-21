@@ -36,8 +36,8 @@ pwsh build/build-portable.ps1 -Runtime linux-x64
 
 Use the matching runtime on a Mac or ARM64 Linux machine. Packaging runs on Linux/macOS so archives retain
 executable permissions. Each archive contains the app, CLI, rhwp, 7-Zip, installation instructions and per-user
-install/uninstall scripts. `Filee-<version>-<rid>-SHA256SUMS.txt` verifies the archive. macOS bundles use
-`com.filee.app` and a development ad-hoc signature by default; public distribution still needs Developer ID signing
+install/uninstall scripts. `Jhatpat-<version>-<rid>-SHA256SUMS.txt` verifies the archive. macOS bundles use
+`com.jhatpat.app` and a development ad-hoc signature by default; public distribution still needs Developer ID signing
 and notarization. `-SigningIdentity` can supply a signing identity, but does not perform notarization.
 
 Linux release packages must run on Ubuntu 22.04 (glibc 2.35). CI builds rhwp from source on Ubuntu 22.04
