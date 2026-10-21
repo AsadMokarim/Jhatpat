@@ -89,7 +89,7 @@ public sealed class GestureDetector
         {
             _lastX = x;
             _lastY = y;
-            fire = _armed is null ? DetectLateModifier(x, y, modifiers, heldButton) : DetectDragPastThreshold(x, y);
+            fire = _armed is null ? DetectLateModifier(x, y, modifiers, heldButton) : DetectDragPastThreshold(x, y, modifiers);
             if (fire is not null)
                 _dragActive = true;
         }
@@ -102,9 +102,16 @@ public sealed class GestureDetector
     /// An armed gesture moved: a drag gesture fires once the threshold is passed; a hold gesture is cancelled.
     /// Caller holds the lock.
     /// </summary>
-    private TriggerGesture? DetectDragPastThreshold(int x, int y)
+    private TriggerGesture? DetectDragPastThreshold(int x, int y, ModifierKeys modifiers)
     {
         var armed = _armed!;
+        // If the required modifier was released early (before crossing threshold), disarm the gesture.
+        if ((modifiers & armed.Gesture.Modifiers) != armed.Gesture.Modifiers)
+        {
+            _armed = null;
+            return null;
+        }
+
         var threshold = armed.Gesture.DragThreshold > 0 ? armed.Gesture.DragThreshold : SystemDragThreshold;
         if (Math.Abs(x - armed.X) <= threshold && Math.Abs(y - armed.Y) <= threshold)
             return null;
@@ -169,21 +176,63 @@ public sealed class GestureDetector
     /// <summary>A key went down. <paramref name="key"/> is the key name without the "Vc" prefix, e.g. "Space".</summary>
     public void KeyDown(string key, ModifierKeys modifiers)
     {
-        TriggerGesture? fire;
+        TriggerGesture? fire = null;
+        int x, y;
+        bool cancelDrag = false;
+        lock (_lock)
+        {
+            (x, y) = (_lastX, _lastY);
+            if (string.Equals(key, "Escape", StringComparison.OrdinalIgnoreCase))
+            {
+                _armed = null;
+                cancelDrag = _dragActive;
+                _dragActive = false;
+                _lateRejected = false;
+            }
+            else
+            {
+                if (Paused)
+                    return;
+                fire = _gestures.FirstOrDefault(g =>
+                    g.Kind == TriggerKind.KeyChord &&
+                    string.Equals(g.Key, key, StringComparison.OrdinalIgnoreCase) &&
+                    g.Modifiers == modifiers);
+                if (fire is not null && !ScopeFilter(fire, x, y))
+                    fire = null;
+            }
+        }
+        if (cancelDrag)
+            DragEnded?.Invoke(x, y);
+        if (fire is not null)
+            KeyChordTriggered?.Invoke(fire, x, y);
+    }
+
+    /// <summary>A key was released. Disarms pending gestures if their required modifier was released early.</summary>
+    public void KeyUp(string key, ModifierKeys modifiers)
+    {
+        lock (_lock)
+        {
+            if (_armed is { } armed && (modifiers & armed.Gesture.Modifiers) != armed.Gesture.Modifiers)
+            {
+                _armed = null;
+            }
+        }
+    }
+
+    /// <summary>Explicitly cancels any active drag or armed gesture.</summary>
+    public void CancelDrag()
+    {
+        bool cancel;
         int x, y;
         lock (_lock)
         {
-            if (Paused)
-                return;
-            fire = _gestures.FirstOrDefault(g =>
-                g.Kind == TriggerKind.KeyChord &&
-                string.Equals(g.Key, key, StringComparison.OrdinalIgnoreCase) &&
-                g.Modifiers == modifiers);
+            _armed = null;
+            cancel = _dragActive;
+            _dragActive = false;
+            _lateRejected = false;
             (x, y) = (_lastX, _lastY);
-            if (fire is not null && !ScopeFilter(fire, x, y))
-                fire = null;
         }
-        if (fire is not null)
-            KeyChordTriggered?.Invoke(fire, x, y);
+        if (cancel)
+            DragEnded?.Invoke(x, y);
     }
 }

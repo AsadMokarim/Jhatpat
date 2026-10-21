@@ -14,7 +14,9 @@ public sealed class LinuxPlatformServices : IPlatformServices
 
     private static readonly HashSet<string> FileManagers = new(StringComparer.OrdinalIgnoreCase)
     {
-        "thunar", "nautilus", "org.gnome.nautilus", "nemo", "dolphin", "caja", "pcmanfm", "pcmanfm-qt", "xfdesktop",
+        "thunar", "nautilus", "org.gnome.nautilus", "nemo", "dolphin", "caja", "pcmanfm", "pcmanfm-qt",
+        "xfdesktop", "nemo-desktop", "caja-desktop", "pcmanfm-desktop", "cosmic-files",
+        "cosmic-applet-desktop", "io.elementary.files", "deepin-file-manager", "dde-file-manager", "peony",
     };
 
     public static bool IsWaylandSession =>
@@ -47,17 +49,20 @@ public sealed class LinuxPlatformServices : IPlatformServices
     public bool PressCarriesPosition => !WaylandGestures;
     public bool SupportsSelectionShortcut => false;
     public string SelectionShortcutUnavailableReason =>
-        "Linux file managers do not expose a shared selected-file API. Use the Filee context action or its Thunar shortcut.";
+        "Linux file managers do not expose a shared selected-file API. Use the Jhatpat context action or its Thunar shortcut.";
     public string? GlobalPointerGesturesUnavailableReason => SupportsGlobalPointerGestures ? null : IsWaylandSession
-        ? "The cursor-following gesture requires an X11 desktop session. File actions and the drop zone remain available on Wayland."
+        ? "Cursor-following drag gestures require an X11 session due to Wayland input isolation. Use system shortcuts (jhatpat --radial), dock actions, or the drop zone."
         : "The cursor-following gesture requires an X11 display.";
     public string ThunarShortcutRestartRequired =>
-        "Close Thunar before changing its shortcut, then reopen it to load the Filee action and shortcut.";
+        "Close Thunar before changing its shortcut, then reopen it to load the Jhatpat action and shortcut.";
 
     // Wayland can't say which window is under the cursor, so any Ctrl+drag may open the (invisible) donut window;
     // it only shows when files are dragged in, and excluded apps can't be told apart there either.
+    // On X11, detects both open file manager windows and the desktop (desktop icons and empty desktop areas).
     public bool IsFileManagerAt(int x, int y) =>
-        WaylandGestures || ProcessNameAt(x, y) is { } name && FileManagers.Contains(name);
+        WaylandGestures || (X11WindowSystem.IsAvailable
+            ? X11WindowSystem.IsFileManagerOrDesktopAt(x, y, FileManagers)
+            : ProcessNameAt(x, y) is { } name && FileManagers.Contains(name));
     public string? ProcessNameAt(int x, int y) => X11WindowSystem.ProcessNameAt(x, y);
 
     public IReadOnlyList<string> RunningAppNames() => IPlatformServices.AppNames(X11WindowSystem.ClientProcessNames());

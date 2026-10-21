@@ -7,8 +7,12 @@ namespace Filee.Platform.Linux;
 
 internal sealed class LinuxDesktopIntegration(string configHome, string dataHome)
 {
-    internal const string ThunarActionId = "filee-convert";
+    internal const string ThunarActionId = "jhatpat-convert";
+    internal const string LegacyThunarActionId = "fluxa-convert";
+    internal const string OlderLegacyThunarActionId = "filee-convert";
     internal const string ThunarAcceleratorPath = "<Actions>/ThunarActions/uca-action-" + ThunarActionId;
+    internal const string LegacyThunarAcceleratorPath = "<Actions>/ThunarActions/uca-action-" + LegacyThunarActionId;
+    internal const string OlderLegacyThunarAcceleratorPath = "<Actions>/ThunarActions/uca-action-" + OlderLegacyThunarActionId;
 
     internal static string? ToThunarAccelerator(TriggerGesture gesture)
     {
@@ -67,11 +71,13 @@ internal sealed class LinuxDesktopIntegration(string configHome, string dataHome
         {
             if (accelerator is not null && !match.Groups["disabled"].Success
                 && match.Groups["path"].Value != ThunarAcceleratorPath
+                && match.Groups["path"].Value != LegacyThunarAcceleratorPath
+                && match.Groups["path"].Value != OlderLegacyThunarAcceleratorPath
                 && string.Equals(NormalizeAccelerator(match.Groups["key"].Value), NormalizeAccelerator(accelerator), StringComparison.Ordinal))
                 throw new InvalidOperationException($"Thunar already uses {accelerator} for {match.Groups["path"].Value}.");
         }
-        var ownPattern = @"(?m)^[ \t]*;?[ \t]*\(gtk_accel_path """ + Regex.Escape(ThunarAcceleratorPath)
-            + @""" ""[^""\r\n]*""\)[ \t]*(?:\r?\n|$)";
+        var ownPattern = @"(?m)^[ \t]*;?[ \t]*\(gtk_accel_path ""(?:" + Regex.Escape(ThunarAcceleratorPath)
+            + "|" + Regex.Escape(LegacyThunarAcceleratorPath) + "|" + Regex.Escape(OlderLegacyThunarAcceleratorPath) + @")"" ""[^""\r\n]*""\)[ \t]*(?:\r?\n|$)";
         var updated = Regex.Replace(contents, ownPattern, "", RegexOptions.CultureInvariant);
         if (accelerator is not null)
         {
@@ -90,13 +96,19 @@ internal sealed class LinuxDesktopIntegration(string configHome, string dataHome
 
     public void SetAutostart(bool enabled, string executablePath)
     {
-        var path = Path.Combine(configHome, "autostart", "filee.desktop");
+        var path = Path.Combine(configHome, "autostart", "jhatpat.desktop");
+        var legacyPath = Path.Combine(configHome, "autostart", "fluxa.desktop");
+        var olderLegacyPath = Path.Combine(configHome, "autostart", "filee.desktop");
         if (!enabled)
         {
-            File.Delete(path);
+            if (File.Exists(path)) File.Delete(path);
+            if (File.Exists(legacyPath)) File.Delete(legacyPath);
+            if (File.Exists(olderLegacyPath)) File.Delete(olderLegacyPath);
             return;
         }
-        Write(path, $"[Desktop Entry]\nType=Application\nName=Filee\nExec={DesktopArgument(executablePath)} --background\nTerminal=false\nX-GNOME-Autostart-enabled=true\n");
+        if (File.Exists(legacyPath)) File.Delete(legacyPath);
+        if (File.Exists(olderLegacyPath)) File.Delete(olderLegacyPath);
+        Write(path, $"[Desktop Entry]\nType=Application\nName=Jhatpat\nExec={DesktopArgument(executablePath)} --background\nTerminal=false\nX-GNOME-Autostart-enabled=true\n");
     }
 
     public void SetContextMenu(bool enabled, string executablePath, string label)
@@ -104,6 +116,17 @@ internal sealed class LinuxDesktopIntegration(string configHome, string dataHome
         var thunarPath = Path.Combine(configHome, "Thunar", "uca.xml");
         var menuPaths = new[]
         {
+            Path.Combine(dataHome, "Thunar", "sendto", "jhatpat.desktop"),
+            Path.Combine(dataHome, "nautilus", "scripts", "Jhatpat"),
+            Path.Combine(dataHome, "nemo", "actions", "jhatpat.nemo_action"),
+            Path.Combine(dataHome, "kio", "servicemenus", "jhatpat.desktop"),
+        };
+        var legacyMenuPaths = new[]
+        {
+            Path.Combine(dataHome, "Thunar", "sendto", "fluxa.desktop"),
+            Path.Combine(dataHome, "nautilus", "scripts", "Fluxa"),
+            Path.Combine(dataHome, "nemo", "actions", "fluxa.nemo_action"),
+            Path.Combine(dataHome, "kio", "servicemenus", "fluxa.desktop"),
             Path.Combine(dataHome, "Thunar", "sendto", "filee.desktop"),
             Path.Combine(dataHome, "nautilus", "scripts", "Filee"),
             Path.Combine(dataHome, "nemo", "actions", "filee.nemo_action"),
@@ -116,8 +139,19 @@ internal sealed class LinuxDesktopIntegration(string configHome, string dataHome
             if (File.Exists(thunarPath))
                 Write(thunarPath, thunar.ToString());
             foreach (var path in menuPaths)
-                File.Delete(path);
+            {
+                if (File.Exists(path)) File.Delete(path);
+            }
+            foreach (var path in legacyMenuPaths)
+            {
+                if (File.Exists(path)) File.Delete(path);
+            }
             return;
+        }
+
+        foreach (var path in legacyMenuPaths)
+        {
+            if (File.Exists(path)) File.Delete(path);
         }
 
         var command = $"{DesktopArgument(executablePath)} --convert %F";
@@ -134,7 +168,7 @@ internal sealed class LinuxDesktopIntegration(string configHome, string dataHome
         if (document.Root?.Name != "actions")
             throw new InvalidDataException("Thunar's custom actions file has an unexpected root element.");
         document.Root.Elements("action")
-            .Where(action => (string?)action.Element("unique-id") == ThunarActionId).Remove();
+            .Where(action => (string?)action.Element("unique-id") is ThunarActionId or LegacyThunarActionId or OlderLegacyThunarActionId).Remove();
         if (!enabled)
             return;
         var command = ShellArgument(executablePath).Replace("%", "%%", StringComparison.Ordinal) + " --convert %F";

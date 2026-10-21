@@ -137,4 +137,72 @@ public class GestureDetectorTests
         detector.HoldElapsed(token);
         Assert.Equal(1, held);
     }
+
+    [Fact]
+    public void Releasing_modifier_early_via_key_up_disarms_drag()
+    {
+        var shiftDrag = new TriggerGesture { Kind = TriggerKind.Drag, Modifiers = ModifierKeys.Shift, Button = TriggerMouseButton.Left };
+        var detector = Create(shiftDrag);
+        var started = 0;
+        detector.DragStarted += (_, _, _) => started++;
+
+        detector.MouseDown(TriggerMouseButton.Left, 100, 100, ModifierKeys.Shift);
+        detector.KeyUp("Shift", ModifierKeys.None);
+        detector.MouseMove(150, 100, ModifierKeys.None);
+
+        Assert.Equal(0, started);
+    }
+
+    [Fact]
+    public void Releasing_modifier_during_drag_before_threshold_disarms_drag()
+    {
+        var shiftDrag = new TriggerGesture { Kind = TriggerKind.Drag, Modifiers = ModifierKeys.Shift, Button = TriggerMouseButton.Left };
+        var detector = Create(shiftDrag);
+        var started = 0;
+        detector.DragStarted += (_, _, _) => started++;
+
+        detector.MouseDown(TriggerMouseButton.Left, 100, 100, ModifierKeys.Shift);
+        detector.MouseMove(102, 100, ModifierKeys.Shift); // under threshold (4px)
+        detector.MouseMove(150, 100, ModifierKeys.None); // modifier released as movement continues
+
+        Assert.Equal(0, started);
+    }
+
+    [Fact]
+    public void Escape_key_cancels_active_drag()
+    {
+        var shiftDrag = new TriggerGesture { Kind = TriggerKind.Drag, Modifiers = ModifierKeys.Shift, Button = TriggerMouseButton.Left };
+        var detector = Create(shiftDrag);
+        var started = 0;
+        var ended = 0;
+        detector.DragStarted += (_, _, _) => started++;
+        detector.DragEnded += (_, _) => ended++;
+
+        detector.MouseDown(TriggerMouseButton.Left, 100, 100, ModifierKeys.Shift);
+        detector.MouseMove(120, 100, ModifierKeys.Shift);
+        Assert.Equal(1, started);
+        Assert.Equal(0, ended);
+
+        detector.KeyDown("Escape", ModifierKeys.None);
+        Assert.Equal(1, ended);
+
+        // Subsequent mouse movement or mouse up should not fire ended again
+        detector.MouseUp(TriggerMouseButton.Left, 120, 100);
+        Assert.Equal(1, ended);
+    }
+
+    [Fact]
+    public void Escape_key_disarms_pending_gesture_before_threshold()
+    {
+        var shiftDrag = new TriggerGesture { Kind = TriggerKind.Drag, Modifiers = ModifierKeys.Shift, Button = TriggerMouseButton.Left };
+        var detector = Create(shiftDrag);
+        var started = 0;
+        detector.DragStarted += (_, _, _) => started++;
+
+        detector.MouseDown(TriggerMouseButton.Left, 100, 100, ModifierKeys.Shift);
+        detector.KeyDown("Escape", ModifierKeys.None);
+        detector.MouseMove(150, 100, ModifierKeys.Shift);
+
+        Assert.Equal(0, started);
+    }
 }
