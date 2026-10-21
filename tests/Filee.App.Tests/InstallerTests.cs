@@ -61,6 +61,19 @@ public class InstallerTests
         Assert.False(CommandLine.Parse(["--background"]).Quit);
     }
 
+    [Fact]
+    public void Radial_and_drop_zone_options_are_parsed()
+    {
+        Assert.True(CommandLine.Parse(["--radial"]).ShowRadial);
+        Assert.True(CommandLine.Parse(["--menu"]).ShowRadial);
+        Assert.True(CommandLine.Parse(["--quick-actions"]).ShowRadial);
+        Assert.False(CommandLine.Parse([]).ShowRadial);
+
+        Assert.True(CommandLine.Parse(["--drop-zone"]).ShowDropZone);
+        Assert.True(CommandLine.Parse(["--dropzone"]).ShowDropZone);
+        Assert.False(CommandLine.Parse([]).ShowDropZone);
+    }
+
     [AvaloniaFact]
     public void Engines_from_the_installer_start_only_when_something_is_left_to_install()
     {

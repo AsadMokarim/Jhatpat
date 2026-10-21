@@ -43,7 +43,7 @@ if ($Version -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z][0-9A-Za-z.-]*)?$') {
     throw 'Version must be a three-part version with an optional prerelease suffix.'
 }
 $bundleVersion = ($Version -split '-')[0]
-$packageName = "Filee-$Version-$Runtime"
+$packageName = "Jhatpat-$Version-$Runtime"
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 $OutputDir = (Resolve-Path -LiteralPath $OutputDir).Path
 $archive = Join-Path $OutputDir "$packageName.tar.gz"
@@ -53,7 +53,7 @@ if ((Test-Path -LiteralPath $archive) -or (Test-Path -LiteralPath $sums)) {
 }
 $stage = Join-Path $root ('build/.cache/portable/' + [Guid]::NewGuid().ToString('N'))
 $package = Join-Path $stage $packageName
-$appBundle = Join-Path $package 'Filee.app'
+$appBundle = Join-Path $package 'Jhatpat.app'
 $publish = if ($Runtime.StartsWith('osx-')) { Join-Path $appBundle 'Contents/MacOS' } else { $package }
 New-Item -ItemType Directory -Force -Path $publish | Out-Null
 
@@ -100,7 +100,7 @@ if ($Runtime.StartsWith('osx-')) {
     Invoke-Checked 'Validate Info.plist' { plutil -lint (Join-Path $contents 'Info.plist') }
     $iconset = Join-Path $stage 'filee.iconset'
     New-Item -ItemType Directory -Path $iconset | Out-Null
-    $sourceIcon = Join-Path $root 'src/Filee.App/Assets/Icons/filee.png'
+    $sourceIcon = Join-Path $root 'src/Filee.App/Assets/Icons/jhatpat.png'
     foreach ($size in @(16, 32, 128, 256, 512)) {
         foreach ($scale in @(1, 2)) {
             $pixels = $size * $scale
@@ -133,7 +133,7 @@ if ($Runtime.StartsWith('osx-')) {
     Copy-Item -LiteralPath (Join-Path $root 'installer/macos/INSTALL.txt') -Destination $package
 }
 else {
-    Copy-Item -LiteralPath (Join-Path $root 'src/Filee.App/Assets/Icons/filee.png') -Destination $package
+    Copy-Item -LiteralPath (Join-Path $root 'src/Filee.App/Assets/Icons/jhatpat.png') -Destination $package
     Copy-Item -LiteralPath (Join-Path $root 'installer/linux/install.sh') -Destination $package
     Copy-Item -LiteralPath (Join-Path $root 'installer/linux/uninstall.sh') -Destination $package
     Copy-Item -LiteralPath (Join-Path $root 'installer/linux/INSTALL.txt') -Destination $package
