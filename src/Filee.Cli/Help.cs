@@ -14,12 +14,12 @@ internal static class Help
         "convert" => Convert,
         "watch" => Watch,
         "formats" => "Usage: filee formats [<format>]\n\nLists every format, or what one format converts to.\n",
-        "presets" => "Usage: filee presets\n\nLists the presets saved in Filee (built-in and your own).\n",
+        "presets" => "Usage: filee presets\n\nLists the presets saved in Jhatpat (built-in and your own).\n",
         _ => General,
     };
 
     private const string General = """
-        Filee: convert files offline from the command line.
+        Jhatpat: convert files offline from the command line.
 
         Usage:
           filee convert <files or folders...> --to <format> [options]
@@ -36,7 +36,7 @@ internal static class Help
           filee convert D:\Scans --recursive --preset to-pdf
           filee watch D:\Inbox --to pdf --move-originals
 
-        Presets and engines are the ones in the Filee app. Exit codes: 0 all converted, 1 some failed,
+        Presets and engines are the ones in the Jhatpat app. Exit codes: 0 all converted, 1 some failed,
         2 wrong arguments or a missing input, 3 nothing to convert.
 
         """;
@@ -44,7 +44,7 @@ internal static class Help
     private const string Convert = """
         Usage: filee convert <files or folders...> (--to <format> | --preset <preset>) [options]
 
-        Files can be wildcards (*.heic). Folders convert the files in them that Filee knows.
+        Files can be wildcards (*.heic). Folders convert the files in them that Jhatpat knows.
 
         Options:
           -t, --to <format>      Target format, e.g. jpg, png, pdf, docx, mp4 (see 'filee formats')
