@@ -129,29 +129,55 @@ public sealed partial class DonutMenu : Control
     private static readonly Geometry Trail2 = Geometry.Parse("M38,231 h158 a12,12 0 0 1 12,12 a12,12 0 0 1 -12,12 h-158 a12,12 0 0 1 -12,-12 a12,12 0 0 1 12,-12 Z");
     private static readonly Geometry Trail3 = Geometry.Parse("M80,282 h45 a11,11 0 0 1 11,11 a11,11 0 0 1 -11,11 h-45 a11,11 0 0 1 -11,-11 a11,11 0 0 1 11,-11 Z");
 
-    private static readonly IBrush TangerineHoverBrush = new LinearGradientBrush
+    private IBrush GetHoverBrush()
     {
-        StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-        EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
-        GradientStops =
+        if (AccentBrush is ISolidColorBrush scb)
         {
-            new GradientStop(Color.Parse("#FF5A1E"), 0),
-            new GradientStop(Color.Parse("#FA4616"), 0.55),
-            new GradientStop(Color.Parse("#E03206"), 1),
-        },
-    };
-    private static readonly IBrush TangerineHubGrad = new LinearGradientBrush
+            var c = scb.Color;
+            return new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+                GradientStops =
+                {
+                    new GradientStop(ShadeColor(c, 0.18), 0),
+                    new GradientStop(c, 0.55),
+                    new GradientStop(ShadeColor(c, -0.18), 1),
+                },
+            };
+        }
+        return AccentBrush ?? Brushes.DodgerBlue;
+    }
+
+    private IBrush GetHubGradient()
     {
-        StartPoint = new RelativePoint(0.12, 0.02, RelativeUnit.Relative),
-        EndPoint = new RelativePoint(0.82, 0.98, RelativeUnit.Relative),
-        GradientStops =
+        if (AccentBrush is ISolidColorBrush scb)
         {
-            new GradientStop(Color.Parse("#FFE72E"), 0),
-            new GradientStop(Color.Parse("#FFB31A"), 0.35),
-            new GradientStop(Color.Parse("#FF7418"), 0.7),
-            new GradientStop(Color.Parse("#FF3D32"), 1.0),
-        },
-    };
+            var c = scb.Color;
+            return new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0.12, 0.02, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(0.82, 0.98, RelativeUnit.Relative),
+                GradientStops =
+                {
+                    new GradientStop(ShadeColor(c, 0.35), 0),
+                    new GradientStop(ShadeColor(c, 0.15), 0.35),
+                    new GradientStop(c, 0.70),
+                    new GradientStop(ShadeColor(c, -0.22), 1.0),
+                },
+            };
+        }
+        return AccentBrush ?? Brushes.DodgerBlue;
+    }
+
+    private static Color ShadeColor(Color color, double factor)
+    {
+        var r = factor > 0 ? color.R + (255 - color.R) * factor : color.R * (1 + factor);
+        var g = factor > 0 ? color.G + (255 - color.G) * factor : color.G * (1 + factor);
+        var b = factor > 0 ? color.B + (255 - color.B) * factor : color.B * (1 + factor);
+        return Color.FromArgb(color.A, (byte)Math.Clamp(r, 0, 255), (byte)Math.Clamp(g, 0, 255), (byte)Math.Clamp(b, 0, 255));
+    }
+
     private static readonly IBrush SparkleBrush = new SolidColorBrush(Color.Parse("#FFB51B"));
 
     private Spring[] _hover = [];
@@ -969,11 +995,11 @@ public sealed partial class DonutMenu : Control
                 var rimPen = new Pen(new SolidColorBrush(Color.FromArgb(64, 255, 255, 255)), 1.3);
                 context.DrawGeometry(null, rimPen, rimArc);
 
-                // Tangerine highlight with warm gradient when hovered or drop target
+                // Dynamic highlight with gradient matching chosen AccentBrush when hovered or drop target
                 var emphasis = i == _dropTargetIndex ? 1.0 : hover;
                 if (emphasis > 0.01 && item.IsEnabled)
                 {
-                    var highlightBrush = WithOpacity(TangerineHoverBrush, 0.95 * Math.Clamp(emphasis, 0, 1));
+                    var highlightBrush = WithOpacity(GetHoverBrush(), 0.95 * Math.Clamp(emphasis, 0, 1));
                     context.DrawGeometry(highlightBrush, null, wedge);
                 }
 
@@ -1019,13 +1045,15 @@ public sealed partial class DonutMenu : Control
             context.DrawEllipse(brush, null, new Point(center.X, center.Y + 5), shadowRadius, shadowRadius);
             if (_hoverIndex >= 0)
             {
+                var ac = (AccentBrush is ISolidColorBrush scb) ? scb.Color : Color.FromRgb(59, 130, 246);
+                var glowColor = Color.FromArgb(28, ac.R, ac.G, ac.B);
                 var glowBrush = new RadialGradientBrush
                 {
                     GradientStops =
                     {
                         new GradientStop(Color.FromArgb(0, 0, 0, 0), 0),
-                        new GradientStop(Color.FromArgb(26, 255, 116, 24), (r2 - 10) / (shadowRadius + 6)),
-                        new GradientStop(Color.FromArgb(0, 255, 116, 24), 1),
+                        new GradientStop(glowColor, (r2 - 10) / (shadowRadius + 6)),
+                        new GradientStop(Color.FromArgb(0, ac.R, ac.G, ac.B), 1),
                     },
                 };
                 context.DrawEllipse(glowBrush, null, center, shadowRadius + 6, shadowRadius + 6);
@@ -1077,21 +1105,21 @@ public sealed partial class DonutMenu : Control
         }
         else
         {
-            // Resting state: display signature Jhatpat brand emblem at central hub
-            DrawCenterEmblem(context, center, radius * 0.65);
+            // Resting state: display signature Jhatpat brand emblem at central hub matching accent
+            DrawCenterEmblem(context, center, radius * 0.65, GetHubGradient());
         }
     }
 
-    private static void DrawCenterEmblem(DrawingContext context, Point center, double targetSize)
+    private static void DrawCenterEmblem(DrawingContext context, Point center, double targetSize, IBrush hubBrush)
     {
         var scale = targetSize / 512.0;
         var matrix = Matrix.CreateTranslation(-256, -256) * Matrix.CreateScale(scale, scale) * Matrix.CreateTranslation(center.X, center.Y);
         using (context.PushTransform(matrix))
         {
-            context.DrawGeometry(TangerineHubGrad, null, Trail1);
-            context.DrawGeometry(TangerineHubGrad, null, Trail2);
-            context.DrawGeometry(TangerineHubGrad, null, Trail3);
-            context.DrawGeometry(TangerineHubGrad, null, JMarkIcon);
+            context.DrawGeometry(hubBrush, null, Trail1);
+            context.DrawGeometry(hubBrush, null, Trail2);
+            context.DrawGeometry(hubBrush, null, Trail3);
+            context.DrawGeometry(hubBrush, null, JMarkIcon);
             context.DrawGeometry(SparkleBrush, null, SparkleIcon);
         }
     }

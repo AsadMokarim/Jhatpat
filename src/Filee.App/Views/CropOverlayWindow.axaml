@@ -145,6 +145,7 @@
         <Grid>
           <c:CropCanvas x:Name="Canvas"
                         SourceImage="{Binding PreviewImage}"
+                        AccentBrush="{DynamicResource AccentBrush}"
                         HorizontalAlignment="Stretch"
                         VerticalAlignment="Stretch" IsVisible="{Binding IsEditing}" />
 

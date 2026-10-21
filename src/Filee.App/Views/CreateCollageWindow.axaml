@@ -194,7 +194,7 @@
                   <Button Classes="color-chip" Classes.active="{Binding IsBgWhite}" Command="{Binding SetBgColorCommand}" CommandParameter="White" Background="White" ToolTip.Tip="White" />
                   <Button Classes="color-chip" Classes.active="{Binding IsBgBlack}" Command="{Binding SetBgColorCommand}" CommandParameter="Black" Background="Black" ToolTip.Tip="Black" />
                   <Button Classes="color-chip" Classes.active="{Binding IsBgDark}" Command="{Binding SetBgColorCommand}" CommandParameter="Dark" Background="#1A1A22" ToolTip.Tip="Dark Gray" />
-                  <Button Classes="color-chip" Classes.active="{Binding IsBgAccent}" Command="{Binding SetBgColorCommand}" CommandParameter="Accent" Background="#FA4616" ToolTip.Tip="Accent Tangerine" />
+                  <Button Classes="color-chip" Classes.active="{Binding IsBgAccent}" Command="{Binding SetBgColorCommand}" CommandParameter="Accent" Background="{DynamicResource AccentBrush}" ToolTip.Tip="Accent Color" />
                   <Button Classes="color-chip" Classes.active="{Binding IsBgTransparent}" Command="{Binding SetBgColorCommand}" CommandParameter="Transparent" Background="Transparent" ToolTip.Tip="Transparent" />
                 </StackPanel>
               </StackPanel>
