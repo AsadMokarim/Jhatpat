@@ -119,6 +119,29 @@ public class DonutHighlightTests
         Assert.Equal(1, donut.LitAmount(3), 3);
     }
 
+    [AvaloniaFact]
+    public void Hovering_from_one_dial_to_another_clears_the_previous_dial_without_delay()
+    {
+        TestServices.EnsureInitialized("ko");
+        var donut = new DonutMenu
+        {
+            Items = new[] { "PNG", "JPG", "WEBP", "PDF" }.Select(l => new DonutItem { Id = l, Label = l }).ToList(),
+        };
+        // Slice 1 becomes active
+        donut.SetExternalHighlight(1);
+        donut.Advance(1 / 60.0);
+        Assert.True(donut.LitAmount(1) > 0);
+
+        // Move directly to Slice 2: slice 1 must immediately clear with zero delay
+        donut.SetExternalHighlight(2);
+        Assert.Equal(0, donut.LitAmount(1));
+        Assert.True(donut.LitAmount(2) >= 1.0);
+
+        donut.Advance(1 / 60.0);
+        Assert.Equal(0, donut.LitAmount(1));
+        Assert.True(donut.LitAmount(2) >= 0.99);
+    }
+
     [AvaloniaFact] // switching the setting restyles the open windows, which belong to the UI thread
     public void Following_the_system_reads_it_again_when_a_window_opens()
     {
