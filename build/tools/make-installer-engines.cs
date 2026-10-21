@@ -1,4 +1,4 @@
-// Writes the engine list of the installer's engine page (installer/Filee.iss includes the result): package ids, their
+// Writes the engine list of the installer's engine page (installer/Jhatpat.iss includes the result): package ids, their
 // components, sizes and which ones are suggested come from EngineDownloads (engines.json), names and texts from the
 // app's translations. So the installer offers exactly what Settings → Engines offers, in the same words.
 // Run by build/build-installer.ps1:  dotnet run build/tools/make-installer-engines.cs -- <output .iss>
@@ -21,7 +21,7 @@ var repo = Environment.CurrentDirectory;
 while (!File.Exists(Path.Combine(repo, "Filee.slnx")))
     repo = Path.GetDirectoryName(repo) ?? throw new InvalidOperationException("Run this from inside the Filee repository.");
 
-// [Languages] names in installer/Filee.iss → the app's translation files.
+// [Languages] names in installer/Jhatpat.iss → the app's translation files.
 (string Inno, string App)[] languages = [("en", "en"), ("ko", "ko"), ("zhcn", "zh-CN"), ("ja", "ja")];
 var texts = languages.ToDictionary(l => l.Inno, l => Load(Path.Combine(repo, "src", "Filee.App", "Assets", "i18n", l.App + ".json")));
 
@@ -50,14 +50,16 @@ iss.AppendLine()
     .AppendLine("[Code]")
     .AppendLine("procedure AddEngines;")
     .AppendLine("begin");
+var winComponents = EngineDownloads.ComponentsForRuntime("win-x64");
 foreach (var package in EngineDownloads.Packages)
 {
     // EngineInstaller marks each component's folder under the engines root; LibreOffice extensions ("oxt") sit
     // inside LibreOffice and come with it, so they are not checked separately.
-    var markerFolders = package.Components.Where(c => EngineDownloads.Components[c].Kind != "oxt");
+    var markerFolders = package.Components.Where(c => winComponents.TryGetValue(c, out var comp) && comp.Kind != "oxt");
+    var downloadSize = package.Components.Sum(c => winComponents.GetValueOrDefault(c)?.Size ?? 0);
     iss.AppendLine(string.Create(CultureInfo.InvariantCulture,
-        $"  AddEngine('{package.Id}', '{string.Join(',', markerFolders)}', '{FormatBytes(EngineDownloads.DownloadSize(package))}', " +
-        $"'{FormatBytes(package.InstalledSize)}', {(EngineDownloads.IsSuggested(package) ? "True" : "False")});"));
+        $"  AddEngine('{package.Id}', '{string.Join(',', markerFolders)}', '{FormatBytes(downloadSize)}', " +
+        $"'{FormatBytes(package.InstalledSize)}', {(downloadSize < EngineDownloads.SuggestLimit && package.Id != "ghostscript" ? "True" : "False")});"));
 }
 iss.AppendLine("end;");
 

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Builds the Windows installer Jhatpat-<version>-win-Setup.exe (installer/Filee.iss) and, with -Portable, the portable
+  Builds the Windows installer Jhatpat-<version>-win-Setup.exe (installer/Jhatpat.iss) and, with -Portable, the portable
   zip, into -OutputDir.
 
 .DESCRIPTION
@@ -14,7 +14,7 @@
   EngineDownloads by build/tools/make-installer-engines.cs.
 
 .PARAMETER CheckOnly
-  Compiles the script against a stub app without compression, to check installer/Filee.iss quickly (CI).
+  Compiles the script against a stub app without compression, to check installer/Jhatpat.iss quickly (CI).
 
 .EXAMPLE
   pwsh build/build-installer.ps1
@@ -108,6 +108,7 @@ elseif (-not $PublishDir) {
             "-p:Version=$Version" -p:PublishReadyToRun=true -p:FileeRelease=true -o $PublishDir
     }
     New-Item -ItemType Directory -Force -Path (Join-Path $PublishDir 'cli') | Out-Null
+    Set-Content (Join-Path $PublishDir 'cli\jhatpat.cmd') "@`"%~dp0..\filee-cli.exe`" %*" -Encoding ascii
     Set-Content (Join-Path $PublishDir 'cli\filee.cmd') "@`"%~dp0..\filee-cli.exe`" %*" -Encoding ascii
     # Next to Filee.exe: the Explorer menu package's external location is the install folder.
     & (Join-Path $PSScriptRoot 'build-explorer-menu.ps1') -Destination $PublishDir -Version $Version
@@ -137,11 +138,11 @@ finally {
 Write-Host "compile installer $Version"
 $options = @('/Q', "/DAppVersion=$Version", "/DPublishDir=$PublishDir", "/O$OutputDir")
 if ($CheckOnly) { $options += '--no-compression' }
-Invoke-Checked 'ISCC' { & $iscc @options (Join-Path $root 'installer\Filee.iss') }
+Invoke-Checked 'ISCC' { & $iscc @options (Join-Path $root 'installer\Jhatpat.iss') }
 $setupExe = Join-Path $OutputDir "Jhatpat-$Version-win-Setup.exe"
 if (-not (Test-Path $setupExe)) { throw "ISCC did not write $setupExe" }
 if ($CheckOnly) {
-    Write-Host "installer/Filee.iss compiles"
+    Write-Host "installer/Jhatpat.iss compiles"
     return
 }
 

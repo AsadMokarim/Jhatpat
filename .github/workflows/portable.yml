@@ -174,6 +174,26 @@ jobs:
           }
           ./build/build-portable.ps1 -Runtime '${{ matrix.rid }}' -Version $env:PACKAGE_VERSION -SkipFonts @native
 
+      - name: Build Debian package (.deb)
+        if: matrix.rid == 'linux-x64'
+        shell: bash
+        env:
+          PACKAGE_VERSION: ${{ inputs.version }}
+        run: |
+          VERSION="${PACKAGE_VERSION#v}"
+          if [ -z "$VERSION" ]; then
+            VERSION="1.0.0"
+          fi
+          ./scripts/package-ubuntu.sh --version "$VERSION" --output-dir Releases
+
+      - name: Upload Debian package
+        if: matrix.rid == 'linux-x64'
+        uses: actions/upload-artifact@v7
+        with:
+          name: portable-deb
+          path: Releases/*.deb
+          if-no-files-found: error
+
       - name: Check archive and run native converters
         run: ./build/smoke-portable.ps1 -Runtime '${{ matrix.rid }}'
 

@@ -112,7 +112,7 @@ applied by `WindowsPlatformServices.SetContextMenu` at start-up and whenever set
   - The package is **unsigned** (publisher contains `OID.2.25.311729368913984317654407730594956997722=1`; Filee has no
     code-signing certificate). Windows only registers an unsigned package with executable content **with
     administrator rights** (it installs it for all users); a per-user attempt fails with 0x80073D2B "an unsigned
-    package cannot include Executable activations". Setup (`installer/Filee.iss`) has those rights anyway and
+    package cannot include Executable activations". Setup (`installer/Jhatpat.iss`) has those rights anyway and
     registers it on Windows 11 x64 while its option is ticked. Later the General page offers "Add to the main menu",
     which runs `Add-AppxPackage -Path … -ExternalLocation … -AllowUnsigned` in Windows PowerShell through one UAC
     prompt (`ExplorerMenuRegistration`). A signed package would register per user without a prompt.
