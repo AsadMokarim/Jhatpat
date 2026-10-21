@@ -58,6 +58,41 @@ public static class BuiltInData
             Id = "tool-resize", NameKey = "preset.compression", TargetFormat = SameAsSource,
             Kind = PresetKind.Tool, Output = { FileNamePattern = "{name}_compressed" },
         },
+        new()
+        {
+            Id = "tool-photo-edit", NameKey = "preset.edit_photo", TargetFormat = SameAsSource,
+            Kind = PresetKind.Tool, Output = { FileNamePattern = "{name}_edited" },
+        },
+        new()
+        {
+            Id = "tool-annotate", NameKey = "preset.annotate", TargetFormat = SameAsSource,
+            Kind = PresetKind.Tool, Output = { FileNamePattern = "{name}_annotated" },
+        },
+        new()
+        {
+            Id = "tool-collage", NameKey = "preset.collage", TargetFormat = SameAsSource,
+            Kind = PresetKind.Tool, Output = { FileNamePattern = "collage" },
+        },
+        new()
+        {
+            Id = "tool-pdf-organize", NameKey = "preset.organize_pdf", TargetFormat = "pdf",
+            Kind = PresetKind.Tool, Output = { FileNamePattern = "{name}_organized" },
+        },
+        new()
+        {
+            Id = "tool-video-trim", NameKey = "preset.trim_video", TargetFormat = SameAsSource,
+            Kind = PresetKind.Tool, Output = { FileNamePattern = "{name}_trimmed" },
+        },
+        new()
+        {
+            Id = "tool-video-tools", NameKey = "preset.video_tools", TargetFormat = SameAsSource,
+            Kind = PresetKind.Tool, Output = { FileNamePattern = "{name}_processed" },
+        },
+        new()
+        {
+            Id = "tool-audio-tools", NameKey = "preset.audio_tools", TargetFormat = SameAsSource,
+            Kind = PresetKind.Tool, Output = { FileNamePattern = "{name}_processed" },
+        },
         .. ImageToolPresets(),
         new()
         {
@@ -309,7 +344,7 @@ public static class BuiltInData
         new()
         {
             Id = "image-tools", NameKey = "preset.group_image_tools", TargetFormat = Preset.GroupTarget, Kind = PresetKind.Group,
-            SubPresetIds = ["tool-crop", "tool-frame", "tool-resize", "half-size", "rotate-left", "rotate-right"],
+            SubPresetIds = ["tool-annotate", "tool-photo-edit", "tool-collage", "tool-crop", "tool-frame", "tool-resize"],
         },
     ];
 

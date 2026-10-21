@@ -288,11 +288,27 @@ public sealed class RadialController(
             return;
         }
 
-        if (preset.IsTool)
+        if (preset.IsTool || preset.Id == "merge-pdf")
         {
             var near = _window?.Position;
             Close(animate: false);
-            if (preset.Id == "tool-frame")
+            if (preset.Id is "merge-pdf" or "tool-pdf-merge")
+                windows.ShowPdfMergeWindow(sources, preset, near);
+            else if (preset.Id == "tool-pdf-organize")
+                windows.ShowPdfOrganizeWindow(sources[0], preset, near);
+            else if (preset.Id == "tool-photo-edit")
+                windows.ShowEditPhotoWindow(sources[0], preset, near);
+            else if (preset.Id == "tool-annotate")
+                windows.ShowAnnotateWindow(sources[0], preset, near);
+            else if (preset.Id == "tool-collage")
+                windows.ShowCollageWindow(sources, preset, near);
+            else if (preset.Id == "tool-video-trim")
+                windows.ShowVideoTrimWindow(sources[0], preset, near);
+            else if (preset.Id == "tool-video-tools")
+                windows.ShowVideoToolsWindow(sources, preset, near);
+            else if (preset.Id == "tool-audio-tools")
+                windows.ShowAudioToolsWindow(sources[0], preset, near);
+            else if (preset.Id == "tool-frame")
                 windows.ShowFramingOverlay(sources, preset, near);
             else if (preset.Id is "tool-resize" or "tool-compression")
             {
