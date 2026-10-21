@@ -32,7 +32,7 @@ public sealed class ThemeSettings
     public ThemeMode Mode { get; set; } = ThemeMode.System;
 
     /// <summary>Accent colour as <c>#RRGGBB</c>.</summary>
-    public string Accent { get; set; } = "#7F77DD";
+    public string Accent { get; set; } = "#FF7418";
 
     /// <summary>Base corner radius in pixels. Larger = "softer" UI.</summary>
     public double CornerRadius { get; set; } = 16;
@@ -65,7 +65,7 @@ public sealed class DonutSettings
 public sealed class AppSettings
 {
     /// <summary>Current schema version. Increase when the format changes and add a migration.</summary>
-    public const int CurrentSchemaVersion = 28;
+    public const int CurrentSchemaVersion = 29;
 
     public int SchemaVersion { get; set; } = CurrentSchemaVersion;
 
@@ -77,7 +77,7 @@ public sealed class AppSettings
     /// <summary>Show the Explorer "Convert with Filee" context menu entry.</summary>
     public bool ContextMenuEnabled { get; set; } = true;
 
-    public bool CheckForUpdates { get; set; } = true;
+    public bool CheckForUpdates { get; set; } = false;
 
     /// <summary>What closing the main window does. A value from a newer Filee reads as <see cref="CloseAction.Ask"/>.</summary>
     [JsonConverter(typeof(LenientEnumJsonConverter<CloseAction>))]
@@ -184,6 +184,21 @@ public sealed class AppSettings
 
     /// <summary>Every geospatial conversion is saved as a ZIP, whatever the preset says (see <see cref="OutputRule.ZipResult"/>).</summary>
     public bool ZipGeoResults { get; set; }
+
+    /// <summary>Last directory selected by the user for exporting or batch processing.</summary>
+    public string? LastOutputDirectory { get; set; }
+
+    /// <summary>Default target format for image resizing and compression: "same", "png", "jpg", or "webp".</summary>
+    public string DefaultImageFormat { get; set; } = "same";
+
+    /// <summary>Default compression quality for lossy codecs (10 to 100).</summary>
+    public int DefaultCompressionQuality { get; set; } = 85;
+
+    [JsonIgnore]
+    public int EffectiveDefaultCompressionQuality => Math.Clamp(DefaultCompressionQuality, 10, 100);
+
+    /// <summary>Default aspect ratio behavior for resizing: lock aspect ratio by default.</summary>
+    public bool DefaultMaintainAspectRatio { get; set; } = true;
 
     /// <summary>
     /// Returns <paramref name="preset"/> itself, or a copy with the app-wide output settings applied: it saves to

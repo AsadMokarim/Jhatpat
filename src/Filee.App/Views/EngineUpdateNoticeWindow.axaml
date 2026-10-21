@@ -3,7 +3,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Filee.App.Views.EngineUpdateNoticeWindow"
-        Title="Filee"
+        Title="Jhatpat"
         Width="360"
         SizeToContent="Height"
         WindowDecorations="None"
@@ -34,7 +34,7 @@
               <TextBlock Text="{DynamicResource engines.update}" />
             </StackPanel>
           </Button>
-          <Button Content="{DynamicResource update.later}" Click="OnClose" Padding="12,5" />
+          <Button Classes="glass" Content="{DynamicResource update.later}" Click="OnClose" Padding="12,5" />
         </StackPanel>
       </StackPanel>
     </DockPanel>

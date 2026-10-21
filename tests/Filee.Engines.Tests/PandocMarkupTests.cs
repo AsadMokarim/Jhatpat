@@ -69,7 +69,7 @@ public class PandocMarkupTests(EngineFixture fx) : IClassFixture<EngineFixture>
     [Fact]
     public void More_markup_languages_and_slides()
     {
-        var planner = fx.Catalog.CreatePlanner(["pandoc", "libreoffice"]);
+        var planner = fx.Catalog.CreatePlanner(["pandoc", "libreoffice", "rhwp"]);
         foreach (var markup in PandocConverter.Markup)
         {
             Assert.NotNull(FormatRegistry.FindById(markup));

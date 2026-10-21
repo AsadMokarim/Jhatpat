@@ -45,6 +45,8 @@ public static class AppHost
         services.AddSingleton<ThemeService>();
         services.AddSingleton<SystemIntegrationService>();
         services.AddSingleton<ElevationService>();
+        services.AddSingleton<IClipboardService, ClipboardService>();
+        services.AddSingleton<IScreenshotService, ScreenshotService>();
 
         // Conversion engines
         services.AddSingleton(_ => new EngineEnvironment(dataDir));

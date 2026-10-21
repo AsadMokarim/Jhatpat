@@ -61,7 +61,7 @@ public sealed partial class UpdateService : ObservableObject
         _log = log;
         // Downloads use their own stall timeout (StallTimeout); this one covers the API call and the response headers.
         _http = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(20) };
-        _http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Filee", CurrentVersion));
+        _http.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Jhatpat", CurrentVersion));
         _http.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
     }
 
@@ -132,9 +132,17 @@ public sealed partial class UpdateService : ObservableObject
         typeof(UpdateService).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
             .Any(a => a.Key == "FileeRelease" && a.Value == "true");
 
+    /// <summary>
+    /// Whether remote update checking is enabled.
+    /// Disabled while rebranded as Jhatpat until a dedicated Jhatpat release repository/channel is configured.
+    /// </summary>
+    public static bool UpdatesEnabled { get; set; } = false;
+
     /// <summary>Checks the latest release now. Returns the newer version, or null when up to date or offline.</summary>
     public async Task<string?> CheckAsync(CancellationToken cancellationToken = default)
     {
+        if (!UpdatesEnabled)
+            return null;
         await RefreshAsync(announce: true, cancellationToken);
         return LatestVersion;
     }
@@ -146,6 +154,8 @@ public sealed partial class UpdateService : ObservableObject
     /// </summary>
     internal async Task<bool> RefreshAsync(bool announce, CancellationToken cancellationToken = default)
     {
+        if (!UpdatesEnabled && announce)
+            return false;
         try
         {
             var api = RepositoryUrl.TrimEnd('/').Replace("https://github.com/", "https://api.github.com/repos/", StringComparison.OrdinalIgnoreCase)
@@ -219,6 +229,8 @@ public sealed partial class UpdateService : ObservableObject
     /// <summary>Checks shortly after start and then every few hours while <paramref name="enabled"/> says so.</summary>
     public void StartPeriodicChecks(Func<bool> enabled, TimeSpan firstDelay)
     {
+        if (!UpdatesEnabled)
+            return;
         if (_timer is not null)
             return;
         _timer = new DispatcherTimer { Interval = firstDelay };

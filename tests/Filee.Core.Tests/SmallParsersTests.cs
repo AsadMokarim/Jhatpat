@@ -1,5 +1,6 @@
 using Filee.Core.Conversion;
 using Filee.Core.Formats;
+using Filee.Core.Platform;
 using Filee.Core.Presets;
 
 namespace Filee.Core.Tests;
@@ -90,7 +91,7 @@ public class BuiltInDataTests
             Assert.InRange(group.SubPresetIds.Count, 1, Preset.MaxSubPresets);
             Assert.All(group.SubPresetIds, id => Assert.False(presets[id].IsGroup, id));
         }
-        Assert.DoesNotContain(BuiltInData.CreateProfiles(), p => p.PresetIds.Any(id => presets[id].IsGroup));
+        Assert.DoesNotContain(BuiltInData.CreateProfiles(), p => p.PresetIds.Any(id => presets[id].IsGroup && id != "image-tools"));
     }
 
     [Fact]
@@ -164,5 +165,39 @@ public class BuiltInDataTests
             Assert.DoesNotContain(pngPreset.Id, profile.PresetIds);
             Assert.DoesNotContain(jpgPreset.Id, profile.PresetIds);
         }
+    }
+}
+
+public class FileSystemPathsTests
+{
+    [Fact]
+    public void PathsEqual_identifies_identical_and_case_variant_paths()
+    {
+        Assert.True(FileSystemPaths.PathsEqual("/path/to/file.png", "/path/to/file.png"));
+        Assert.True(FileSystemPaths.PathsEqual("/path/to/file.png", "/path/to/FILE.PNG"));
+        Assert.True(FileSystemPaths.PathsEqual("/path/to/../to/file.png", "/path/to/file.png"));
+        Assert.False(FileSystemPaths.PathsEqual("/path/to/file1.png", "/path/to/file2.png"));
+        Assert.False(FileSystemPaths.PathsEqual(null, "/path/to/file.png"));
+        Assert.False(FileSystemPaths.PathsEqual("/path/to/file.png", null));
+        Assert.False(FileSystemPaths.PathsEqual("", ""));
+    }
+
+    [Fact]
+    public void Exception_helpers_classify_correctly()
+    {
+        Assert.True(FileSystemPaths.IsPermissionDenied(new UnauthorizedAccessException()));
+        Assert.False(FileSystemPaths.IsPermissionDenied(new IOException()));
+
+        Assert.True(FileSystemPaths.IsDiskFull(new IOException("No space left on device")));
+        Assert.True(FileSystemPaths.IsDiskFull(new IOException("There is not enough space on the disk.")));
+        Assert.True(FileSystemPaths.IsDiskFull(new IOException("disk full")));
+        Assert.False(FileSystemPaths.IsDiskFull(new IOException("File locked")));
+
+        Assert.True(FileSystemPaths.IsCorrupt(new InvalidDataException()));
+        Assert.False(FileSystemPaths.IsCorrupt(new ArgumentException()));
+
+        Assert.True(FileSystemPaths.IsNotFound(new FileNotFoundException()));
+        Assert.True(FileSystemPaths.IsNotFound(new DirectoryNotFoundException()));
+        Assert.False(FileSystemPaths.IsNotFound(new IOException()));
     }
 }

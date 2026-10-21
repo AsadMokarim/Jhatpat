@@ -159,16 +159,18 @@ public sealed partial class RadialViewModel(UserDataStore store, ILocalizer loc,
 
         DonutItem ItemOf(Preset p, bool caption = true)
         {
-            var reason = availability.Check(p, formats);
+            var reason = files.Count == 0 ? null : availability.Check(p, formats);
             return new DonutItem
             {
                 Id = p.Id,
                 // On a group's ring the group's name gives the context: "Rotate" → Left / Right / 180°.
                 Label = caption ? loc.DisplayName(p) : loc.RingName(p),
                 Caption = !caption ? null
-                    : p.TargetFormat == BuiltInData.SameAsSource
-                        ? string.Join("/", formats.Select(f => f.DisplayName).Take(2))
-                        : FormatLabels.NameOf(loc, p.TargetFormat),
+                    : files.Count == 0
+                        ? (p.TargetFormat == BuiltInData.SameAsSource ? null : FormatLabels.NameOf(loc, p.TargetFormat))
+                        : p.TargetFormat == BuiltInData.SameAsSource
+                            ? string.Join("/", formats.Select(f => f.DisplayName).Take(2))
+                            : FormatLabels.NameOf(loc, p.TargetFormat),
                 IsEnabled = reason is null,
                 DisabledReason = reason,
                 IsPromoted = caption && p.Id == "image-tools",
@@ -195,9 +197,11 @@ public sealed partial class RadialViewModel(UserDataStore store, ILocalizer loc,
             };
         }).ToList();
 
-        CenterTitle = formats.Count == 1
-            ? loc.Format("donut.files_same", files.Count, formats[0].DisplayName)
-            : loc.Format("donut.files_mixed", files.Count);
+        CenterTitle = files.Count == 0
+            ? "Jhatpat"
+            : formats.Count == 1
+                ? loc.Format("donut.files_same", files.Count, formats[0].DisplayName)
+                : loc.Format("donut.files_mixed", files.Count);
         CenterSubtitle = clickMode ? loc["donut.close_hint"] : null;
     }
 

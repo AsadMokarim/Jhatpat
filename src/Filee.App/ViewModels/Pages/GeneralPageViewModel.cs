@@ -48,6 +48,9 @@ public sealed partial class GeneralPageViewModel : ObservableObject, IDisposable
         _defaultFolder = output.CustomFolder;
         _keepFileDates = store.Settings.KeepFileDates;
         _zipGeoResults = store.Settings.ZipGeoResults;
+        _defaultImageFormat = ImageFormats.FirstOrDefault(f => f.Value == store.Settings.DefaultImageFormat) ?? ImageFormats[0];
+        _defaultQuality = store.Settings.EffectiveDefaultCompressionQuality;
+        _defaultMaintainAspectRatio = store.Settings.DefaultMaintainAspectRatio;
         CloseChoices = Enum.GetValues<CloseAction>().Select(v => new Choice<CloseAction>(v, loc[$"general.close.{v}"])).ToList();
         _closeChoice = CloseChoices.First(c => c.Value == store.Settings.CloseAction);
         store.SettingsChanged += OnSettingsChanged;
@@ -91,6 +94,30 @@ public sealed partial class GeneralPageViewModel : ObservableObject, IDisposable
 
     [ObservableProperty] private bool _keepFileDates;
     [ObservableProperty] private bool _zipGeoResults;
+
+    public IReadOnlyList<Choice<string>> ImageFormats { get; } =
+    [
+        new Choice<string>("same", "Same as input"),
+        new Choice<string>("png", "PNG"),
+        new Choice<string>("jpg", "JPEG"),
+        new Choice<string>("webp", "WebP"),
+    ];
+
+    [ObservableProperty] private Choice<string> _defaultImageFormat;
+    [ObservableProperty] private int _defaultQuality;
+    [ObservableProperty] private bool _defaultMaintainAspectRatio;
+
+    partial void OnDefaultImageFormatChanged(Choice<string>? oldValue, Choice<string> newValue)
+    {
+        if (!Choices.Restore(oldValue, newValue, v => DefaultImageFormat = v))
+            Save(s => s.DefaultImageFormat = newValue.Value);
+    }
+
+    partial void OnDefaultQualityChanged(int value) =>
+        Save(s => s.DefaultCompressionQuality = Math.Clamp(value, 10, 100));
+
+    partial void OnDefaultMaintainAspectRatioChanged(bool value) =>
+        Save(s => s.DefaultMaintainAspectRatio = value);
 
     /// <summary>What closing the main window does; its "Don't ask again" also sets it.</summary>
     public IReadOnlyList<Choice<CloseAction>> CloseChoices { get; }

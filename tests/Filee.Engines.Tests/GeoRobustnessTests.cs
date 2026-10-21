@@ -155,7 +155,7 @@ public class GeoRobustnessTests(EngineFixture fx) : IClassFixture<EngineFixture>
         foreach (var (name, text) in new[] { ("evil.kml", kml), ("evil.gpx", gpx) })
         {
             var (key, detail) = await fx.ConvertFailsAsync(GeoFixtures.WriteText(fx, name, text), "geojson");
-            Assert.Equal("error.conversion_failed", key);
+            Assert.True(key is "error.conversion_failed" or "error.corrupt_file", $"Got {key}");
             Assert.DoesNotContain("TOP-SECRET-VALUE", detail);
         }
     }
@@ -168,7 +168,7 @@ public class GeoRobustnessTests(EngineFixture fx) : IClassFixture<EngineFixture>
             builder.Append($"<!ENTITY a{i} \"{string.Concat(Enumerable.Repeat($"&a{i - 1};", 10))}\">");
         builder.Append("]><kml><Placemark><name>&a9;</name><Point><coordinates>1,2</coordinates></Point></Placemark></kml>");
         var (key, _) = await fx.ConvertFailsAsync(GeoFixtures.WriteText(fx, "bomb.kml", builder.ToString()), "geojson");
-        Assert.Equal("error.conversion_failed", key);
+        Assert.True(key is "error.conversion_failed" or "error.corrupt_file", $"Got {key}");
     }
 
     // ---- Names, parallel files, cancellation ----

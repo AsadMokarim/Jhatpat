@@ -30,7 +30,8 @@ public sealed partial class GroupEditorViewModel : ObservableObject
         _name = loc.DisplayName(group);
         foreach (var id in group.SubPresetIds)
         {
-            if (store.FindPreset(id) is { IsGroup: false } preset)
+            var preset = store.FindPreset(id) ?? BuiltInData.CreatePresets().FirstOrDefault(x => x.Id == id);
+            if (preset is { IsGroup: false })
                 Members.Add(MemberOf(preset));
         }
         Members.CollectionChanged += (_, _) => Refresh();

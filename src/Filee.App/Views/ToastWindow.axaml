@@ -5,7 +5,7 @@
         xmlns:s="using:Filee.App.Services"
         x:Class="Filee.App.Views.ToastWindow"
         x:DataType="s:ConversionService"
-        Title="Filee"
+        Title="Jhatpat"
         Width="360"
         SizeToContent="Height"
         WindowDecorations="None"
@@ -65,8 +65,8 @@
             <ProgressBar Value="{Binding Progress}" Maximum="100" IsVisible="{Binding IsRunning}" />
             <DockPanel>
               <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6">
-                <Button Content="{DynamicResource toast.cancel}" Command="{Binding CancelCommand}" IsVisible="{Binding IsRunning}" Padding="10,4" />
-                <Button Command="{Binding RetryCommand}" IsVisible="{Binding CanRetry}" Padding="10,4">
+                <Button Classes="glass" Content="{DynamicResource toast.cancel}" Command="{Binding CancelCommand}" IsVisible="{Binding IsRunning}" Padding="10,4" />
+                <Button Classes="glass" Command="{Binding RetryCommand}" IsVisible="{Binding CanRetry}" Padding="10,4">
                   <StackPanel Orientation="Horizontal" Spacing="6">
                     <PathIcon Width="13" Height="13" Data="{StaticResource Icon.Refresh}" />
                     <TextBlock Text="{DynamicResource common.retry}" />

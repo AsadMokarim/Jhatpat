@@ -106,6 +106,39 @@ public sealed partial class DonutMenu : Control
     private static readonly Geometry PencilIcon = Geometry.Parse(
         "M3,17.25V21h3.75L17.81,9.94l-3.75-3.75L3,17.25z M20.71,7.04c0.39-0.39,0.39-1.02,0-1.41l-2.34-2.34c-0.39-0.39-1.02-0.39-1.41,0l-1.83,1.83l3.75,3.75L20.71,7.04z");
 
+    // Jhatpat signature brand geometries for Tangerine central hub
+    private static readonly Geometry JMarkIcon = Geometry.Parse(
+        "M321,61 C342,57 356,69 352,91 L320,269 C308,337 274,383 215,407 C173,424 128,414 108,386 C91,363 98,333 120,313 C137,297 155,300 172,314 C190,329 207,329 222,315 C235,302 242,282 248,255 L266,158 L199,160 C176,161 161,147 166,127 C171,108 187,96 210,91 Z");
+    private static readonly Geometry SparkleIcon = Geometry.Parse(
+        "M407,132 C412,153 418,161 440,167 C418,173 412,181 407,203 C401,181 394,173 373,167 C394,161 401,153 407,132 Z");
+    private static readonly Geometry Trail1 = Geometry.Parse("M72,184 h136 a12,12 0 0 1 12,12 a12,12 0 0 1 -12,12 h-136 a12,12 0 0 1 -12,-12 a12,12 0 0 1 12,-12 Z");
+    private static readonly Geometry Trail2 = Geometry.Parse("M38,231 h158 a12,12 0 0 1 12,12 a12,12 0 0 1 -12,12 h-158 a12,12 0 0 1 -12,-12 a12,12 0 0 1 12,-12 Z");
+    private static readonly Geometry Trail3 = Geometry.Parse("M80,282 h45 a11,11 0 0 1 11,11 a11,11 0 0 1 -11,11 h-45 a11,11 0 0 1 -11,-11 a11,11 0 0 1 11,-11 Z");
+
+    private static readonly IBrush TangerineHoverBrush = new LinearGradientBrush
+    {
+        StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+        EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+        GradientStops =
+        {
+            new GradientStop(Color.FromArgb(240, 255, 179, 26), 0),
+            new GradientStop(Color.FromArgb(250, 255, 116, 24), 1),
+        },
+    };
+    private static readonly IBrush TangerineHubGrad = new LinearGradientBrush
+    {
+        StartPoint = new RelativePoint(0.12, 0.02, RelativeUnit.Relative),
+        EndPoint = new RelativePoint(0.82, 0.98, RelativeUnit.Relative),
+        GradientStops =
+        {
+            new GradientStop(Color.Parse("#FFE72E"), 0),
+            new GradientStop(Color.Parse("#FFB31A"), 0.35),
+            new GradientStop(Color.Parse("#FF7418"), 0.7),
+            new GradientStop(Color.Parse("#FF3D32"), 1.0),
+        },
+    };
+    private static readonly IBrush SparkleBrush = new SolidColorBrush(Color.Parse("#FFB51B"));
+
     private Spring[] _hover = [];
     private double[] _open = [];
     private Spring _centerPulse;
@@ -602,6 +635,19 @@ public sealed partial class DonutMenu : Control
         e.Handled = true;
     }
 
+    protected override void OnDoubleTapped(TappedEventArgs e)
+    {
+        base.OnDoubleTapped(e);
+        if (!IsEditMode)
+            return;
+        var hit = HitTest(e.GetPosition(this));
+        if (hit.Kind is DonutHitKind.Segment or DonutHitKind.EditButton)
+        {
+            SegmentContextRequested?.Invoke(this, hit.Index);
+            e.Handled = true;
+        }
+    }
+
     private void SetHover(int index)
     {
         if (_hoverIndex == index)
@@ -903,10 +949,18 @@ public sealed partial class DonutMenu : Control
                 var wedge = CreateWedge(center, r1Slice, r2Slice, mid, span);
                 context.DrawGeometry(WithOpacity(SliceBrush, SliceOpacity * (item.IsEnabled ? 1 : 0.55)), BorderPen(), wedge);
 
-                // The accent fades in and out with the highlight (no floor: a floor made it vanish with a jump).
+                // Delicate frosted glass specular top rim arc
+                var rimArc = CreateOuterArc(center, r2Slice - 1.0, mid, span - 0.04);
+                var rimPen = new Pen(new SolidColorBrush(Color.FromArgb(42, 255, 255, 255)), 1.2);
+                context.DrawGeometry(null, rimPen, rimArc);
+
+                // Tangerine highlight with warm gradient when hovered or drop target
                 var emphasis = i == _dropTargetIndex ? 1.0 : hover;
                 if (emphasis > 0.01 && item.IsEnabled)
-                    context.DrawGeometry(WithOpacity(AccentBrush, 0.82 * Math.Clamp(emphasis, 0, 1)), null, wedge);
+                {
+                    var highlightBrush = WithOpacity(TangerineHoverBrush, 0.88 * Math.Clamp(emphasis, 0, 1));
+                    context.DrawGeometry(highlightBrush, null, wedge);
+                }
 
                 var hot = (i == ActiveIndex || i == _dropTargetIndex) && item.IsEnabled;
                 DrawLabel(context, item, center, (r1Slice + r2Slice) / 2, mid, span * (r1Slice + r2Slice) / 2 - 10,
@@ -931,21 +985,37 @@ public sealed partial class DonutMenu : Control
 
     private void DrawSoftShadow(DrawingContext context, Point center, double r2)
     {
-        // A radial gradient ring fakes a soft drop shadow without blur effects (cheap on any GPU).
-        var shadowRadius = r2 + 14;
+        // Multi-layer ambient and directional soft shadow with Tangerine ambient warmth
+        var shadowRadius = r2 + 20;
         var brush = new RadialGradientBrush
         {
             GradientStops =
             {
                 new GradientStop(Color.FromArgb(0, 0, 0, 0), 0),
-                new GradientStop(Color.FromArgb(0, 0, 0, 0), (r2 - 18) / shadowRadius),
-                new GradientStop(Color.FromArgb(46, 0, 0, 0), (r2 - 2) / shadowRadius),
+                new GradientStop(Color.FromArgb(0, 0, 0, 0), (r2 - 20) / shadowRadius),
+                new GradientStop(Color.FromArgb(52, 0, 0, 0), (r2 - 2) / shadowRadius),
+                new GradientStop(Color.FromArgb(20, 0, 0, 0), (r2 + 8) / shadowRadius),
                 new GradientStop(Color.FromArgb(0, 0, 0, 0), 1),
             },
         };
         var opening = _open.Length == 0 ? 1 : Math.Clamp(_open.Average(), 0, 1);
         using (context.PushOpacity(opening))
-            context.DrawEllipse(brush, null, new Point(center.X, center.Y + 4), shadowRadius, shadowRadius);
+        {
+            context.DrawEllipse(brush, null, new Point(center.X, center.Y + 5), shadowRadius, shadowRadius);
+            if (_hoverIndex >= 0)
+            {
+                var glowBrush = new RadialGradientBrush
+                {
+                    GradientStops =
+                    {
+                        new GradientStop(Color.FromArgb(0, 0, 0, 0), 0),
+                        new GradientStop(Color.FromArgb(26, 255, 116, 24), (r2 - 10) / (shadowRadius + 6)),
+                        new GradientStop(Color.FromArgb(0, 255, 116, 24), 1),
+                    },
+                };
+                context.DrawEllipse(glowBrush, null, center, shadowRadius + 6, shadowRadius + 6);
+            }
+        }
     }
 
     private void DrawCenter(DrawingContext context, Point center, double r1, Typeface bold, Typeface regular)
@@ -953,18 +1023,76 @@ public sealed partial class DonutMenu : Control
         var pulse = 1 + _centerPulse.Value * 0.06;
         var radius = (r1 - 6) * pulse;
         var cancelHot = _externalCenterHot;
-        context.DrawEllipse(CenterBrush, BorderPen(), center, radius, radius);
-        if (cancelHot)
-            context.DrawEllipse(WithOpacity(DangerBrush, 0.18), null, center, radius, radius);
 
-        var maxWidth = radius * 1.6;
-        var title = MakeText(CenterTitle ?? "", bold, 14, Foreground, maxWidth, maxLines: 2);
-        var subtitle = MakeText(CenterSubtitle ?? "", regular, 11.5, cancelHot ? DangerBrush : SecondaryForeground, maxWidth, maxLines: 2);
-        var total = title.Height + (string.IsNullOrEmpty(CenterSubtitle) ? 0 : subtitle.Height + 2);
-        var y = center.Y - total / 2;
-        DrawCentered(context, title, center.X, y);
-        if (!string.IsNullOrEmpty(CenterSubtitle))
-            DrawCentered(context, subtitle, center.X, y + title.Height + 2);
+        // Outer frosted glass disc
+        context.DrawEllipse(CenterBrush, BorderPen(), center, radius, radius);
+
+        // Specular outer rim reflection
+        var rimPen = new Pen(new SolidColorBrush(Color.FromArgb(42, 255, 255, 255)), 1.2);
+        context.DrawEllipse(null, rimPen, center, radius - 1, radius - 1);
+
+        // Inner subtle concentric aperture ring
+        var innerPen = new Pen(new SolidColorBrush(Color.FromArgb(24, 255, 255, 255)), 1);
+        context.DrawEllipse(null, innerPen, center, radius * 0.72, radius * 0.72);
+
+        if (cancelHot)
+        {
+            context.DrawEllipse(WithOpacity(DangerBrush, 0.22), null, center, radius, radius);
+            var bounds = CloseIcon.Bounds;
+            var s = (radius * 0.7) / Math.Max(bounds.Width, bounds.Height);
+            var matrix = Matrix.CreateTranslation(-bounds.Center.X, -bounds.Center.Y) * Matrix.CreateScale(s, s) * Matrix.CreateTranslation(center.X, center.Y);
+            using (context.PushTransform(matrix))
+                context.DrawGeometry(DangerBrush, null, CloseIcon);
+            return;
+        }
+
+        var hasTitle = !string.IsNullOrWhiteSpace(CenterTitle);
+        var hasSubtitle = !string.IsNullOrWhiteSpace(CenterSubtitle);
+
+        if (hasTitle || hasSubtitle)
+        {
+            var maxWidth = radius * 1.6;
+            var title = MakeText(CenterTitle ?? "", bold, 13.5, Foreground, maxWidth, maxLines: 2);
+            var subtitle = MakeText(CenterSubtitle ?? "", regular, 11, SecondaryForeground, maxWidth, maxLines: 2);
+            var total = title.Height + (hasSubtitle ? subtitle.Height + 2 : 0);
+            var y = center.Y - total / 2;
+            DrawCentered(context, title, center.X, y);
+            if (hasSubtitle)
+                DrawCentered(context, subtitle, center.X, y + title.Height + 2);
+        }
+        else
+        {
+            // Resting state: display signature Jhatpat brand emblem at central hub
+            DrawCenterEmblem(context, center, radius * 0.65);
+        }
+    }
+
+    private static void DrawCenterEmblem(DrawingContext context, Point center, double targetSize)
+    {
+        var scale = targetSize / 512.0;
+        var matrix = Matrix.CreateTranslation(-256, -256) * Matrix.CreateScale(scale, scale) * Matrix.CreateTranslation(center.X, center.Y);
+        using (context.PushTransform(matrix))
+        {
+            context.DrawGeometry(TangerineHubGrad, null, Trail1);
+            context.DrawGeometry(TangerineHubGrad, null, Trail2);
+            context.DrawGeometry(TangerineHubGrad, null, Trail3);
+            context.DrawGeometry(TangerineHubGrad, null, JMarkIcon);
+            context.DrawGeometry(SparkleBrush, null, SparkleIcon);
+        }
+    }
+
+    private static StreamGeometry CreateOuterArc(Point center, double r, double mid, double span)
+    {
+        var s = mid - span / 2;
+        var e = mid + span / 2;
+        var p1 = DonutGeometry.PointAt(center, r, s);
+        var p2 = DonutGeometry.PointAt(center, r, e);
+        var geo = new StreamGeometry();
+        using var ctx = geo.Open();
+        ctx.BeginFigure(p1, false);
+        ctx.ArcTo(p2, new Size(r, r), 0, span > Math.PI, SweepDirection.Clockwise);
+        ctx.EndFigure(false);
+        return geo;
     }
 
     private void DrawLabel(DrawingContext context, DonutItem item, Point center, double radius, double angle,

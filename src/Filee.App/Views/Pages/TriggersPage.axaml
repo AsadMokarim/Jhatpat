@@ -134,7 +134,7 @@
           <Button.Flyout>
             <Flyout Placement="BottomEdgeAlignedLeft">
               <StackPanel Spacing="8" Width="280">
-                <TextBox Text="{Binding RunningSearch}" Watermark="{DynamicResource common.search}">
+                <TextBox Text="{Binding RunningSearch}" PlaceholderText="{DynamicResource common.search}">
                   <TextBox.InnerLeftContent>
                     <PathIcon Width="14" Height="14" Margin="10,0,0,0" Data="{StaticResource Icon.Search}" Foreground="{DynamicResource TextSecondaryBrush}" />
                   </TextBox.InnerLeftContent>

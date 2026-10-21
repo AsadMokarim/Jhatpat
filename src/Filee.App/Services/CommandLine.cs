@@ -31,7 +31,9 @@ public sealed record CommandLine(
     bool UninstallCleanup = false,
     IReadOnlyList<string>? InstallEngines = null,
     bool? StartWithWindows = null,
-    bool? ContextMenu = null)
+    bool? ContextMenu = null,
+    bool ShowRadial = false,
+    bool ShowDropZone = false)
 {
     /// <summary>File name prefix of list files written by FileeExplorerMenu.dll (LIST_PREFIX there) into %TEMP%.</summary>
     public const string ListFilePrefix = "Filee-convert-";
@@ -40,6 +42,8 @@ public sealed record CommandLine(
     {
         var background = false;
         var settings = false;
+        var showRadial = false;
+        var showDropZone = false;
         var files = new List<string>();
         string? listFile = null;
         var collecting = false;
@@ -62,6 +66,12 @@ public sealed record CommandLine(
             var (name, value) = SplitOption(arg);
             switch (name)
             {
+                case "--radial" or "--menu" or "--quick-actions":
+                    showRadial = true;
+                    break;
+                case "--drop-zone" or "--dropzone":
+                    showDropZone = true;
+                    break;
                 case "--install-engines" when value is not null:
                     engines = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                         .Select(id => id.ToLowerInvariant()).Distinct().ToList();
@@ -97,7 +107,7 @@ public sealed record CommandLine(
                     break;
             }
         }
-        return new CommandLine(background, settings, files, listFile, quit, cleanup, engines, startWithWindows, contextMenu);
+        return new CommandLine(background, settings, files, listFile, quit, cleanup, engines, startWithWindows, contextMenu, showRadial, showDropZone);
     }
 
     /// <summary>"--Name=Value" → ("--name", "Value"); "--name" → ("--name", null).</summary>

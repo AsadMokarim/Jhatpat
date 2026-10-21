@@ -78,4 +78,36 @@ public class RadialControllerTests
             Directory.Delete(folder, recursive: true);
         }
     }
+
+    [Fact]
+    public void WindowPosition_centers_and_clamps_on_screen()
+    {
+        var screenArea = new Avalonia.PixelRect(0, 0, 1920, 1080);
+        var centerCursor = new Avalonia.PixelPoint(960, 540);
+        var pos = RadialController.WindowPosition(centerCursor, screenArea, 300);
+        Assert.Equal(810, pos.X);
+        Assert.Equal(390, pos.Y);
+
+        // Clamping at top-left edge
+        var cornerCursor = new Avalonia.PixelPoint(10, 10);
+        var clampedPos = RadialController.WindowPosition(cornerCursor, screenArea, 300);
+        Assert.Equal(0, clampedPos.X);
+        Assert.Equal(0, clampedPos.Y);
+    }
+
+    [AvaloniaFact]
+    public void ShowRadial_loads_quick_actions_when_files_empty()
+    {
+        TestServices.EnsureInitialized("en");
+        var radial = AppHost.Get<RadialController>();
+        radial.ShowRadial();
+
+        Assert.True(radial.IsVisible);
+        Assert.NotNull(radial.Window);
+        Assert.True(radial.Window.IsVisible);
+        Assert.Equal("Jhatpat", radial.ViewModel.CenterTitle);
+
+        radial.Close(animate: false);
+        Assert.False(radial.IsVisible);
+    }
 }

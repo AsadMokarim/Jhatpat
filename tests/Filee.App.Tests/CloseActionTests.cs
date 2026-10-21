@@ -137,11 +137,12 @@ public class CloseActionTests
     {
         TestServices.EnsureInitialized("en");
         var store = AppHost.Get<UserDataStore>();
-        using var page = new GeneralPageViewModel(store, AppHost.Get<ILocalizer>(), AppHost.Get<IPlatformServices>(),
+        var loc = AppHost.Get<ILocalizer>();
+        using var page = new GeneralPageViewModel(store, loc, AppHost.Get<IPlatformServices>(),
             NullLogger<GeneralPageViewModel>.Instance);
         try
         {
-            Assert.Equal(["Ask every time", "Keep Filee running in the tray", "Quit Filee"], page.CloseChoices.Select(c => c.Label));
+            Assert.Equal([loc["general.close.Ask"], loc["general.close.Tray"], loc["general.close.Quit"]], page.CloseChoices.Select(c => c.Label));
             page.CloseChoice = page.CloseChoices.Single(c => c.Value == CloseAction.Quit);
             Assert.Equal(CloseAction.Quit, store.Settings.CloseAction);
         }
