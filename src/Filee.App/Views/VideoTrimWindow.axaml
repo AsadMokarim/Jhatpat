@@ -1,0 +1,231 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Filee.App.ViewModels"
+        x:Class="Filee.App.Views.VideoTrimWindow"
+        x:DataType="vm:VideoTrimViewModel"
+        Title="Trim Video"
+        Icon="avares://Filee/Assets/Icons/jhatpat.ico"
+        Width="1040" Height="720" MinWidth="860" MinHeight="580"
+        WindowDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        Topmost="True"
+        CanResize="True">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
+    <KeyBinding Gesture="Space" Command="{Binding TogglePlayCommand}" />
+  </Window.KeyBindings>
+
+  <Window.Styles>
+    <Style Selector="Button.control-btn">
+      <Setter Property="Width" Value="36" />
+      <Setter Property="Height" Value="36" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="CornerRadius" Value="18" />
+      <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SubtleBorderBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.control-btn:pointerover">
+      <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <Style Selector="Button.play-btn">
+      <Setter Property="Width" Value="44" />
+      <Setter Property="Height" Value="44" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="CornerRadius" Value="22" />
+      <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.play-btn:pointerover">
+      <Setter Property="Opacity" Value="0.9" />
+    </Style>
+    <Style Selector="Button.action-btn">
+      <Setter Property="Padding" Value="14,8" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+  </Window.Styles>
+
+  <Border Margin="16" CornerRadius="{DynamicResource SoftRadius}"
+          Background="{DynamicResource GlassPanelBrush}"
+          BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1"
+          ClipToBounds="True"
+          BoxShadow="{DynamicResource GlassShadow}">
+    <DockPanel>
+      <!-- Top header bar -->
+      <Border DockPanel.Dock="Top" Height="50" Padding="18,0" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,0,0,1"
+              Background="{DynamicResource GlassHeaderBrush}">
+        <DockPanel VerticalAlignment="Center">
+          <Button DockPanel.Dock="Right" Classes="icon" Command="{Binding CloseCommand}"
+                  ToolTip.Tip="Close" Margin="4,0,0,0">
+            <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Close}" Foreground="{DynamicResource TextSecondaryBrush}" />
+          </Button>
+
+          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="8" Width="30" Height="30">
+              <PathIcon Width="16" Height="16" Data="{StaticResource Icon.Video}" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <TextBlock Text="Trim Video" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+
+            <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+              <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" MaxWidth="220" TextTrimming="CharacterEllipsis" />
+            </Border>
+
+            <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+              <TextBlock Text="{Binding TotalDurationText}" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold" />
+            </Border>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- Bottom action bar -->
+      <Border DockPanel.Dock="Bottom" Padding="18,12" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,1,0,0"
+              Background="{DynamicResource GlassHeaderBrush}">
+        <DockPanel VerticalAlignment="Center">
+          <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="10">
+            <Button Classes="action-btn" Command="{Binding ExportCurrentFrameCommand}"
+                    Background="{DynamicResource SurfaceAltBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
+                    BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Camera}" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <TextBlock Text="Save Current Frame" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+            <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="{DynamicResource AccentBrush}"
+                       VerticalAlignment="Center" Margin="0,0,6,0" IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+            <Button Classes="action-btn" Command="{Binding OpenOutputFolderCommand}" IsVisible="{Binding IsFinished}"
+                    Background="{DynamicResource SurfaceAltBrush}" Foreground="{DynamicResource TextPrimaryBrush}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Folder}" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <TextBlock Text="Open Folder" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+
+            <Button Classes="action-btn" Command="{Binding ApplyTrimCommand}" IsEnabled="{Binding !IsProcessing}"
+                    Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource OnAccentBrush}" FontWeight="SemiBold" Padding="18,8">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ProgressBar IsIndeterminate="True" Width="14" Height="14" IsVisible="{Binding IsProcessing}" />
+                <PathIcon Width="13" Height="13" Data="{StaticResource Icon.Check}" IsVisible="{Binding !IsProcessing}" Foreground="{DynamicResource OnAccentBrush}" />
+                <TextBlock Text="Apply Trim" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- Bottom Controls and Filmstrip Timeline -->
+      <Border DockPanel.Dock="Bottom" Background="{DynamicResource SurfaceAltBrush}" Padding="18,12" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="0,1,0,0">
+        <StackPanel Spacing="10">
+          <!-- Filmstrip Timeline Container -->
+          <Border Height="72" Background="#111116" CornerRadius="8" ClipToBounds="True" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1">
+            <Grid>
+              <!-- Filmstrip Images -->
+              <ItemsControl ItemsSource="{Binding FilmstripThumbnails}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Image Source="{Binding}" Stretch="UniformToFill" />
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <!-- Loading spinner for filmstrip -->
+              <ProgressBar IsIndeterminate="True" Width="120" Height="4" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsLoadingFilmstrip}" />
+            </Grid>
+          </Border>
+
+          <!-- Timeline Scrubber Sliders -->
+          <StackPanel Spacing="2">
+            <!-- Scrubber Slider -->
+            <Slider Minimum="0" Maximum="{Binding TotalDurationSeconds}" Value="{Binding CurrentTimeSeconds}" />
+
+            <!-- Trim Range Sliders -->
+            <Grid ColumnDefinitions="*, *">
+              <!-- Start Handle -->
+              <DockPanel Grid.Column="0" Margin="0,0,8,0">
+                <TextBlock Text="Start:" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <TextBlock Text="{Binding StartTimeText}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Width="60" />
+                <Slider Minimum="0" Maximum="{Binding TotalDurationSeconds}" Value="{Binding StartTimeSeconds}" />
+              </DockPanel>
+
+              <!-- End Handle -->
+              <DockPanel Grid.Column="1" Margin="8,0,0,0">
+                <TextBlock Text="End:" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                <TextBlock Text="{Binding EndTimeText}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Width="60" />
+                <Slider Minimum="0" Maximum="{Binding TotalDurationSeconds}" Value="{Binding EndTimeSeconds}" />
+              </DockPanel>
+            </Grid>
+          </StackPanel>
+
+          <!-- Stepping & Playback controls bar -->
+          <Grid ColumnDefinitions="*, Auto, *">
+            <!-- Left Time readout -->
+            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="6" Padding="8,4" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1">
+                <TextBlock Text="{Binding CurrentTimeText, StringFormat='{}Position: {0}'}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
+              </Border>
+            </StackPanel>
+
+            <!-- Center Stepping & Play/Pause -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Button Classes="control-btn" Command="{Binding SeekToStartCommand}" ToolTip.Tip="Seek to Trim Start (|&lt;)">
+                <PathIcon Width="10" Height="10" Data="{StaticResource Icon.ChevronRight}" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                  <PathIcon.RenderTransform>
+                    <RotateTransform Angle="180" />
+                  </PathIcon.RenderTransform>
+                </PathIcon>
+              </Button>
+              <Button Classes="control-btn" Command="{Binding StepBackwardCommand}" ToolTip.Tip="Step -0.1s (&lt;)">
+                <TextBlock Text="&lt;" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Button>
+
+              <!-- Big Play / Pause Circle Button -->
+              <Button Classes="play-btn" Command="{Binding TogglePlayCommand}" ToolTip.Tip="Play / Pause (Space)">
+                <Grid>
+                  <PathIcon Width="16" Height="16" Data="{StaticResource Icon.Play}" Foreground="{DynamicResource OnAccentBrush}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsPlaying}" />
+                  <PathIcon Width="16" Height="16" Data="{StaticResource Icon.Pause}" Foreground="{DynamicResource OnAccentBrush}"
+                            HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsPlaying}" />
+                </Grid>
+              </Button>
+
+              <Button Classes="control-btn" Command="{Binding StepForwardCommand}" ToolTip.Tip="Step +0.1s (&gt;)">
+                <TextBlock Text="&gt;" FontWeight="Bold" FontSize="13" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Button>
+              <Button Classes="control-btn" Command="{Binding SeekToEndCommand}" ToolTip.Tip="Seek to Trim End (&gt;|)">
+                <PathIcon Width="10" Height="10" Data="{StaticResource Icon.ChevronRight}" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Button>
+            </StackPanel>
+
+            <!-- Right Trim Duration readout -->
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Right">
+              <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="6" Padding="8,4">
+                <TextBlock Text="{Binding TrimDurationText, StringFormat='{}Trimmed: {0}'}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" />
+              </Border>
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </Border>
+
+      <!-- Center Video Frame Preview Area -->
+      <Border Background="#0C0C10" Margin="14" CornerRadius="10" ClipToBounds="True">
+        <Grid>
+          <Image Source="{Binding CurrentFrameBitmap}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"
+                 RenderOptions.BitmapInterpolationMode="HighQuality" />
+        </Grid>
+      </Border>
+    </DockPanel>
+  </Border>
+</Window>

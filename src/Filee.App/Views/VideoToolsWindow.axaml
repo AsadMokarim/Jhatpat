@@ -1,0 +1,335 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Filee.App.ViewModels"
+        x:Class="Filee.App.Views.VideoToolsWindow"
+        x:DataType="vm:VideoToolsViewModel"
+        Title="Video Tools"
+        Icon="avares://Filee/Assets/Icons/jhatpat.ico"
+        Width="960" Height="680" MinWidth="780" MinHeight="540"
+        WindowDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        Topmost="True"
+        CanResize="True">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
+  </Window.KeyBindings>
+
+  <Window.Styles>
+    <Style Selector="Button.tab-btn">
+      <Setter Property="Padding" Value="14,8" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.tab-btn:pointerover">
+      <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <Style Selector="Button.tab-btn.active">
+      <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+    </Style>
+    <Style Selector="Button.chip-btn">
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SubtleBorderBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.chip-btn.active">
+      <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.action-btn">
+      <Setter Property="Padding" Value="16,8" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+  </Window.Styles>
+
+  <Border Margin="16" CornerRadius="{DynamicResource SoftRadius}"
+          Background="{DynamicResource GlassPanelBrush}"
+          BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1"
+          ClipToBounds="True"
+          BoxShadow="{DynamicResource GlassShadow}">
+    <DockPanel>
+      <!-- Top header bar -->
+      <Border DockPanel.Dock="Top" Height="50" Padding="18,0" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,0,0,1"
+              Background="{DynamicResource GlassHeaderBrush}">
+        <DockPanel VerticalAlignment="Center">
+          <Button DockPanel.Dock="Right" Classes="icon" Command="{Binding CloseCommand}"
+                  ToolTip.Tip="Close" Margin="4,0,0,0">
+            <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Close}" Foreground="{DynamicResource TextSecondaryBrush}" />
+          </Button>
+
+          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="8" Width="30" Height="30">
+              <PathIcon Width="16" Height="16" Data="{StaticResource Icon.Video}" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <TextBlock Text="Video Tools" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+
+            <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+              <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" MaxWidth="220" TextTrimming="CharacterEllipsis" />
+            </Border>
+
+            <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+              <TextBlock Text="{Binding DurationText}" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold" />
+            </Border>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- Tabs Navigation -->
+      <Border DockPanel.Dock="Top" Height="44" Padding="14,4" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="0,0,0,1">
+        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <Button Classes="tab-btn" Classes.active="{Binding IsTabCrop}" Command="{Binding SelectTabCommand}" CommandParameter="Crop">
+            <TextBlock Text="Crop Video" />
+          </Button>
+          <Button Classes="tab-btn" Classes.active="{Binding IsTabSpeed}" Command="{Binding SelectTabCommand}" CommandParameter="Speed">
+            <TextBlock Text="Change Speed" />
+          </Button>
+          <Button Classes="tab-btn" Classes.active="{Binding IsTabJoin}" Command="{Binding SelectTabCommand}" CommandParameter="Join">
+            <TextBlock Text="Join Videos" />
+          </Button>
+          <Button Classes="tab-btn" Classes.active="{Binding IsTabFrames}" Command="{Binding SelectTabCommand}" CommandParameter="Frames">
+            <TextBlock Text="Export Frames" />
+          </Button>
+          <Button Classes="tab-btn" Classes.active="{Binding IsTabSplit}" Command="{Binding SelectTabCommand}" CommandParameter="Split">
+            <TextBlock Text="Split Video" />
+          </Button>
+        </StackPanel>
+      </Border>
+
+      <!-- Bottom action bar -->
+      <Border DockPanel.Dock="Bottom" Padding="18,12" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,1,0,0"
+              Background="{DynamicResource GlassHeaderBrush}">
+        <DockPanel VerticalAlignment="Center">
+          <TextBlock DockPanel.Dock="Left" Text="{Binding StatusMessage}" FontSize="12"
+                     Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+            <Button Classes="action-btn" Command="{Binding OpenOutputFolderCommand}" IsVisible="{Binding IsFinished}"
+                    Background="{DynamicResource SurfaceAltBrush}" Foreground="{DynamicResource TextPrimaryBrush}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Folder}" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <TextBlock Text="Open Folder" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- TAB CONTENTS -->
+      <Grid Margin="20">
+        <!-- 1. CROP VIDEO TAB -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding IsTabCrop}">
+          <StackPanel Spacing="16" MaxWidth="600" HorizontalAlignment="Left">
+            <TextBlock Text="Crop video aspect ratio or dimensions" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
+
+            <!-- Aspect Presets -->
+            <StackPanel Spacing="6">
+              <TextBlock Text="Aspect Ratio Preset" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
+              <WrapPanel Orientation="Horizontal">
+                <Button Classes="chip-btn" Command="{Binding SetCropAspectCommand}" CommandParameter="16:9" Margin="0,0,6,6"><TextBlock Text="16:9 (Landscape)" /></Button>
+                <Button Classes="chip-btn" Command="{Binding SetCropAspectCommand}" CommandParameter="9:16" Margin="0,0,6,6"><TextBlock Text="9:16 (Shorts/Reels)" /></Button>
+                <Button Classes="chip-btn" Command="{Binding SetCropAspectCommand}" CommandParameter="1:1" Margin="0,0,6,6"><TextBlock Text="1:1 (Square)" /></Button>
+                <Button Classes="chip-btn" Command="{Binding SetCropAspectCommand}" CommandParameter="4:3" Margin="0,0,6,6"><TextBlock Text="4:3" /></Button>
+                <Button Classes="chip-btn" Command="{Binding SetCropAspectCommand}" CommandParameter="Free" Margin="0,0,6,6"><TextBlock Text="Original" /></Button>
+              </WrapPanel>
+            </StackPanel>
+
+            <!-- Dimension Readouts -->
+            <Grid ColumnDefinitions="*, *" Margin="0,4">
+              <StackPanel Grid.Column="0" Spacing="4" Margin="0,0,8,0">
+                <TextBlock Text="Crop Width" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
+                <NumericUpDown Minimum="100" Maximum="{Binding VideoWidth}" Value="{Binding CropWidth}" />
+              </StackPanel>
+              <StackPanel Grid.Column="1" Spacing="4" Margin="8,0,0,0">
+                <TextBlock Text="Crop Height" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
+                <NumericUpDown Minimum="100" Maximum="{Binding VideoHeight}" Value="{Binding CropHeight}" />
+              </StackPanel>
+            </Grid>
+
+            <Button Classes="action-btn" Command="{Binding ExecuteCropCommand}" IsEnabled="{Binding !IsProcessing}"
+                    Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource OnAccentBrush}" Margin="0,10,0,0">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ProgressBar IsIndeterminate="True" Width="14" Height="14" IsVisible="{Binding IsProcessing}" />
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Crop}" IsVisible="{Binding !IsProcessing}" Foreground="{DynamicResource OnAccentBrush}" />
+                <TextBlock Text="Crop and Save Video" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- 2. CHANGE SPEED TAB -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding IsTabSpeed}">
+          <StackPanel Spacing="16" MaxWidth="600" HorizontalAlignment="Left">
+            <TextBlock Text="Speed up or slow down video playback" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
+
+            <!-- Speed presets -->
+            <StackPanel Spacing="6">
+              <TextBlock Text="Speed Multiplier" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
+              <WrapPanel Orientation="Horizontal">
+                <Button Classes="chip-btn" Command="{Binding SetSpeedCommand}" CommandParameter="0.25" Margin="0,0,6,6"><TextBlock Text="0.25x (Super Slow)" /></Button>
+                <Button Classes="chip-btn" Command="{Binding SetSpeedCommand}" CommandParameter="0.5" Margin="0,0,6,6"><TextBlock Text="0.5x (Slow)" /></Button>
+                <Button Classes="chip-btn" Command="{Binding SetSpeedCommand}" CommandParameter="0.75" Margin="0,0,6,6"><TextBlock Text="0.75x" /></Button>
+                <Button Classes="chip-btn" Command="{Binding SetSpeedCommand}" CommandParameter="1.25" Margin="0,0,6,6"><TextBlock Text="1.25x" /></Button>
+                <Button Classes="chip-btn" Command="{Binding SetSpeedCommand}" CommandParameter="1.5" Margin="0,0,6,6"><TextBlock Text="1.5x (Fast)" /></Button>
+                <Button Classes="chip-btn" Command="{Binding SetSpeedCommand}" CommandParameter="2.0" Margin="0,0,6,6"><TextBlock Text="2.0x (2x Speed)" /></Button>
+                <Button Classes="chip-btn" Command="{Binding SetSpeedCommand}" CommandParameter="4.0" Margin="0,0,6,6"><TextBlock Text="4.0x (Timelapse)" /></Button>
+              </WrapPanel>
+            </StackPanel>
+
+            <!-- Duration readout -->
+            <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="8" Padding="12" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1">
+              <StackPanel Spacing="6">
+                <TextBlock Text="{Binding Speed, StringFormat='{}Selected Speed: {0:0.00}x'}" FontWeight="SemiBold" Foreground="{DynamicResource AccentBrush}" />
+                <TextBlock Text="{Binding NewDurationText, StringFormat='{}New Duration: {0}'}" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
+              </StackPanel>
+            </Border>
+
+            <CheckBox IsChecked="{Binding MuteAudio}" Content="Mute Audio (remove sound)" Margin="0,4" />
+
+            <Button Classes="action-btn" Command="{Binding ExecuteSpeedCommand}" IsEnabled="{Binding !IsProcessing}"
+                    Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource OnAccentBrush}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ProgressBar IsIndeterminate="True" Width="14" Height="14" IsVisible="{Binding IsProcessing}" />
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Check}" IsVisible="{Binding !IsProcessing}" Foreground="{DynamicResource OnAccentBrush}" />
+                <TextBlock Text="Apply Speed Adjustment" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- 3. JOIN VIDEOS TAB -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding IsTabJoin}">
+          <StackPanel Spacing="14">
+            <DockPanel>
+              <Button Classes="chip-btn" Command="{Binding AddJoinClipsCommand}" DockPanel.Dock="Right">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <PathIcon Width="10" Height="10" Data="{StaticResource Icon.Plus}" Foreground="{DynamicResource TextPrimaryBrush}" />
+                  <TextBlock Text="Add More Videos" VerticalAlignment="Center" />
+                </StackPanel>
+              </Button>
+              <TextBlock Text="Combine multiple video files in order" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+            </DockPanel>
+
+            <!-- Clips List -->
+            <ItemsControl ItemsSource="{Binding JoinClips}">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:VideoClipItemViewModel">
+                  <Border Margin="0,0,0,6" Padding="10" CornerRadius="8"
+                          Background="{DynamicResource SurfaceBrush}"
+                          BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1">
+                    <DockPanel VerticalAlignment="Center">
+                      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="4">
+                        <Button Classes="icon" Command="{Binding $parent[Window].((vm:VideoToolsViewModel)DataContext).MoveClipUpCommand}"
+                                CommandParameter="{Binding}" IsEnabled="{Binding !IsFirst}" Width="28" Height="28">
+                          <PathIcon Width="9" Height="9" Data="{StaticResource Icon.ArrowUp}" Foreground="{DynamicResource TextPrimaryBrush}" />
+                        </Button>
+                        <Button Classes="icon" Command="{Binding $parent[Window].((vm:VideoToolsViewModel)DataContext).MoveClipDownCommand}"
+                                CommandParameter="{Binding}" IsEnabled="{Binding !IsLast}" Width="28" Height="28">
+                          <PathIcon Width="9" Height="9" Data="{StaticResource Icon.ArrowDown}" Foreground="{DynamicResource TextPrimaryBrush}" />
+                        </Button>
+                        <Button Classes="icon" Command="{Binding $parent[Window].((vm:VideoToolsViewModel)DataContext).RemoveClipCommand}"
+                                CommandParameter="{Binding}" Width="28" Height="28">
+                          <PathIcon Width="9" Height="9" Data="{StaticResource Icon.Close}" Foreground="{DynamicResource TextSecondaryBrush}" />
+                        </Button>
+                      </StackPanel>
+
+                      <Border DockPanel.Dock="Left" Width="24" Height="24" CornerRadius="12" Background="{DynamicResource AccentSoftBrush}" Margin="0,0,10,0">
+                        <TextBlock Text="{Binding DisplayIndex}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                      </Border>
+
+                      <TextBlock Text="{Binding FileName}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                    </DockPanel>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <Button Classes="action-btn" Command="{Binding ExecuteJoinCommand}" IsEnabled="{Binding CanJoin}"
+                    Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource OnAccentBrush}" HorizontalAlignment="Left" Margin="0,10,0,0">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ProgressBar IsIndeterminate="True" Width="14" Height="14" IsVisible="{Binding IsProcessing}" />
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Check}" IsVisible="{Binding !IsProcessing}" Foreground="{DynamicResource OnAccentBrush}" />
+                <TextBlock Text="Join Video Clips" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- 4. EXPORT FRAMES TAB -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding IsTabFrames}">
+          <StackPanel Spacing="16" MaxWidth="600" HorizontalAlignment="Left">
+            <TextBlock Text="Export still images from video" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
+
+            <StackPanel Spacing="6">
+              <DockPanel>
+                <TextBlock Text="Timestamp" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
+                <TextBlock Text="{Binding FrameTimeText}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Right" />
+              </DockPanel>
+              <Slider Minimum="0" Maximum="{Binding DurationSeconds}" Value="{Binding FrameTimeSeconds}" />
+            </StackPanel>
+
+            <StackPanel Spacing="6">
+              <TextBlock Text="Format" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <RadioButton Content="PNG (Lossless)" IsChecked="True" GroupName="fmt" />
+                <RadioButton Content="JPEG" GroupName="fmt" />
+              </StackPanel>
+            </StackPanel>
+
+            <Button Classes="action-btn" Command="{Binding ExecuteExportFrameCommand}"
+                    Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource OnAccentBrush}" Margin="0,10,0,0">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Camera}" Foreground="{DynamicResource OnAccentBrush}" />
+                <TextBlock Text="Export Current Frame" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </ScrollViewer>
+
+        <!-- 5. SPLIT VIDEO TAB -->
+        <ScrollViewer VerticalScrollBarVisibility="Auto" IsVisible="{Binding IsTabSplit}">
+          <StackPanel Spacing="16" MaxWidth="600" HorizontalAlignment="Left">
+            <TextBlock Text="Split video into segments by duration" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
+
+            <StackPanel Spacing="6">
+              <DockPanel>
+                <TextBlock Text="Segment Length" FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" />
+                <TextBlock Text="{Binding SplitIntervalSeconds, StringFormat='{}{0:0} seconds'}" FontSize="12" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Right" />
+              </DockPanel>
+              <Slider Minimum="5" Maximum="300" Value="{Binding SplitIntervalSeconds}" />
+            </StackPanel>
+
+            <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="8" Padding="12" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1">
+              <TextBlock Text="{Binding EstimatedParts, StringFormat='{}Video will be divided into ~{0} separate video files.'}"
+                         FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
+            </Border>
+
+            <Button Classes="action-btn" Command="{Binding ExecuteSplitCommand}" IsEnabled="{Binding !IsProcessing}"
+                    Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource OnAccentBrush}" Margin="0,10,0,0">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ProgressBar IsIndeterminate="True" Width="14" Height="14" IsVisible="{Binding IsProcessing}" />
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Check}" IsVisible="{Binding !IsProcessing}" Foreground="{DynamicResource OnAccentBrush}" />
+                <TextBlock Text="Split and Export Video Parts" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
+    </DockPanel>
+  </Border>
+</Window>
