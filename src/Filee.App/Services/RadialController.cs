@@ -13,6 +13,7 @@
 
 using System.ComponentModel;
 using Avalonia;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using Filee.App.Controls;
 using Filee.App.ViewModels;
@@ -65,6 +66,8 @@ public sealed class RadialController(
 
     public bool IsVisible => _visible;
 
+    public RadialViewModel ViewModel => viewModel;
+
     internal RadialWindow? Window => _window;
 
     /// <summary>
@@ -95,28 +98,34 @@ public sealed class RadialController(
     }
 
     /// <summary>
+    /// Opens the radial menu. If <paramref name="files"/> is provided, prepares for conversion.
+    /// If coordinates (x, y) are (0, 0), centers on the active or primary monitor.
+    /// </summary>
+    public void ShowRadial(int x = 0, int y = 0, IReadOnlyList<string>? files = null, bool forAnotherProcess = false)
+    {
+        var resolvedFiles = files is not null ? platform.ResolveShortcuts(files) : [];
+        ReleaseProgressToToast();
+        _grace.Start();
+        var window = EnsureWindow();
+        _dropped = false;
+        _converted = false;
+        viewModel.Load(resolvedFiles, clickMode: true);
+        viewModel.FitToThisDonut();
+        window.DonutControl.AllowContextEdit = true;
+        PlaceAndShow(window, x, y, activate: true);
+        window.DonutControl.PlayOpenAnimation();
+    }
+
+    /// <summary>
     /// Opens the donut for known files (click mode). Shortcuts among them stand for the files they point to.
     /// <paramref name="forAnotherProcess"/>: the files came from a later launch or the Services menu, so on macOS the
     /// donut may lose focus once while Filee becomes the active app.
     /// </summary>
     public void ShowForFiles(int x, int y, IReadOnlyList<string> files, bool forAnotherProcess = false)
     {
-        files = platform.ResolveShortcuts(files);
         if (files.Count == 0)
             return;
-        ReleaseProgressToToast();
-        if (forAnotherProcess && OperatingSystem.IsMacOS())
-            _grace.Start();
-        else
-            _grace.Cancel();
-        var window = EnsureWindow();
-        _dropped = false;
-        _converted = false;
-        viewModel.Load(files, clickMode: true);
-        viewModel.FitToThisDonut();
-        window.DonutControl.AllowContextEdit = true;
-        PlaceAndShow(window, x, y, activate: true);
-        window.DonutControl.PlayOpenAnimation();
+        ShowRadial(x, y, files, forAnotherProcess);
     }
 
     /// <summary>The mouse button of the drag gesture was released somewhere.</summary>
@@ -266,6 +275,13 @@ public sealed class RadialController(
     /// <summary>Converts with slice <paramref name="index"/>, or with slice <paramref name="sub"/> of that group's ring.</summary>
     internal void Convert(int index, int sub, IReadOnlyList<string> files)
     {
+        if (files.Count == 0)
+        {
+            Close();
+            windows.ShowMain("home");
+            return;
+        }
+
         if (viewModel.PresetAt(index, sub) is not { } preset || SourcesFor(preset, files) is not { Count: > 0 } sources)
         {
             Close();
@@ -278,8 +294,13 @@ public sealed class RadialController(
             Close(animate: false);
             if (preset.Id == "tool-frame")
                 windows.ShowFramingOverlay(sources, preset, near);
-            else if (preset.Id == "tool-resize")
-                windows.ShowResizeOverlay(sources, preset, near);
+            else if (preset.Id is "tool-resize" or "tool-compression")
+            {
+                if (sources.Count > 1)
+                    windows.ShowBatchResizeWindow(sources, preset, near);
+                else
+                    windows.ShowResizeOverlay(sources, preset, near);
+            }
             else
                 windows.ShowCropOverlay(sources, preset, near);
             return;
@@ -413,10 +434,51 @@ public sealed class RadialController(
             Math.Clamp(position.Y, a.Y, Math.Max(a.Y, a.Bottom - sidePx)));
     }
 
+    /// <summary>
+    /// Finds the screen containing <paramref name="cursor"/>, or the closest screen when cursor is on
+    /// a boundary seam or edge where ScreenFromPoint returns null.
+    /// </summary>
+    internal static Screen? ScreenForPoint(RadialWindow window, PixelPoint cursor)
+    {
+        if (window.Screens.ScreenFromPoint(cursor) is { } hit)
+            return hit;
+
+        Screen? closest = null;
+        double minDistance = double.MaxValue;
+        foreach (var screen in window.Screens.All)
+        {
+            var bounds = screen.Bounds;
+            var cx = Math.Clamp(cursor.X, bounds.X, bounds.Right - 1);
+            var cy = Math.Clamp(cursor.Y, bounds.Y, bounds.Bottom - 1);
+            var dx = cursor.X - cx;
+            var dy = cursor.Y - cy;
+            var distance = (double)dx * dx + (double)dy * dy;
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                closest = screen;
+            }
+        }
+        return closest ?? window.Screens.Primary;
+    }
+
     private void PlaceAndShow(RadialWindow window, int x, int y, bool activate)
     {
         var cursor = new PixelPoint(x, y);
-        var screen = window.Screens.ScreenFromPoint(cursor) ?? window.Screens.Primary;
+        Screen? screen;
+        if (x == 0 && y == 0)
+        {
+            screen = window.Screens.Primary ?? window.Screens.All.FirstOrDefault();
+            if (screen is not null)
+            {
+                var wa = screen.WorkingArea;
+                cursor = new PixelPoint(wa.X + wa.Width / 2, wa.Y + wa.Height / 2);
+            }
+        }
+        else
+        {
+            screen = ScreenForPoint(window, cursor);
+        }
         var scaling = OperatingSystem.IsMacOS() ? 1 : screen?.Scaling ?? 1;
 
         // Window size follows the donut size (SizeToContent); compute it up front to centre on the cursor.

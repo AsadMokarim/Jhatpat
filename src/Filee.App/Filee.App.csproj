@@ -7,7 +7,7 @@
     <AssemblyName>Filee</AssemblyName>
     <RootNamespace>Filee.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <ApplicationIcon>Assets\Icons\filee.ico</ApplicationIcon>
+    <ApplicationIcon>Assets\Icons\jhatpat.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
   </PropertyGroup>
@@ -38,18 +38,20 @@
     <AvaloniaResource Include="Assets\**" />
     <!-- Shown on the About page. -->
     <AvaloniaResource Include="..\..\THIRD-PARTY-NOTICES.md" Link="Assets\THIRD-PARTY-NOTICES.md" />
+    <None Include="..\..\models\**" Link="models\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Filee.App.Tests" />
   </ItemGroup>
 
-  <!-- Native debug symbols from NuGet packages (SkiaSharp, HarfBuzz: ~100 MB) are useless to users. -->
-  <Target Name="FileeRemoveNativeSymbols" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release'">
+  <!-- Strip debug symbols (.pdb) and XML doc files from release publish directory -->
+  <Target Name="FileeCleanPublishArtifacts" AfterTargets="Publish" Condition="'$(Configuration)' == 'Release'">
     <ItemGroup>
-      <_FileeNativePdb Include="$(PublishDir)lib*.pdb" />
+      <_PublishSymbols Include="$(PublishDir)*.pdb" />
+      <_PublishXmlDocs Include="$(PublishDir)*.xml" />
     </ItemGroup>
-    <Delete Files="@(_FileeNativePdb)" />
+    <Delete Files="@(_PublishSymbols);@(_PublishXmlDocs)" />
   </Target>
 
   <!-- Repository URL for the updater / About page, taken from Directory.Build.props. -->

@@ -3,6 +3,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.VisualTree;
 using Filee.App.Services;
 using Microsoft.Extensions.Logging;
 
@@ -31,6 +32,39 @@ public partial class HomePage : UserControl
             e.DragEffects = DraggedFiles.Offered(e.DataTransfer) ? DragDropEffects.Copy : DragDropEffects.None);
         DragDrop.AddDragLeaveHandler(DropZone, (_, _) => DropZone.Classes.Remove("over"));
         DragDrop.AddDropHandler(DropZone, OnDrop);
+
+        // Clicking on the drop zone empty area opens file browser
+        DropZone.PointerPressed += (s, e) =>
+        {
+            if (e.GetCurrentPoint(DropZone).Properties.IsLeftButtonPressed &&
+                e.Source is not Button && !(e.Source is Visual visual && visual.FindAncestorOfType<Button>() is not null))
+            {
+                if (DataContext is ViewModels.Pages.HomePageViewModel vm)
+                {
+                    vm.BrowseFilesCommand.Execute(null);
+                    e.Handled = true;
+                }
+            }
+        };
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (DataContext is ViewModels.Pages.HomePageViewModel vm)
+        {
+            var isCtrlOrCmd = (e.KeyModifiers & (OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control)) != 0;
+            if (isCtrlOrCmd && e.Key == Key.V)
+            {
+                vm.PasteImageCommand.Execute(null);
+                e.Handled = true;
+            }
+            else if (isCtrlOrCmd && e.Key == Key.O)
+            {
+                vm.BrowseFilesCommand.Execute(null);
+                e.Handled = true;
+            }
+        }
     }
 
     private void OnDrop(object? sender, DragEventArgs e)
