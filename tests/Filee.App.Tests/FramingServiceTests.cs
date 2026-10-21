@@ -528,4 +528,68 @@ public class FramingServiceTests
                 Directory.Delete(folder, recursive: true);
         }
     }
+
+    [AvaloniaFact]
+    public void RenderPreview_generates_writeable_bitmap_instantly()
+    {
+        TestServices.EnsureInitialized("en");
+        using var source = CreateBitmap(400, 300, SKColors.CornflowerBlue);
+        var options = new FramingOptions
+        {
+            Padding = 32,
+            CornerRadius = 16,
+            HasShadow = true,
+            BackgroundType = FramingBackgroundType.Gradient,
+            GradientStartColor = "#6366F1",
+            GradientEndColor = "#EC4899",
+            RelativeOffsetX = 0.2,
+            RelativeOffsetY = -0.1,
+        };
+
+        var (bitmap, w, h, srcW, srcH, tx, ty, tw, th) =
+            FramingService.RenderPreview(source, options, 400, 300);
+
+        using (bitmap)
+        {
+            Assert.NotNull(bitmap);
+            Assert.True(w > 0);
+            Assert.True(h > 0);
+            Assert.Equal(400, srcW);
+            Assert.Equal(300, srcH);
+            Assert.True(tw > 0 && th > 0);
+        }
+    }
+
+    [AvaloniaFact]
+    public void FramingOverlayViewModel_SetRelativeOffset_clamps_and_resets_properly()
+    {
+        TestServices.EnsureInitialized("en");
+        var store = AppHost.Get<UserDataStore>();
+        var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+        var preset = BuiltInData.CreatePresets().First(p => p.Id == "tool-frame");
+
+        using var vm = new FramingOverlayViewModel([], preset, loc, store);
+
+        Assert.False(vm.HasOffset);
+        Assert.Equal(0.0, vm.RelativeOffsetX);
+        Assert.Equal(0.0, vm.RelativeOffsetY);
+
+        // Clamp upper
+        vm.SetRelativeOffset(1.5, 2.0);
+        Assert.Equal(1.0, vm.RelativeOffsetX);
+        Assert.Equal(1.0, vm.RelativeOffsetY);
+        Assert.True(vm.HasOffset);
+
+        // Clamp lower
+        vm.SetRelativeOffset(-1.8, -3.0);
+        Assert.Equal(-1.0, vm.RelativeOffsetX);
+        Assert.Equal(-1.0, vm.RelativeOffsetY);
+        Assert.True(vm.HasOffset);
+
+        // Reset
+        vm.ResetPosition();
+        Assert.Equal(0.0, vm.RelativeOffsetX);
+        Assert.Equal(0.0, vm.RelativeOffsetY);
+        Assert.False(vm.HasOffset);
+    }
 }
