@@ -33,7 +33,9 @@ public sealed class UserDataStore
     public const string DirectoryVariable = "FILEE_DATA_DIR";
 
     /// <summary>The folder <see cref="DirectoryVariable"/> points to (full path), or null when it is not set.</summary>
-    public static string? OverrideDirectory => DirectoryFrom(Environment.GetEnvironmentVariable(DirectoryVariable));
+    public static string? OverrideDirectory => DirectoryFrom(
+        Environment.GetEnvironmentVariable("JHATPAT_DATA_DIR")
+        ?? Environment.GetEnvironmentVariable(DirectoryVariable));
 
     /// <summary>
     /// Default data directory: %APPDATA%\Filee on Windows, ~/Library/Application Support/Filee on macOS, or the
@@ -127,6 +129,22 @@ public sealed class UserDataStore
             History.Clear();
         Write(HistoryPath, History, FileeJsonContext.Default.ListHistoryEntry);
         HistoryChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>Removes a single history entry by its job ID.</summary>
+    public bool RemoveHistory(string jobId)
+    {
+        lock (_saveLock)
+        {
+            var index = History.FindIndex(e => e.JobId == jobId);
+            if (index < 0)
+                return false;
+
+            History.RemoveAt(index);
+            Write(HistoryPath, History, FileeJsonContext.Default.ListHistoryEntry);
+        }
+        HistoryChanged?.Invoke(this, EventArgs.Empty);
+        return true;
     }
 
     /// <summary>Replaces presets and profiles with factory defaults.</summary>
@@ -678,6 +696,52 @@ internal static class SettingsMigrations
         //      the user filled up, or a library without the preset, stays as it is.
         if (from < 28)
             changed |= Offer(presets, profiles, "archives", "zip-all", "extract");
+        // v29: "Image Options" group (crop, frame, resize, half size, rotate) on the images donut.
+        if (from < 29)
+        {
+            if (BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "image-tools") is { } tools)
+            {
+                if (presets.FirstOrDefault(p => p.Id == "image-tools") is not { } existing)
+                {
+                    presets.Add(tools);
+                    changed = true;
+                }
+                else if (!existing.IsGroup)
+                {
+                    existing.Kind = PresetKind.Group;
+                    existing.TargetFormat = Preset.GroupTarget;
+                    existing.SubPresetIds = [.. tools.SubPresetIds];
+                    changed = true;
+                }
+            }
+
+            foreach (var toolId in new[] { "tool-crop", "tool-frame", "tool-resize" })
+            {
+                if (presets.All(p => p.Id != toolId) && BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == toolId) is { } toolPreset)
+                {
+                    presets.Add(toolPreset);
+                    changed = true;
+                }
+            }
+
+            if (profiles.FirstOrDefault(p => p.Id == "images") is { } images)
+            {
+                if (!images.PresetIds.Contains("image-tools"))
+                {
+                    var redundant = images.PresetIds.FindIndex(id => id is "half-size" or "tool-crop" or "tool-frame" or "tool-resize" or "flip" or "rotate");
+                    if (redundant >= 0)
+                    {
+                        images.PresetIds[redundant] = "image-tools";
+                        changed = true;
+                    }
+                    else if (images.PresetIds.Count < ToolbarProfile.MaxSlices)
+                    {
+                        images.PresetIds.Add("image-tools");
+                        changed = true;
+                    }
+                }
+            }
+        }
         return changed;
     }
 

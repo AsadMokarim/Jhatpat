@@ -4,6 +4,7 @@
 using System.Collections.Concurrent;
 using System.Threading.Channels;
 using Filee.Core.Formats;
+using Filee.Core.Platform;
 using Filee.Core.Presets;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -163,12 +164,38 @@ public sealed class JobQueue : IAsyncDisposable
             return;
         }
 
-        await _pdfMerger!.MergeAsync(inputs, output, job.CancellationToken);
-        first.Outputs.Add(output);
-        foreach (var f in job.Files.Where(f => f.State != FileState.Failed))
+        try
         {
-            f.State = FileState.Done;
-            f.Progress = 1;
+            await _pdfMerger!.MergeAsync(inputs, output, job.CancellationToken);
+            first.Outputs.Add(output);
+            foreach (var f in job.Files.Where(f => f.State != FileState.Failed))
+            {
+                f.State = FileState.Done;
+                f.Progress = 1;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            try { if (File.Exists(output)) File.Delete(output); } catch { }
+            foreach (var f in job.Files)
+                f.State = FileState.Cancelled;
+        }
+        catch (Exception ex)
+        {
+            try { if (File.Exists(output)) File.Delete(output); } catch { }
+            _log.LogWarning(ex, "Merging {Count} PDF(s) into {Output} failed", inputs.Count, output);
+            var (key, detail) = FileSystemPaths.IsPermissionDenied(ex) ? ("error.permission_denied", ex.Message)
+                : FileSystemPaths.IsDiskFull(ex) ? ("error.not_enough_space", ex.Message)
+                : FileSystemPaths.IsNotFound(ex) ? ("error.file_not_found", ex.Message)
+                : FileSystemPaths.IsCorrupt(ex) ? ("error.corrupt_file", ex.Message)
+                : ("error.conversion_failed", ex.Message);
+            foreach (var f in job.Files.Where(f => f.State != FileState.Failed))
+            {
+                f.State = FileState.Failed;
+                f.ErrorKey = key;
+                f.ErrorDetail = detail;
+                f.Progress = 1;
+            }
         }
         Notify(job);
     }
@@ -204,12 +231,38 @@ public sealed class JobQueue : IAsyncDisposable
             return;
         }
 
-        await _tiffMerger!.MergeAsync(inputs, output, job.Preset.Image, job.CancellationToken);
-        first.Outputs.Add(output);
-        foreach (var f in job.Files.Where(f => f.State != FileState.Failed))
+        try
         {
-            f.State = FileState.Done;
-            f.Progress = 1;
+            await _tiffMerger!.MergeAsync(inputs, output, job.Preset.Image, job.CancellationToken);
+            first.Outputs.Add(output);
+            foreach (var f in job.Files.Where(f => f.State != FileState.Failed))
+            {
+                f.State = FileState.Done;
+                f.Progress = 1;
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            try { if (File.Exists(output)) File.Delete(output); } catch { }
+            foreach (var f in job.Files)
+                f.State = FileState.Cancelled;
+        }
+        catch (Exception ex)
+        {
+            try { if (File.Exists(output)) File.Delete(output); } catch { }
+            _log.LogWarning(ex, "Merging TIFF pages into {Output} failed", output);
+            var (key, detail) = FileSystemPaths.IsPermissionDenied(ex) ? ("error.permission_denied", ex.Message)
+                : FileSystemPaths.IsDiskFull(ex) ? ("error.not_enough_space", ex.Message)
+                : FileSystemPaths.IsNotFound(ex) ? ("error.file_not_found", ex.Message)
+                : FileSystemPaths.IsCorrupt(ex) ? ("error.corrupt_file", ex.Message)
+                : ("error.conversion_failed", ex.Message);
+            foreach (var f in job.Files.Where(f => f.State != FileState.Failed))
+            {
+                f.State = FileState.Failed;
+                f.ErrorKey = key;
+                f.ErrorDetail = detail;
+                f.Progress = 1;
+            }
         }
         Notify(job);
     }
@@ -235,7 +288,7 @@ public sealed class JobQueue : IAsyncDisposable
             if (File.Exists(file.SourcePath) || Directory.Exists(file.SourcePath))
                 inputs.Add(file);
             else
-                MarkFailed(file, "The file no longer exists.");
+                MarkFailed(file, "error.file_not_found", file.SourcePath);
         }
         if (inputs.Count == 0)
         {
@@ -282,21 +335,28 @@ public sealed class JobQueue : IAsyncDisposable
         }
         catch (OperationCanceledException)
         {
+            try { if (File.Exists(output)) File.Delete(output); } catch { }
             foreach (var f in inputs)
                 f.State = FileState.Cancelled;
         }
         catch (Exception ex)
         {
+            try { if (File.Exists(output)) File.Delete(output); } catch { }
             _log.LogWarning(ex, "Packing {Count} file(s) into {Output} failed", inputs.Count, output);
+            var (key, detail) = FileSystemPaths.IsPermissionDenied(ex) ? ("error.permission_denied", ex.Message)
+                : FileSystemPaths.IsDiskFull(ex) ? ("error.not_enough_space", ex.Message)
+                : FileSystemPaths.IsNotFound(ex) ? ("error.file_not_found", ex.Message)
+                : FileSystemPaths.IsCorrupt(ex) ? ("error.corrupt_file", ex.Message)
+                : ("error.conversion_failed", ex.Message);
             foreach (var f in inputs)
-                MarkFailed(f, ex.Message);
+                MarkFailed(f, key, detail);
         }
         Notify(job);
 
-        static void MarkFailed(FileResult f, string detail)
+        static void MarkFailed(FileResult f, string errorKey, string detail)
         {
             f.State = FileState.Failed;
-            f.ErrorKey = "error.conversion_failed";
+            f.ErrorKey = errorKey;
             f.ErrorDetail = detail;
             f.Progress = 1;
         }
@@ -354,6 +414,9 @@ public sealed class JobQueue : IAsyncDisposable
         string intermediate = "pdf")
     {
         var ct = job.CancellationToken;
+        if (!File.Exists(file.SourcePath) && !Directory.Exists(file.SourcePath))
+            return Fail(file, "error.file_not_found", file.SourcePath);
+
         var source = FormatRegistry.Detect(file.SourcePath);
         if (source is null)
             return Fail(file, "error.unsupported_source", "." + FormatRegistry.ExtensionOf(file.SourcePath));
@@ -395,6 +458,7 @@ public sealed class JobQueue : IAsyncDisposable
         file.State = FileState.Running;
         Notify(job);
 
+        var allocatedFinalPaths = new List<string>();
         try
         {
             IReadOnlyList<string> inputs = [file.SourcePath];
@@ -405,7 +469,7 @@ public sealed class JobQueue : IAsyncDisposable
                 var step = route.Steps[s];
                 var isLast = s == route.Steps.Count - 1;
                 IOutputAllocator allocator = isLast && finalOutput && !zipResult
-                    ? CreateFinalAllocator(job, file.SourcePath, index)
+                    ? CreateFinalAllocator(job, file.SourcePath, index, allocatedFinalPaths)
                     : new TempAllocator(workDir, FormatRegistry.NameWithoutExtension(file.SourcePath));
 
                 var outputs = new List<string>();
@@ -462,19 +526,44 @@ public sealed class JobQueue : IAsyncDisposable
         }
         catch (OperationCanceledException)
         {
+            CleanPartialOutputs(allocatedFinalPaths);
             file.State = FileState.Cancelled;
             Notify(job);
             return [];
         }
         catch (ConversionRefusedException ex)
         {
+            CleanPartialOutputs(allocatedFinalPaths);
             _log.LogInformation("Converting {File} was refused: {Reason}", file.SourcePath, ex.Message);
             return Fail(file, ex.ErrorKey, ex.Detail);
         }
         catch (Exception ex)
         {
+            CleanPartialOutputs(allocatedFinalPaths);
             _log.LogWarning(ex, "Converting {File} failed", file.SourcePath);
+            if (FileSystemPaths.IsPermissionDenied(ex))
+                return Fail(file, "error.permission_denied", ex.Message);
+            if (FileSystemPaths.IsDiskFull(ex))
+                return Fail(file, "error.not_enough_space", ex.Message);
+            if (FileSystemPaths.IsNotFound(ex))
+                return Fail(file, "error.file_not_found", file.SourcePath);
+            if (FileSystemPaths.IsCorrupt(ex))
+                return Fail(file, "error.corrupt_file", ex.Message);
+
             return Fail(file, "error.conversion_failed", ex.Message);
+        }
+
+        static void CleanPartialOutputs(List<string> paths)
+        {
+            foreach (var path in paths)
+            {
+                try
+                {
+                    if (File.Exists(path))
+                        File.Delete(path);
+                }
+                catch { }
+            }
         }
 
         static Preset Unturned(Preset preset)
@@ -561,8 +650,8 @@ public sealed class JobQueue : IAsyncDisposable
             return new SemaphoreSlim(max, max);
         });
 
-    private FinalAllocator CreateFinalAllocator(ConversionJob job, string sourcePath, int index) =>
-        new(this, job.Preset.Output, new OutputPathResolver.Tokens(sourcePath, job.PresetDisplayName, index, job.CreatedAt));
+    private FinalAllocator CreateFinalAllocator(ConversionJob job, string sourcePath, int index, List<string>? tracked = null) =>
+        new(this, job.Preset.Output, new OutputPathResolver.Tokens(sourcePath, job.PresetDisplayName, index, job.CreatedAt), tracked);
 
     private void Notify(ConversionJob job)
     {
@@ -616,7 +705,7 @@ public sealed class JobQueue : IAsyncDisposable
     }
 
     /// <summary>Allocates final output paths according to the preset's <see cref="OutputRule"/>.</summary>
-    private sealed class FinalAllocator(JobQueue queue, OutputRule rule, OutputPathResolver.Tokens tokens) : IOutputAllocator
+    private sealed class FinalAllocator(JobQueue queue, OutputRule rule, OutputPathResolver.Tokens tokens, List<string>? tracked = null) : IOutputAllocator
     {
         public string? Allocate(string extension, string? suffix = null)
         {
@@ -629,6 +718,7 @@ public sealed class JobQueue : IAsyncDisposable
                     return null;
 
                 queue._reservedOutputs.Add(path);
+                tracked?.Add(path);
                 Directory.CreateDirectory(Path.GetDirectoryName(path)!);
                 // An empty extension asks for a folder (archive extraction): the converter creates it.
                 return path;
