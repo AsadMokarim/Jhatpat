@@ -10,7 +10,6 @@ internal static class X11WindowSystem
     private const string Library = "libX11.so.6";
 
     internal static bool IsAvailable => OperatingSystem.IsLinux()
-        && !LinuxPlatformServices.IsWaylandSession
         && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY"));
 
     internal static string? ProcessNameAt(int x, int y)

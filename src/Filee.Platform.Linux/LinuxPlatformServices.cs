@@ -23,13 +23,10 @@ public sealed class LinuxPlatformServices : IPlatformServices
         string.Equals(Environment.GetEnvironmentVariable("XDG_SESSION_TYPE"), "wayland", StringComparison.OrdinalIgnoreCase)
         || !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"));
 
-    // Wayland gestures (experimental) are opt-in: FILEE_WAYLAND_GESTURES=1 on KDE Plasma. libuiohook's libinput backend
-    // reads /dev/input, so /dev/input is only probed once the switch is set, and it works once the user is in the
-    // `input` group. Presses carry no position and a mouse only moves relatively there; a KWin script places the donut.
-    private static readonly bool WaylandGestures = IsWaylandSession
-        && Environment.GetEnvironmentVariable("FILEE_WAYLAND_GESTURES") == "1"
-        && (Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP") ?? "").Split(':').Contains("KDE", StringComparer.OrdinalIgnoreCase)
-        && CanReadInputDevices();
+    // Wayland gestures use SharpHook's libinput/uinput backend (libuiohook-wayland.so), which reads /dev/input.
+    // The user must be in the `input` group (or equivalent) for this to work.
+    // Presses carry no absolute position on Wayland; moves arrive as relative deltas.
+    private static readonly bool WaylandGestures = IsWaylandSession && CanReadInputDevices();
 
     private static bool CanReadInputDevices()
     {
@@ -51,7 +48,7 @@ public sealed class LinuxPlatformServices : IPlatformServices
     public string SelectionShortcutUnavailableReason =>
         "Linux file managers do not expose a shared selected-file API. Use the Jhatpat context action or its Thunar shortcut.";
     public string? GlobalPointerGesturesUnavailableReason => SupportsGlobalPointerGestures ? null : IsWaylandSession
-        ? "Cursor-following drag gestures require an X11 session due to Wayland input isolation. Use system shortcuts (jhatpat --radial), dock actions, or the drop zone."
+        ? "Cursor-following drag gestures on Wayland require read access to /dev/input. Add your user to the 'input' group: sudo usermod -aG input $USER, then log out and back in."
         : "The cursor-following gesture requires an X11 display.";
     public string ThunarShortcutRestartRequired =>
         "Close Thunar before changing its shortcut, then reopen it to load the Jhatpat action and shortcut.";

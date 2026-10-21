@@ -1,0 +1,11 @@
+{
+  "name": "Jhatpat Donut at Cursor",
+  "description": "Positions Jhatpat's radial donut menu at the cursor on Wayland",
+  "uuid": "jhatpat-donut@fluxa.dev",
+  "shell-version": [
+    "45",
+    "46",
+    "47"
+  ],
+  "version": 1
+}
