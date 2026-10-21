@@ -1,4 +1,4 @@
-# REA Runtime Investigation Report: Fluxa (Filee)
+# REA Runtime Investigation Report: Jhatpat (Filee)
 
 **Target Commit**: `0c1d7de` (`feat(framing): implement image background framing with live preview and radial menu integration`)  
 **Host Environment**: Linux (`Linux 6.6.137+rpt-rpi-2712 aarch64`, Debian/Raspberry Pi OS)  
@@ -9,7 +9,7 @@
 
 ## 1. Executive Summary
 
-This investigation evaluated the Reverse Engineer Anything (REA) Model Context Protocol (MCP) toolset against the running Fluxa/Filee application on Linux. The goal was to inspect runtime UI scenarios (radial menu, crop editor, background framing overlay) and identify discrepancies against the intended user experience.
+This investigation evaluated the Reverse Engineer Anything (REA) Model Context Protocol (MCP) toolset against the running Jhatpat/Filee application on Linux. The goal was to inspect runtime UI scenarios (radial menu, crop editor, background framing overlay) and identify discrepancies against the intended user experience.
 
 **Key Findings:**
 1. **REA Native UI Capabilities on Linux**: The REA native UI observation tools (`observe_native_ui`, `capture_native_ui_scenario`, `trace_native_ui_action`) are explicitly tied to macOS accessibility (`AXUIElement` / CoreGraphics). On Linux, these calls return an unrecoverable `capability_unavailable` error: `"Native macOS utilities require macOS."`
