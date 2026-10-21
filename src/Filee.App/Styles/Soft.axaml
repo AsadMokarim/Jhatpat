@@ -12,58 +12,67 @@
     <ResourceDictionary>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-          <SolidColorBrush x:Key="PageBrush" Color="#F6F5F1" />
-          <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
-          <SolidColorBrush x:Key="SurfaceAltBrush" Color="#EFEDE6" />
-          <SolidColorBrush x:Key="SubtleBorderBrush" Color="#16000000" />
-          <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1F1E1D" />
-          <SolidColorBrush x:Key="TextSecondaryBrush" Color="#6B6A66" />
+          <SolidColorBrush x:Key="PageBrush" Color="#FAF5ED" />
+          <SolidColorBrush x:Key="SurfaceBrush" Color="#FBF6EE" />
+          <SolidColorBrush x:Key="SurfaceAltBrush" Color="#F2E7D6" />
+          <SolidColorBrush x:Key="SubtleBorderBrush" Color="#269A6836" />
+          <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1A1816" />
+          <SolidColorBrush x:Key="TextSecondaryBrush" Color="#6E665E" />
           <SolidColorBrush x:Key="DangerBrush" Color="#C73A39" />
           <SolidColorBrush x:Key="SuccessBrush" Color="#0F7A5A" />
           <SolidColorBrush x:Key="WarningBrush" Color="#9A5B0C" />
-          <SolidColorBrush x:Key="GlassPanelBrush" Color="#E8FFFFFF" />
-          <SolidColorBrush x:Key="GlassHeaderBrush" Color="#DCFFFFFF" />
-          <SolidColorBrush x:Key="GlassCardBrush" Color="#D0FFFFFF" />
-          <SolidColorBrush x:Key="GlassBorderBrush" Color="#28000000" />
-          <SolidColorBrush x:Key="GlassBorderSpecularBrush" Color="#66FFFFFF" />
-          <SolidColorBrush x:Key="GlassBackdropBrush" Color="#E4F5F4F0" />
+          <SolidColorBrush x:Key="GlassPanelBrush" Color="#E4F7EFE1" />
+          <SolidColorBrush x:Key="GlassHeaderBrush" Color="#DAF5ECE0" />
+          <SolidColorBrush x:Key="GlassCardBrush" Color="#D2FBF6EC" />
+          <SolidColorBrush x:Key="GlassBorderBrush" Color="#288A5E2E" />
+          <SolidColorBrush x:Key="GlassBorderSpecularBrush" Color="#80FFFFFF" />
+          <SolidColorBrush x:Key="GlassBackdropBrush" Color="#ECF8F1E4" />
+          <SolidColorBrush x:Key="PillGroupBrush" Color="#15704018" />
+          <SolidColorBrush x:Key="PillInactiveTextBrush" Color="#4A433A" />
+          <SolidColorBrush x:Key="GlassInputBrush" Color="#F8FFFFFF" />
+          <SolidColorBrush x:Key="GlassInputBorderBrush" Color="#34906535" />
           <BoxShadows x:Key="CardShadow">0 2 8 0 #0C000000, 0 8 24 0 #08000000</BoxShadows>
-          <BoxShadows x:Key="GlassShadow">0 6 24 0 #12000000, 0 1 4 0 #08000000</BoxShadows>
-          <BoxShadows x:Key="GlassGlowShadow">0 4 16 0 #28FF7418, 0 1 4 0 #10000000</BoxShadows>
+          <BoxShadows x:Key="GlassShadow">0 10 32 0 #18382010, 0 2 8 0 #0C201005</BoxShadows>
+          <BoxShadows x:Key="GlassGlowShadow">0 6 24 0 #32FA4616, 0 1 6 0 #15000000</BoxShadows>
           <SolidColorBrush x:Key="CheckerboardTileBrush" Color="#0D000000" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="PageBrush" Color="#1B1B19" />
-          <SolidColorBrush x:Key="SurfaceBrush" Color="#262624" />
-          <SolidColorBrush x:Key="SurfaceAltBrush" Color="#31312E" />
-          <SolidColorBrush x:Key="SubtleBorderBrush" Color="#1CFFFFFF" />
-          <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F1EFE8" />
-          <SolidColorBrush x:Key="TextSecondaryBrush" Color="#AEACA4" />
+          <SolidColorBrush x:Key="PageBrush" Color="#161311" />
+          <SolidColorBrush x:Key="SurfaceBrush" Color="#221C18" />
+          <SolidColorBrush x:Key="SurfaceAltBrush" Color="#2D2520" />
+          <SolidColorBrush x:Key="SubtleBorderBrush" Color="#24FFFFFF" />
+          <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F5F2EB" />
+          <SolidColorBrush x:Key="TextSecondaryBrush" Color="#ADA498" />
           <SolidColorBrush x:Key="DangerBrush" Color="#F09595" />
           <SolidColorBrush x:Key="SuccessBrush" Color="#5DCAA5" />
           <SolidColorBrush x:Key="WarningBrush" Color="#EF9F27" />
-          <SolidColorBrush x:Key="GlassPanelBrush" Color="#D0262624" />
-          <SolidColorBrush x:Key="GlassHeaderBrush" Color="#C41B1B19" />
-          <SolidColorBrush x:Key="GlassCardBrush" Color="#B8262624" />
-          <SolidColorBrush x:Key="GlassBorderBrush" Color="#2AFFFFFF" />
-          <SolidColorBrush x:Key="GlassBorderSpecularBrush" Color="#48FFFFFF" />
-          <SolidColorBrush x:Key="GlassBackdropBrush" Color="#D81B1B19" />
+          <SolidColorBrush x:Key="GlassPanelBrush" Color="#D0241E1A" />
+          <SolidColorBrush x:Key="GlassHeaderBrush" Color="#C41A1613" />
+          <SolidColorBrush x:Key="GlassCardBrush" Color="#B82B241F" />
+          <SolidColorBrush x:Key="GlassBorderBrush" Color="#32FFFFFF" />
+          <SolidColorBrush x:Key="GlassBorderSpecularBrush" Color="#50FFFFFF" />
+          <SolidColorBrush x:Key="GlassBackdropBrush" Color="#E0181512" />
+          <SolidColorBrush x:Key="PillGroupBrush" Color="#22FFFFFF" />
+          <SolidColorBrush x:Key="PillInactiveTextBrush" Color="#DDD5CA" />
+          <SolidColorBrush x:Key="GlassInputBrush" Color="#E0221C18" />
+          <SolidColorBrush x:Key="GlassInputBorderBrush" Color="#38FFFFFF" />
           <BoxShadows x:Key="CardShadow">0 3 12 0 #45000000, 0 10 30 0 #35000000</BoxShadows>
-          <BoxShadows x:Key="GlassShadow">0 8 32 0 #55000000, 0 2 8 0 #33000000, 0 0 1 1 #18FFFFFF</BoxShadows>
-          <BoxShadows x:Key="GlassGlowShadow">0 6 22 0 #38FF7418, 0 2 6 0 #20000000, 0 0 1 1 #25FFFFFF</BoxShadows>
+          <BoxShadows x:Key="GlassShadow">0 10 36 0 #60000000, 0 3 10 0 #40000000, 0 0 1 1 #20FFFFFF</BoxShadows>
+          <BoxShadows x:Key="GlassGlowShadow">0 8 28 0 #44FA4616, 0 2 8 0 #25000000, 0 0 1 1 #30FFFFFF</BoxShadows>
           <SolidColorBrush x:Key="CheckerboardTileBrush" Color="#18FFFFFF" />
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
 
       <!-- Defaults; ThemeService overwrites these at startup. -->
-      <SolidColorBrush x:Key="AccentBrush" Color="#FF7418" />
-      <SolidColorBrush x:Key="AccentSoftBrush" Color="#2EFF7418" />
-      <SolidColorBrush x:Key="AccentFaintBrush" Color="#17FF7418" />
-      <SolidColorBrush x:Key="AccentStrongBrush" Color="#D95A08" />
+      <SolidColorBrush x:Key="AccentBrush" Color="#FA4616" />
+      <SolidColorBrush x:Key="AccentSoftBrush" Color="#26FA4616" />
+      <SolidColorBrush x:Key="AccentFaintBrush" Color="#14FA4616" />
+      <SolidColorBrush x:Key="AccentStrongBrush" Color="#D83608" />
       <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF" />
       <CornerRadius x:Key="SoftRadius">16</CornerRadius>
       <CornerRadius x:Key="SoftRadiusSmall">9</CornerRadius>
-      <CornerRadius x:Key="SoftRadiusLarge">22</CornerRadius>
+      <CornerRadius x:Key="SoftRadiusLarge">24</CornerRadius>
+      <CornerRadius x:Key="SoftRadiusPill">20</CornerRadius>
       <FontFamily x:Key="AppFontFamily">Segoe UI, Malgun Gothic, Microsoft YaHei, sans-serif</FontFamily>
 
       <!-- Springy easing used by press/hover transitions ("말랑말랑"). -->
@@ -338,11 +347,16 @@
     </Setter>
   </Style>
   <Style Selector="ListBox.nav ListBoxItem:pointerover">
-    <Setter Property="RenderTransform" Value="translateX(3px)" />
+    <Setter Property="RenderTransform" Value="translateX(4px)" />
+  </Style>
+  <Style Selector="ListBox.nav ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource GlassCardBrush}" />
   </Style>
   <Style Selector="ListBox.nav ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
-    <Setter Property="Foreground" Value="{DynamicResource AccentStrongBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
   </Style>
   <Style Selector="ListBox.nav ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
@@ -361,12 +375,153 @@
     <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
   </Style>
 
+  <!-- Circular top-left close button matching Tangerine modal design -->
+  <Style Selector="Button.close-circle">
+    <Setter Property="Width" Value="28" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="CornerRadius" Value="14" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.18" />
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.18" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.22" Easing="{StaticResource SoftEase}" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.close-circle:pointerover">
+    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="RenderTransform" Value="scale(1.08)" />
+  </Style>
+  <Style Selector="Button.close-circle:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.92)" />
+  </Style>
+
+  <!-- Segmented pill selector container -->
+  <Style Selector="Border.pill-group">
+    <Setter Property="Background" Value="{DynamicResource PillGroupBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="16" />
+    <Setter Property="Padding" Value="3" />
+  </Style>
+
+  <!-- Segmented pill button -->
+  <Style Selector="Button.pill">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{DynamicResource PillInactiveTextBrush}" />
+    <Setter Property="CornerRadius" Value="13" />
+    <Setter Property="Padding" Value="12,5" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.18" />
+        <BrushTransition Property="Foreground" Duration="0:0:0.18" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.22" Easing="{StaticResource SoftEase}" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.pill:pointerover">
+    <Setter Property="Background" Value="{DynamicResource GlassCardBrush}" />
+  </Style>
+  <Style Selector="Button.pill.active">
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+    <Setter Property="FontWeight" Value="Bold" />
+  </Style>
+  <Style Selector="Button.pill.active:pointerover">
+    <Setter Property="Background" Value="{DynamicResource AccentStrongBrush}" />
+  </Style>
+
+  <!-- Segmented pill divider line -->
+  <Style Selector="Rectangle.pill-divider">
+    <Setter Property="Width" Value="1" />
+    <Setter Property="Height" Value="14" />
+    <Setter Property="Fill" Value="{DynamicResource GlassBorderBrush}" />
+    <Setter Property="VerticalAlignment" Value="Center" />
+    <Setter Property="Margin" Value="2,0" />
+  </Style>
+
+  <!-- Primary Tangerine Apply action button -->
+  <Style Selector="Button.apply">
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+    <Setter Property="FontWeight" Value="Bold" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="20,8" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.18" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.22" Easing="{StaticResource SoftEase}" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.apply:pointerover">
+    <Setter Property="Background" Value="{DynamicResource AccentStrongBrush}" />
+    <Setter Property="RenderTransform" Value="scale(1.03)" />
+  </Style>
+  <Style Selector="Button.apply:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.96)" />
+  </Style>
+
+  <!-- Secondary Reset glass action button -->
+  <Style Selector="Button.reset">
+    <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="CornerRadius" Value="10" />
+    <Setter Property="Padding" Value="18,8" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.18" />
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.18" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.22" Easing="{StaticResource SoftEase}" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.reset:pointerover">
+    <Setter Property="Background" Value="{DynamicResource GlassCardBrush}" />
+    <Setter Property="RenderTransform" Value="scale(1.02)" />
+  </Style>
+  <Style Selector="Button.reset:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.96)" />
+  </Style>
+
+  <!-- Glass Numeric and Text Inputs -->
+  <Style Selector="TextBox.glass">
+    <Setter Property="Background" Value="{DynamicResource GlassInputBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassInputBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="10,6" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+  </Style>
+
   <!-- ───────── Donut control colours ───────── -->
   <Style Selector="c|DonutMenu">
-    <Setter Property="SliceBrush" Value="{DynamicResource SurfaceBrush}" />
-    <Setter Property="SliceBorderBrush" Value="{DynamicResource SubtleBorderBrush}" />
+    <Setter Property="SliceBrush" Value="{DynamicResource GlassCardBrush}" />
+    <Setter Property="SliceBorderBrush" Value="{DynamicResource GlassBorderBrush}" />
     <Setter Property="CornerRadius" Value="{DynamicResource SoftRadius}" />
-    <Setter Property="CenterBrush" Value="{DynamicResource SurfaceBrush}" />
+    <Setter Property="CenterBrush" Value="{DynamicResource GlassPanelBrush}" />
     <Setter Property="AccentBrush" Value="{DynamicResource AccentBrush}" />
     <Setter Property="OnAccentBrush" Value="{DynamicResource OnAccentBrush}" />
     <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />

@@ -67,11 +67,11 @@ public sealed class CropCanvas : Control
     private static readonly Cursor TopRightCursor = new(StandardCursorType.TopRightCorner);
     private static readonly Cursor CrossCursor = new(StandardCursorType.Cross);
 
-    private static readonly IBrush DimMaskBrush = new SolidColorBrush(Color.FromArgb(175, 0, 0, 0));
-    private static readonly IPen CropBorderPen = new Pen(Brushes.White, 1.5);
-    private static readonly IPen GridPen = new Pen(new SolidColorBrush(Color.FromArgb(80, 255, 255, 255)), 1);
-    private static readonly IPen HandlePen = new Pen(Brushes.White, 3.5);
-    private static readonly IPen HandleShadowPen = new Pen(new SolidColorBrush(Color.FromArgb(140, 0, 0, 0)), 5.0);
+    private static readonly IBrush DimMaskBrush = new SolidColorBrush(Color.FromArgb(160, 0, 0, 0));
+    private static readonly IPen CropBorderPen = new Pen(new SolidColorBrush(Color.FromArgb(220, 250, 70, 22)), 1.5);
+    private static readonly IPen GridPen = new Pen(new SolidColorBrush(Color.FromArgb(60, 255, 255, 255)), 1);
+    private static readonly IPen HandlePen = new Pen(new SolidColorBrush(Color.Parse("#FA4616")), 4.0, lineCap: PenLineCap.Round);
+    private static readonly IPen HandleShadowPen = new Pen(new SolidColorBrush(Color.FromArgb(120, 0, 0, 0)), 5.5, lineCap: PenLineCap.Round);
 
     private static double SafeClamp(double val, double min, double max) =>
         min > max ? Math.Clamp(val, max, min) : Math.Clamp(val, min, max);

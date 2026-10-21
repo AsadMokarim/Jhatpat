@@ -10,68 +10,47 @@
         Background="Transparent"
         TransparencyLevelHint="Transparent"
         Topmost="True"
-        CanResize="True">
+        CanResize="True"
+        WindowStartupLocation="CenterScreen">
 
   <Window.KeyBindings>
     <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
   </Window.KeyBindings>
 
-  <Window.Styles>
-    <Style Selector="Button.action-btn">
-      <Setter Property="Padding" Value="14,8" />
-      <Setter Property="CornerRadius" Value="8" />
-      <Setter Property="FontSize" Value="13" />
-      <Setter Property="Cursor" Value="Hand" />
-    </Style>
-    <Style Selector="Button.order-btn">
-      <Setter Property="Width" Value="32" />
-      <Setter Property="Height" Value="32" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="CornerRadius" Value="6" />
-      <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
-      <Setter Property="BorderThickness" Value="1" />
-      <Setter Property="BorderBrush" Value="{DynamicResource SubtleBorderBrush}" />
-      <Setter Property="Cursor" Value="Hand" />
-    </Style>
-    <Style Selector="Button.order-btn:pointerover">
-      <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
-    </Style>
-  </Window.Styles>
-
-  <Border Margin="16" CornerRadius="{DynamicResource SoftRadius}"
-          Background="{DynamicResource GlassPanelBrush}"
+  <Border Margin="16" CornerRadius="{DynamicResource DialogRadius}"
+          Background="{DynamicResource GlassCardBrush}"
           BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1"
           ClipToBounds="True"
-          BoxShadow="{DynamicResource GlassShadow}">
+          BoxShadow="0 24 64 0 #50000000, 0 2 0 0 #40FFFFFF inset">
     <DockPanel>
-      <!-- Top header bar -->
-      <Border DockPanel.Dock="Top" Height="50" Padding="18,0" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,0,0,1"
+      <!-- Top header bar matching Tangerine modal standard -->
+      <Border DockPanel.Dock="Top" Height="56" Padding="18,0" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,0,0,1"
               Background="{DynamicResource GlassHeaderBrush}">
-        <DockPanel VerticalAlignment="Center">
-          <Button DockPanel.Dock="Right" Classes="icon" Command="{Binding CloseCommand}"
-                  ToolTip.Tip="Close" Margin="4,0,0,0">
-            <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Close}" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <Grid ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+          <!-- Left: Circular close button -->
+          <Button Grid.Column="0" Classes="close-circle" Command="{Binding CloseCommand}" ToolTip.Tip="Close">
+            <TextBlock Text="✕" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,-1,0,0" />
           </Button>
 
-          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-            <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="8" Width="30" Height="30">
-              <PathIcon Width="16" Height="16" Data="{StaticResource Icon.FilePdf}" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-            </Border>
-            <TextBlock Text="Merge PDFs" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+          <!-- Center: Bold window title -->
+          <TextBlock Grid.Column="1" Text="Merge PDFs" FontWeight="Bold" FontSize="16"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextPrimaryBrush}" />
 
-            <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="10" Padding="8,2" VerticalAlignment="Center" IsVisible="{Binding HasItems}">
+          <!-- Right: Badges -->
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" IsVisible="{Binding HasItems}">
+            <Border Background="{DynamicResource GlassCardBrush}" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1"
+                    CornerRadius="12" Padding="8,3" VerticalAlignment="Center">
               <TextBlock Text="{Binding ItemCount, StringFormat='{}{0} files'}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" />
             </Border>
           </StackPanel>
-        </DockPanel>
+        </Grid>
       </Border>
 
       <!-- Description banner -->
-      <Border DockPanel.Dock="Top" Padding="18,10" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="0,0,0,1">
-        <DockPanel>
-          <TextBlock Text="Combine multiple PDF documents into a single file in the exact order specified below."
-                     FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
-        </DockPanel>
+      <Border DockPanel.Dock="Top" Padding="18,10" Background="{DynamicResource GlassPanelBrush}" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,0,0,1">
+        <TextBlock Text="Combine multiple PDF documents into a single file in the exact order specified below."
+                   FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" />
       </Border>
 
       <!-- Bottom action bar -->
@@ -79,17 +58,14 @@
               Background="{DynamicResource GlassHeaderBrush}">
         <DockPanel VerticalAlignment="Center">
           <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
-            <Button Classes="action-btn" Command="{Binding AddFilesCommand}"
-                    Background="{DynamicResource SurfaceAltBrush}" Foreground="{DynamicResource TextPrimaryBrush}"
-                    BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1">
+            <Button Classes="reset" Command="{Binding AddFilesCommand}">
               <StackPanel Orientation="Horizontal" Spacing="6">
                 <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Plus}" Foreground="{DynamicResource TextPrimaryBrush}" />
                 <TextBlock Text="Add More PDFs" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
-            <Button Classes="action-btn" Command="{Binding ClearAllCommand}" IsVisible="{Binding HasItems}"
-                    Background="Transparent" Foreground="{DynamicResource TextSecondaryBrush}" BorderThickness="0">
-              <TextBlock Text="Clear All" VerticalAlignment="Center" />
+            <Button Classes="reset" Command="{Binding ClearAllCommand}" IsVisible="{Binding HasItems}">
+              <TextBlock Text="Clear All" VerticalAlignment="Center" Foreground="{DynamicResource DangerBrush}" />
             </Button>
           </StackPanel>
 
@@ -97,16 +73,14 @@
             <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="{DynamicResource AccentBrush}"
                        VerticalAlignment="Center" Margin="0,0,6,0" IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
-            <Button Classes="action-btn" Command="{Binding OpenOutputFolderCommand}" IsVisible="{Binding IsFinished}"
-                    Background="{DynamicResource SurfaceAltBrush}" Foreground="{DynamicResource TextPrimaryBrush}">
+            <Button Classes="reset" Command="{Binding OpenOutputFolderCommand}" IsVisible="{Binding IsFinished}">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Folder}" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Folder}" Foreground="{DynamicResource TextSecondaryBrush}" />
                 <TextBlock Text="Open Folder" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
 
-            <Button Classes="action-btn" Command="{Binding MergeCommand}" IsEnabled="{Binding CanMerge}"
-                    Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource OnAccentBrush}" FontWeight="SemiBold">
+            <Button Classes="apply" Command="{Binding MergeCommand}" IsEnabled="{Binding CanMerge}">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <ProgressBar IsIndeterminate="True" Width="14" Height="14" IsVisible="{Binding IsProcessing}" />
                 <PathIcon Width="13" Height="13" Data="{StaticResource Icon.Check}" IsVisible="{Binding !IsProcessing}" Foreground="{DynamicResource OnAccentBrush}" />
@@ -118,11 +92,13 @@
       </Border>
 
       <!-- Center file list -->
-      <Grid Margin="18,12">
+      <Grid Margin="20,14">
         <!-- Empty state -->
         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12" IsVisible="{Binding !HasItems}">
-          <PathIcon Width="48" Height="48" Data="{StaticResource Icon.FilePdf}" Foreground="{DynamicResource TextSecondaryBrush}" Opacity="0.4" HorizontalAlignment="Center" />
-          <TextBlock Text="No PDF documents selected" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
+          <Border Width="64" Height="64" CornerRadius="18" Background="{DynamicResource AccentSoftBrush}" HorizontalAlignment="Center">
+            <PathIcon Width="28" Height="28" Data="{StaticResource Icon.FilePdf}" Foreground="{DynamicResource AccentStrongBrush}" />
+          </Border>
+          <TextBlock Text="No PDF documents selected" FontSize="15" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" />
           <TextBlock Text="Click 'Add More PDFs' or drag PDF files into this window." FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" HorizontalAlignment="Center" />
         </StackPanel>
 
@@ -131,22 +107,21 @@
           <ItemsControl ItemsSource="{Binding Items}">
             <ItemsControl.ItemTemplate>
               <DataTemplate x:DataType="vm:PdfMergeItemViewModel">
-                <Border Margin="0,0,0,8" Padding="12,10" CornerRadius="8"
-                        Background="{DynamicResource SurfaceAltBrush}"
-                        BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1">
+                <Border Margin="0,0,0,8" Padding="14,10" CornerRadius="10"
+                        Classes="glass-card">
                   <DockPanel VerticalAlignment="Center">
                     <!-- Actions on right: Move Up, Move Down, Delete -->
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                      <Button Classes="order-btn" Command="{Binding $parent[Window].((vm:PdfMergeViewModel)DataContext).MoveUpCommand}"
-                              CommandParameter="{Binding}" IsEnabled="{Binding !IsFirst}" ToolTip.Tip="Move Up">
+                      <Button Classes="icon" Command="{Binding $parent[Window].((vm:PdfMergeViewModel)DataContext).MoveUpCommand}"
+                              CommandParameter="{Binding}" IsEnabled="{Binding !IsFirst}" ToolTip.Tip="Move Up" Width="28" Height="28">
                         <PathIcon Width="10" Height="10" Data="{StaticResource Icon.ArrowUp}" Foreground="{DynamicResource TextPrimaryBrush}" />
                       </Button>
-                      <Button Classes="order-btn" Command="{Binding $parent[Window].((vm:PdfMergeViewModel)DataContext).MoveDownCommand}"
-                              CommandParameter="{Binding}" IsEnabled="{Binding !IsLast}" ToolTip.Tip="Move Down">
+                      <Button Classes="icon" Command="{Binding $parent[Window].((vm:PdfMergeViewModel)DataContext).MoveDownCommand}"
+                              CommandParameter="{Binding}" IsEnabled="{Binding !IsLast}" ToolTip.Tip="Move Down" Width="28" Height="28">
                         <PathIcon Width="10" Height="10" Data="{StaticResource Icon.ArrowDown}" Foreground="{DynamicResource TextPrimaryBrush}" />
                       </Button>
-                      <Button Classes="order-btn" Command="{Binding $parent[Window].((vm:PdfMergeViewModel)DataContext).RemoveItemCommand}"
-                              CommandParameter="{Binding}" ToolTip.Tip="Remove">
+                      <Button Classes="icon" Command="{Binding $parent[Window].((vm:PdfMergeViewModel)DataContext).RemoveItemCommand}"
+                              CommandParameter="{Binding}" ToolTip.Tip="Remove" Width="28" Height="28">
                         <PathIcon Width="10" Height="10" Data="{StaticResource Icon.Close}" Foreground="{DynamicResource TextSecondaryBrush}" />
                       </Button>
                     </StackPanel>

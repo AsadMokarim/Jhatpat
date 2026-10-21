@@ -16,7 +16,7 @@ public sealed class ThemeService(IPlatformServices platform)
 {
     /// <summary>Accent swatches offered in the Theme page.</summary>
     public static readonly IReadOnlyList<string> Swatches =
-        ["#FF7418", "#FF3D32", "#FFB31A", "#7F77DD", "#1D9E75", "#378ADD", "#639922", "#5F5E5A"];
+        ["#FA4616", "#FF7418", "#FF3D32", "#FFB31A", "#7F77DD", "#1D9E75", "#378ADD", "#639922"];
 
     /// <summary>Embedded Noto fonts (see build/fetch-fonts.ps1). Missing files fall back to system fonts.</summary>
     private const string Latin = "fonts:Filee#Noto Sans";

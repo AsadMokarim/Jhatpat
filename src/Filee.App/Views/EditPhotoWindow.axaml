@@ -10,92 +10,66 @@
         Background="Transparent"
         TransparencyLevelHint="Transparent"
         Topmost="True"
-        CanResize="True">
+        CanResize="True"
+        WindowStartupLocation="CenterScreen">
 
   <Window.KeyBindings>
     <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
     <KeyBinding Gesture="R" Command="{Binding ResetAllCommand}" />
   </Window.KeyBindings>
 
-  <Window.Styles>
-    <Style Selector="Button.tab-btn">
-      <Setter Property="Padding" Value="14,7" />
-      <Setter Property="CornerRadius" Value="6" />
-      <Setter Property="FontSize" Value="12" />
-      <Setter Property="FontWeight" Value="SemiBold" />
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-      <Setter Property="Cursor" Value="Hand" />
-    </Style>
-    <Style Selector="Button.tab-btn:pointerover">
-      <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
-    </Style>
-    <Style Selector="Button.tab-btn.active">
-      <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
-      <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
-    </Style>
-    <Style Selector="Slider">
-      <Setter Property="Margin" Value="0,2,0,8" />
-    </Style>
-  </Window.Styles>
-
-  <Border Margin="16" CornerRadius="{DynamicResource SoftRadius}"
-          Background="{DynamicResource GlassPanelBrush}"
+  <Border Margin="16" CornerRadius="{DynamicResource DialogRadius}"
+          Background="{DynamicResource GlassCardBrush}"
           BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1"
           ClipToBounds="True"
-          BoxShadow="{DynamicResource GlassShadow}">
+          BoxShadow="0 24 64 0 #50000000, 0 2 0 0 #40FFFFFF inset">
     <DockPanel>
-      <!-- Top header bar -->
-      <Border DockPanel.Dock="Top" Height="50" Padding="18,0" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,0,0,1"
+      <!-- Top header bar matching Tangerine modal standard -->
+      <Border DockPanel.Dock="Top" Height="56" Padding="18,0" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,0,0,1"
               Background="{DynamicResource GlassHeaderBrush}">
-        <DockPanel VerticalAlignment="Center">
-          <Button DockPanel.Dock="Right" Classes="icon" Command="{Binding CloseCommand}"
-                  ToolTip.Tip="Close" Margin="4,0,0,0">
-            <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Close}" Foreground="{DynamicResource TextSecondaryBrush}" />
+        <Grid ColumnDefinitions="Auto, *, Auto" VerticalAlignment="Center">
+          <!-- Left: Circular close button -->
+          <Button Grid.Column="0" Classes="close-circle" Command="{Binding CloseCommand}" ToolTip.Tip="Close">
+            <TextBlock Text="✕" FontSize="13" Foreground="{DynamicResource TextSecondaryBrush}" Margin="0,-1,0,0" />
           </Button>
 
-          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-            <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="8" Width="30" Height="30">
-              <PathIcon Width="16" Height="16" Data="{StaticResource Icon.Tune}" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-            </Border>
-            <TextBlock Text="Edit Photo" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+          <!-- Center: Bold window title -->
+          <TextBlock Grid.Column="1" Text="Edit Photo" FontWeight="Bold" FontSize="16"
+                     HorizontalAlignment="Center" VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextPrimaryBrush}" />
 
-            <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
-              <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" MaxWidth="220" TextTrimming="CharacterEllipsis" />
+          <!-- Right: Context metadata & Compare toggle -->
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <Border Background="{DynamicResource GlassCardBrush}" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1"
+                    CornerRadius="12" Padding="8,3" VerticalAlignment="Center">
+              <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" MaxWidth="180" TextTrimming="CharacterEllipsis" />
             </Border>
 
-            <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+            <Border Background="{DynamicResource GlassCardBrush}" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1"
+                    CornerRadius="12" Padding="8,3" VerticalAlignment="Center">
               <TextBlock Text="{Binding ResolutionText}" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold" />
             </Border>
 
             <!-- Compare Button -->
-            <Button Classes="tab-btn" Command="{Binding ToggleCompareCommand}" Margin="12,0,0,0"
-                    Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1">
+            <Button Classes="pill" Classes.active="{Binding IsComparing}" Command="{Binding ToggleCompareCommand}"
+                    ToolTip.Tip="Hold or toggle to compare against original">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Copy}" Foreground="{DynamicResource TextPrimaryBrush}" />
-                <TextBlock Text="{Binding IsComparing, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=True, StringFormat='{}{0}'}" VerticalAlignment="Center">
-                  <TextBlock.Text>
-                    <MultiBinding StringFormat="{}{0}">
-                      <Binding Path="IsComparing" />
-                    </MultiBinding>
-                  </TextBlock.Text>
-                </TextBlock>
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Copy}" />
                 <TextBlock Text="Compare" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
           </StackPanel>
-        </DockPanel>
+        </Grid>
       </Border>
 
       <!-- Bottom action bar -->
-      <Border DockPanel.Dock="Bottom" Padding="18,12" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,1,0,0"
+      <Border DockPanel.Dock="Bottom" Padding="18,14" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,1,0,0"
               Background="{DynamicResource GlassHeaderBrush}">
         <DockPanel VerticalAlignment="Center">
           <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
-            <Button Classes="tab-btn" Command="{Binding ResetAllCommand}" ToolTip.Tip="Reset all sliders to defaults (R)"
-                    Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="1">
+            <Button Classes="reset" Command="{Binding ResetAllCommand}" ToolTip.Tip="Reset all sliders to defaults (R)">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Refresh}" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Refresh}" Foreground="{DynamicResource TextSecondaryBrush}" />
                 <TextBlock Text="Reset All" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
@@ -105,16 +79,14 @@
             <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="{DynamicResource AccentBrush}"
                        VerticalAlignment="Center" Margin="0,0,6,0" IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
 
-            <Button Classes="tab-btn" Command="{Binding OpenOutputFolderCommand}" IsVisible="{Binding IsFinished}"
-                    Background="{DynamicResource SurfaceAltBrush}" Foreground="{DynamicResource TextPrimaryBrush}">
+            <Button Classes="reset" Command="{Binding OpenOutputFolderCommand}" IsVisible="{Binding IsFinished}">
               <StackPanel Orientation="Horizontal" Spacing="6">
-                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Folder}" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Folder}" Foreground="{DynamicResource TextSecondaryBrush}" />
                 <TextBlock Text="Open Folder" VerticalAlignment="Center" />
               </StackPanel>
             </Button>
 
-            <Button Classes="tab-btn" Command="{Binding SaveCopyCommand}" IsEnabled="{Binding !IsSaving}"
-                    Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource OnAccentBrush}" FontWeight="SemiBold" Padding="16,8">
+            <Button Classes="apply" Command="{Binding SaveCopyCommand}" IsEnabled="{Binding !IsSaving}">
               <StackPanel Orientation="Horizontal" Spacing="8">
                 <ProgressBar IsIndeterminate="True" Width="14" Height="14" IsVisible="{Binding IsSaving}" />
                 <PathIcon Width="13" Height="13" Data="{StaticResource Icon.Check}" IsVisible="{Binding !IsSaving}" Foreground="{DynamicResource OnAccentBrush}" />
@@ -127,8 +99,9 @@
 
       <!-- Main Layout: Preview on Left, Adjustments Panel on Right -->
       <Grid ColumnDefinitions="*, 330">
-        <!-- Image Preview Area -->
-        <Border Grid.Column="0" Background="#111116" Margin="14" CornerRadius="10" ClipToBounds="True">
+        <!-- Image Preview Area with rounded glass frame -->
+        <Border Grid.Column="0" Background="#111116" Margin="16" CornerRadius="{DynamicResource SoftRadius}"
+                BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1" ClipToBounds="True">
           <Grid>
             <!-- Adjusted Preview -->
             <Image Source="{Binding PreviewBitmap}" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -139,7 +112,7 @@
                    RenderOptions.BitmapInterpolationMode="HighQuality" IsVisible="{Binding IsComparing}" />
 
             <!-- Compare Watermark Badge -->
-            <Border Background="#CC000000" CornerRadius="4" Padding="8,4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12"
+            <Border Background="#CC000000" CornerRadius="6" Padding="10,5" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="14"
                     IsVisible="{Binding IsComparing}">
               <TextBlock Text="ORIGINAL PHOTO" FontSize="11" FontWeight="Bold" Foreground="White" />
             </Border>
@@ -147,28 +120,32 @@
         </Border>
 
         <!-- Right Adjustments Sidebar -->
-        <Border Grid.Column="1" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1,0,0,0">
+        <Border Grid.Column="1" Background="{DynamicResource GlassPanelBrush}" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1,0,0,0">
           <DockPanel>
-            <!-- Tabs: Light / Color / Detail -->
-            <Border DockPanel.Dock="Top" Height="44" Padding="8,6" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="0,0,0,1">
-              <Grid ColumnDefinitions="*, *, *">
-                <Button Grid.Column="0" Classes="tab-btn" Classes.active="{Binding IsTabLight}" Command="{Binding SelectTabCommand}" CommandParameter="Light" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
-                  <TextBlock Text="Light" FontWeight="SemiBold" />
-                </Button>
-                <Button Grid.Column="1" Classes="tab-btn" Classes.active="{Binding IsTabColor}" Command="{Binding SelectTabCommand}" CommandParameter="Color" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
-                  <TextBlock Text="Color" FontWeight="SemiBold" />
-                </Button>
-                <Button Grid.Column="2" Classes="tab-btn" Classes.active="{Binding IsTabDetail}" Command="{Binding SelectTabCommand}" CommandParameter="Detail" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">
-                  <TextBlock Text="Detail" FontWeight="SemiBold" />
-                </Button>
-              </Grid>
+            <!-- Segmented Pill Selector: Light / Color / Detail -->
+            <Border DockPanel.Dock="Top" Margin="14,12,14,6">
+              <Border Classes="pill-group" HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                  <Button Classes="pill" Classes.active="{Binding IsTabLight}" Command="{Binding SelectTabCommand}" CommandParameter="Light">
+                    <TextBlock Text="Light" />
+                  </Button>
+                  <Rectangle Classes="pill-divider" />
+                  <Button Classes="pill" Classes.active="{Binding IsTabColor}" Command="{Binding SelectTabCommand}" CommandParameter="Color">
+                    <TextBlock Text="Color" />
+                  </Button>
+                  <Rectangle Classes="pill-divider" />
+                  <Button Classes="pill" Classes.active="{Binding IsTabDetail}" Command="{Binding SelectTabCommand}" CommandParameter="Detail">
+                    <TextBlock Text="Detail" />
+                  </Button>
+                </StackPanel>
+              </Border>
             </Border>
 
             <!-- Sliders Content Area -->
             <ScrollViewer VerticalScrollBarVisibility="Auto">
-              <StackPanel Margin="16" Spacing="4">
+              <StackPanel Margin="18,10,18,18" Spacing="10">
                 <!-- LIGHT CONTROLS -->
-                <StackPanel Spacing="4" IsVisible="{Binding IsTabLight}">
+                <StackPanel Spacing="6" IsVisible="{Binding IsTabLight}">
                   <!-- Exposure -->
                   <DockPanel>
                     <TextBlock Text="Exposure" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
@@ -225,13 +202,13 @@
                   </DockPanel>
                   <Slider Minimum="0.2" Maximum="2.5" Value="{Binding Gamma}" />
 
-                  <Button Classes="tab-btn" Command="{Binding ResetLightCommand}" HorizontalAlignment="Center" Margin="0,10,0,0">
+                  <Button Classes="reset" Command="{Binding ResetLightCommand}" HorizontalAlignment="Center" Margin="0,12,0,0" Padding="14,6">
                     <TextBlock Text="Reset Light" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
                   </Button>
                 </StackPanel>
 
                 <!-- COLOR CONTROLS -->
-                <StackPanel Spacing="4" IsVisible="{Binding IsTabColor}">
+                <StackPanel Spacing="6" IsVisible="{Binding IsTabColor}">
                   <!-- Temperature -->
                   <DockPanel>
                     <TextBlock Text="Temperature (Cool / Warm)" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
@@ -267,13 +244,13 @@
                   </DockPanel>
                   <Slider Minimum="-180" Maximum="180" Value="{Binding Hue}" />
 
-                  <Button Classes="tab-btn" Command="{Binding ResetColorCommand}" HorizontalAlignment="Center" Margin="0,10,0,0">
+                  <Button Classes="reset" Command="{Binding ResetColorCommand}" HorizontalAlignment="Center" Margin="0,12,0,0" Padding="14,6">
                     <TextBlock Text="Reset Color" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
                   </Button>
                 </StackPanel>
 
                 <!-- DETAIL CONTROLS -->
-                <StackPanel Spacing="4" IsVisible="{Binding IsTabDetail}">
+                <StackPanel Spacing="6" IsVisible="{Binding IsTabDetail}">
                   <!-- Dehaze -->
                   <DockPanel>
                     <TextBlock Text="Dehaze" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}" />
@@ -302,7 +279,7 @@
                   </DockPanel>
                   <Slider Minimum="0" Maximum="100" Value="{Binding NoiseReduction}" />
 
-                  <Button Classes="tab-btn" Command="{Binding ResetDetailCommand}" HorizontalAlignment="Center" Margin="0,10,0,0">
+                  <Button Classes="reset" Command="{Binding ResetDetailCommand}" HorizontalAlignment="Center" Margin="0,12,0,0" Padding="14,6">
                     <TextBlock Text="Reset Detail" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" />
                   </Button>
                 </StackPanel>

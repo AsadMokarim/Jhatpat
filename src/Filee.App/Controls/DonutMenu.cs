@@ -95,8 +95,8 @@ public sealed partial class DonutMenu : Control
     public static readonly StyledProperty<IBrush?> DangerBrushProperty =
         AvaloniaProperty.Register<DonutMenu, IBrush?>(nameof(DangerBrush), Brushes.IndianRed);
 
-    /// <summary>Gap between slices in pixels (keeps the donut "full" while separating slices).</summary>
-    private const double GapPixels = 3;
+    /// <summary>Gap between slices in pixels (gives the petals distinct spacing matching Tangerine design).</summary>
+    private const double GapPixels = 5;
     private const double PopOut = 7;
     private const double OpenDuration = 0.42;
     private const double OpenStagger = 0.028;
@@ -105,6 +105,20 @@ public sealed partial class DonutMenu : Control
     // Pencil (Material "edit") path in a 24×24 box.
     private static readonly Geometry PencilIcon = Geometry.Parse(
         "M3,17.25V21h3.75L17.81,9.94l-3.75-3.75L3,17.25z M20.71,7.04c0.39-0.39,0.39-1.02,0-1.41l-2.34-2.34c-0.39-0.39-1.02-0.39-1.41,0l-1.83,1.83l3.75,3.75L20.71,7.04z");
+
+    // Tangerine tool vector geometries for slices
+    private static readonly Geometry IconCrop = Geometry.Parse("M7,17V1H5V5H1V7H5V17A2,2 0 0,0 7,19H17V23H19V19H23V17M17,15H19V7C19,5.89 18.1,5 17,5H9V7H17V15Z");
+    private static readonly Geometry IconCompress = Geometry.Parse("M14,4L16.29,6.29L13.41,9.17L14.83,10.59L17.71,7.71L20,10V4M10,4H4V10L6.29,7.71L9.17,10.59L10.59,9.17L7.71,6.29L10,4M20,14L17.71,16.29L14.83,13.41L13.41,14.83L16.29,17.71L14,20H20M4,14V20H10L7.71,17.71L10.59,14.83L9.17,13.41L6.29,16.29L4,14Z");
+    private static readonly Geometry IconEdit = Geometry.Parse("M3,17V19H9V17H3M3,5V7H13V5H3M13,21V19H21V17H13V15H11V21H13M7,9V11H3V13H7V15H9V9H7M21,13V11H11V13H21M15,9H17V7H21V5H17V3H15V9Z");
+    private static readonly Geometry IconAnnotate = Geometry.Parse("M3,17.25V21h3.75L17.81,9.94l-3.75-3.75L3,17.25z M20.71,7.04c0.39-0.39,0.39-1.02,0-1.41l-2.34-2.34c-0.39-0.39-1.02-0.39-1.41,0l-1.83,1.83l3.75,3.75L20.71,7.04z");
+    private static readonly Geometry IconRedact = Geometry.Parse("M12,4.5C7,4.5 2.73,7.61 1,12C2.73,16.39 7,19.5 12,19.5C17,19.5 21.27,16.39 23,12C21.27,7.61 17,4.5 12,4.5M12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9Z");
+    private static readonly Geometry IconMetadata = Geometry.Parse("M21.41,11.58L12.41,2.58C12.05,2.22 11.55,2 11,2H4C2.89,2 2,2.89 2,4V11C2,11.55 2.22,12.05 2.59,12.42L11.58,21.42C11.95,21.78 12.45,22 13,22C13.55,22 14.05,21.78 14.41,21.41L21.41,14.41C21.78,14.05 22,13.55 22,13C22,12.45 21.77,11.94 21.41,11.58M13,20L4,11V4H11L20,13M6.5,5A1.5,1.5 0 1,0 8,6.5A1.5,1.5 0 0,0 6.5,5Z");
+    private static readonly Geometry IconAddBg = Geometry.Parse("M19,19H5V5H19M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M13.96,12.29L11.21,15.83L9.25,13.47L6.5,17H17.5L13.96,12.29Z");
+    private static readonly Geometry IconPdf = Geometry.Parse("M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M13,9V3.5L18.5,9H13Z");
+    private static readonly Geometry IconVideo = Geometry.Parse("M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5Z");
+    private static readonly Geometry IconAudio = Geometry.Parse("M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.84 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.76 16.5,12M3,9V15H7L12,20V4L7,9H3Z");
+    private static readonly Geometry IconCollage = Geometry.Parse("M3,3V11H11V3H3M5,5H9V9H5V5M13,3V11H21V3H13M15,5H19V9H15V5M3,13V21H11V13H3M5,15H9V19H5V15M13,13V21H21V13H13M15,15H19V19H15V15Z");
+    private static readonly Geometry IconRotateCw = Geometry.Parse("M12,4V1L8,5L12,9V6A6,6 0 0,1 18,12C18,13.01 17.75,13.97 17.3,14.8L18.76,16.26C19.53,15.03 20,13.57 20,12A8,8 0 0,0 12,4M12,18A6,6 0 0,1 6,12C6,10.99 6.25,10.03 6.7,9.2L5.24,7.74C4.47,8.97 4,10.43 4,12A8,8 0 0,0 12,20V23L16,19L12,15V18Z");
 
     // Jhatpat signature brand geometries for Tangerine central hub
     private static readonly Geometry JMarkIcon = Geometry.Parse(
@@ -121,8 +135,9 @@ public sealed partial class DonutMenu : Control
         EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
         GradientStops =
         {
-            new GradientStop(Color.FromArgb(240, 255, 179, 26), 0),
-            new GradientStop(Color.FromArgb(250, 255, 116, 24), 1),
+            new GradientStop(Color.Parse("#FF5A1E"), 0),
+            new GradientStop(Color.Parse("#FA4616"), 0.55),
+            new GradientStop(Color.Parse("#E03206"), 1),
         },
     };
     private static readonly IBrush TangerineHubGrad = new LinearGradientBrush
@@ -951,14 +966,14 @@ public sealed partial class DonutMenu : Control
 
                 // Delicate frosted glass specular top rim arc
                 var rimArc = CreateOuterArc(center, r2Slice - 1.0, mid, span - 0.04);
-                var rimPen = new Pen(new SolidColorBrush(Color.FromArgb(42, 255, 255, 255)), 1.2);
+                var rimPen = new Pen(new SolidColorBrush(Color.FromArgb(64, 255, 255, 255)), 1.3);
                 context.DrawGeometry(null, rimPen, rimArc);
 
                 // Tangerine highlight with warm gradient when hovered or drop target
                 var emphasis = i == _dropTargetIndex ? 1.0 : hover;
                 if (emphasis > 0.01 && item.IsEnabled)
                 {
-                    var highlightBrush = WithOpacity(TangerineHoverBrush, 0.88 * Math.Clamp(emphasis, 0, 1));
+                    var highlightBrush = WithOpacity(TangerineHoverBrush, 0.95 * Math.Clamp(emphasis, 0, 1));
                     context.DrawGeometry(highlightBrush, null, wedge);
                 }
 
@@ -1095,24 +1110,69 @@ public sealed partial class DonutMenu : Control
         return geo;
     }
 
+    private static Geometry? ResolveSliceIcon(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return null;
+        var lower = id.ToLowerInvariant();
+        if (lower.Contains("crop")) return IconCrop;
+        if (lower.Contains("compress") || lower.Contains("resize") || lower.Contains("half-size")) return IconCompress;
+        if (lower.Contains("photo-edit") || lower.Contains("edit") || lower.Contains("tune")) return IconEdit;
+        if (lower.Contains("annotate") || lower.Contains("pencil")) return IconAnnotate;
+        if (lower.Contains("redact")) return IconRedact;
+        if (lower.Contains("metadata") || lower.Contains("tag")) return IconMetadata;
+        if (lower.Contains("add-bg") || lower.Contains("frame")) return IconAddBg;
+        if (lower.Contains("pdf")) return IconPdf;
+        if (lower.Contains("video")) return IconVideo;
+        if (lower.Contains("audio") || lower.Contains("volume")) return IconAudio;
+        if (lower.Contains("collage")) return IconCollage;
+        if (lower.Contains("rotate")) return IconRotateCw;
+        if (lower.Contains("sparkle") || lower.Contains("image-tools")) return SparkleIcon;
+        return null;
+    }
+
     private void DrawLabel(DrawingContext context, DonutItem item, Point center, double radius, double angle,
         double maxWidth, double maxHeight, Typeface bold, Typeface regular, bool hot)
     {
         var foreground = hot ? OnAccentBrush : item.IsEnabled ? Foreground : SecondaryForeground;
         var width = Math.Clamp(maxWidth, 30, item.IsPromoted ? 140 : 120);
-        var fontSize = item.IsPromoted ? 14.0 : 13.0;
-        var label = MakeText(item.Label, bold, fontSize, foreground, width, maxLines: 2);
-        var showCaption = !string.IsNullOrEmpty(item.Caption) &&
-                          !string.Equals(item.Caption, item.Label, StringComparison.OrdinalIgnoreCase) &&
-                          label.Height + 14 < maxHeight;
-        var caption = showCaption ? MakeText(item.Caption!, regular, 10.5, hot ? OnAccentBrush : SecondaryForeground, width) : null;
+        var icon = ResolveSliceIcon(item.Id);
+        var hasIcon = icon is not null && maxHeight >= 42;
 
-        var total = label.Height + (caption?.Height ?? 0);
+        var fontSize = hasIcon ? 11.0 : (item.IsPromoted ? 14.0 : 13.0);
+        var labelText = hasIcon ? item.Label.ToUpperInvariant() : item.Label;
+        var label = MakeText(labelText, bold, fontSize, foreground, width, maxLines: 2);
+
         var anchor = DonutGeometry.PointAt(center, radius, angle);
-        var y = anchor.Y - total / 2;
-        DrawCentered(context, label, anchor.X, y);
-        if (caption is not null)
-            DrawCentered(context, caption, anchor.X, y + label.Height);
+
+        if (hasIcon)
+        {
+            const double iconSize = 16.0;
+            var totalH = iconSize + 4 + label.Height;
+            var iconTop = anchor.Y - totalH / 2;
+
+            var bounds = icon!.Bounds;
+            var scale = iconSize / Math.Max(bounds.Width, bounds.Height);
+            var matrix = Matrix.CreateTranslation(-bounds.Center.X, -bounds.Center.Y) *
+                         Matrix.CreateScale(scale, scale) *
+                         Matrix.CreateTranslation(anchor.X, iconTop + iconSize / 2);
+            using (context.PushTransform(matrix))
+                context.DrawGeometry(foreground, null, icon);
+
+            DrawCentered(context, label, anchor.X, iconTop + iconSize + 3);
+        }
+        else
+        {
+            var showCaption = !string.IsNullOrEmpty(item.Caption) &&
+                              !string.Equals(item.Caption, item.Label, StringComparison.OrdinalIgnoreCase) &&
+                              label.Height + 14 < maxHeight;
+            var caption = showCaption ? MakeText(item.Caption!, regular, 10.5, hot ? OnAccentBrush : SecondaryForeground, width) : null;
+
+            var total = label.Height + (caption?.Height ?? 0);
+            var y = anchor.Y - total / 2;
+            DrawCentered(context, label, anchor.X, y);
+            if (caption is not null)
+                DrawCentered(context, caption, anchor.X, y + label.Height);
+        }
     }
 
     private Point EditButtonCenter(int index)
