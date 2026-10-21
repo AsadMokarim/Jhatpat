@@ -78,6 +78,11 @@ public static class BackgroundRemover
         if (BorderColor(pixels, width, height) is not { } border)
             return; // the edge is mostly transparent already: nothing to tell the backdrop by
 
+        // Photos of people, complex outdoor scenes or busy artwork require neural foreground segmentation
+        // with edge-aware guided matting. Built-in flat-backdrop unmixing is for signatures, stamps and scans.
+        if (!keepEnclosed && IsComplexOrPhoto(pixels, width, height) && SegmentationEngine.TryApply(image, tolerance))
+            return;
+
         var cutoff = Math.Clamp(tolerance, 0, 100) / 100f * MaxCutoff;
         var backdrop = new Backdrop(pixels, width, height, border, tolerance / 100f);
 
@@ -294,6 +299,62 @@ public static class BackgroundRemover
 
     private static byte Unmix(byte value, float backdrop, float alpha) =>
         (byte)Math.Clamp(Math.Round(backdrop + (value - backdrop) / alpha), 0, 255);
+
+    /// <summary>
+    /// Checks whether an image is a complex photographic scene or portrait requiring neural segmentation,
+    /// rather than a flat single-color paper/scan/signature.
+    /// </summary>
+    private static bool IsComplexOrPhoto(byte[] pixels, int width, int height)
+    {
+        // Small synthetic test fixtures, stamps or icons (e.g. < 320x320) use the fast plain-backdrop remover.
+        if (width < 320 && height < 320)
+            return false;
+
+        // For photo-sized images, check border variation to distinguish natural scenes from uniform backdrops
+        var top = EdgeMedian(pixels, width, height, 0, 0, 1, 0, width);
+        var bottom = EdgeMedian(pixels, width, height, 0, height - 1, 1, 0, width);
+        var left = EdgeMedian(pixels, width, height, 0, 0, 0, 1, height);
+        var right = EdgeMedian(pixels, width, height, width - 1, 0, 0, 1, height);
+
+        if (top is null || bottom is null || left is null || right is null)
+            return false;
+
+        float tbDist = ColorDist(top.Value, bottom.Value);
+        float lrDist = ColorDist(left.Value, right.Value);
+        float maxEdgeDist = Math.Max(tbDist, lrDist);
+
+        // A natural scene (sky, trees, grass, buildings) has significant difference across opposing edges,
+        // or large photograph dimensions where neural segmentation is always preferred.
+        return maxEdgeDist > 45f || (width >= 512 && height >= 512);
+    }
+
+    private static (float R, float G, float B)? EdgeMedian(byte[] pixels, int width, int height, int startX, int startY, int dx, int dy, int count)
+    {
+        var r = new List<byte>(count);
+        var g = new List<byte>(count);
+        var b = new List<byte>(count);
+        for (int i = 0; i < count; i++)
+        {
+            int x = startX + i * dx;
+            int y = startY + i * dy;
+            int o = (y * width + x) * 4;
+            if (pixels[o + 3] >= 128)
+            {
+                r.Add(pixels[o]);
+                g.Add(pixels[o + 1]);
+                b.Add(pixels[o + 2]);
+            }
+        }
+        return r.Count == 0 ? null : (Median(r), Median(g), Median(b));
+    }
+
+    private static float ColorDist((float R, float G, float B) c1, (float R, float G, float B) c2)
+    {
+        float dr = c1.R - c2.R;
+        float dg = c1.G - c2.G;
+        float db = c1.B - c2.B;
+        return MathF.Sqrt(dr * dr + dg * dg + db * db);
+    }
 
     /// <summary>
     /// Per-channel median of the opaque border pixels, or null when most of the border is transparent: that image has

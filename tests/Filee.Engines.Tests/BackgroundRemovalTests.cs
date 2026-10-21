@@ -458,4 +458,185 @@ public class BackgroundRemovalTests(EngineFixture fx) : IClassFixture<EngineFixt
         Assert.Equal(255, Pixel(result, 5, 5).A);
         Assert.Equal(255, Pixel(result, 5, 5).R);
     }
+
+    [Fact]
+    public void GuidedFilter_refines_edges_within_valid_range()
+    {
+        int w = 64, h = 64;
+        float[] guidance = new float[w * h];
+        float[] mask = new float[w * h];
+
+        // Step function: left is 0, right is 1
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                guidance[y * w + x] = x >= 32 ? 1f : 0f;
+                mask[y * w + x] = x >= 30 ? 0.9f : 0.1f;
+            }
+        }
+
+        var refined = GuidedFilter.Filter(guidance, mask, w, h, radius: 4, eps: 1e-4f, scale: 2);
+        Assert.Equal(w * h, refined.Length);
+        for (int i = 0; i < refined.Length; i++)
+        {
+            Assert.InRange(refined[i], 0f, 1f);
+        }
+
+        // Leftmost pixels should be near 0, rightmost near 1
+        Assert.True(refined[10] < 0.2f);
+        Assert.True(refined[w - 10] > 0.8f);
+    }
+
+    [Fact]
+    public void SegmentationEngine_handles_invalid_or_tiny_images_safely()
+    {
+        using var tiny = new MagickImage(MagickColors.White, 1, 1);
+        Assert.False(SegmentationEngine.TryApply(tiny));
+
+        using var normal = new MagickImage(MagickColors.White, 32, 32);
+        // Returns false or true without throwing exception
+        var _ = SegmentationEngine.TryApply(normal);
+    }
+
+    [Fact]
+    public void Photographic_portrait_background_removal_quality_and_integrity()
+    {
+        const string testPhotoPath = "/home/asad/Pictures/IMG_20260811_145737236_HDR_PCT~2.jpg";
+        if (!File.Exists(testPhotoPath) || !SegmentationEngine.IsModelAvailable)
+            return; // Only run when test fixture and model are available
+
+        using var image = new MagickImage(testPhotoPath);
+        var origWidth = image.Width;
+        var origHeight = image.Height;
+
+        // Extract original RGB values to verify 100% preservation on foreground
+        byte[]? originalRgba;
+        using (var col = image.GetPixels())
+            originalRgba = col.ToByteArray(PixelMapping.RGBA);
+        Assert.NotNull(originalRgba);
+
+        // Apply background removal (calls SegmentationEngine)
+        BackgroundRemover.Apply(image, tolerance: 25, keepEnclosed: false);
+
+        // 1. Dimensions preserved
+        Assert.Equal(origWidth, image.Width);
+        Assert.Equal(origHeight, image.Height);
+        Assert.True(image.HasAlpha);
+
+        // 2. Export to PNG and reload to verify real transparency persistence
+        var tempPng = Path.Combine(Path.GetTempPath(), $"portrait_test_{GuidanceId()}.png");
+        try
+        {
+            image.Write(tempPng, MagickFormat.Png);
+            using var reloaded = new MagickImage(tempPng);
+            Assert.Equal(MagickFormat.Png, reloaded.Format);
+            Assert.True(reloaded.HasAlpha);
+
+            byte[]? outputPixels;
+            using (var col = reloaded.GetPixels())
+                outputPixels = col.ToByteArray(PixelMapping.RGBA);
+            Assert.NotNull(outputPixels);
+
+            int totalPixels = (int)(origWidth * origHeight);
+            int magentaCount = 0;
+            int transparentCount = 0;
+            int opaqueCount = 0;
+            int semiCount = 0;
+            int maxRgbShift = 0;
+
+            for (int i = 0; i < totalPixels; i++)
+            {
+                int o = i * 4;
+                byte r = outputPixels[o];
+                byte g = outputPixels[o + 1];
+                byte b = outputPixels[o + 2];
+                byte a = outputPixels[o + 3];
+
+                // Detect magenta artifacts: high R and B with depressed G
+                if (r > 120 && b > 120 && g < 60)
+                    magentaCount++;
+
+                if (a < 10)
+                    transparentCount++;
+                else if (a > 240)
+                    opaqueCount++;
+                else
+                    semiCount++;
+
+                // Where alpha > 0, verify original RGB was preserved without shifting
+                if (a > 10)
+                {
+                    int dr = Math.Abs(r - originalRgba[o]);
+                    int dg = Math.Abs(g - originalRgba[o + 1]);
+                    int db = Math.Abs(b - originalRgba[o + 2]);
+                    int shift = Math.Max(dr, Math.Max(dg, db));
+                    if (shift > maxRgbShift) maxRgbShift = shift;
+                }
+            }
+
+            // CRITICAL QUALITY ASSERTIONS:
+            // 0 magenta pixels (was 23,052 in old version)
+            Assert.Equal(0, magentaCount);
+
+            // 0 RGB shift on foreground (natural skin, hair, clothes 100% preserved)
+            Assert.Equal(0, maxRgbShift);
+
+            // Genuinely transparent background (> 50% transparent)
+            Assert.True((double)transparentCount / totalPixels > 0.50, $"Transparent ratio: {(double)transparentCount / totalPixels}");
+
+            // Opaque subject preserved (> 20% opaque)
+            Assert.True((double)opaqueCount / totalPixels > 0.20, $"Opaque ratio: {(double)opaqueCount / totalPixels}");
+
+            // Smooth boundary anti-aliasing exists
+            Assert.True(semiCount > 0);
+
+            // Corners / outer background must be fully transparent
+            Assert.Equal(0, Pixel(reloaded, 10, 10).A);
+            Assert.Equal(0, Pixel(reloaded, (int)origWidth - 10, 10).A);
+
+            // Center of subject (person in black clothes) must be solid opaque
+            int centerX = (int)(origWidth * 0.52);
+            int centerY = (int)(origHeight * 0.45);
+            Assert.True(Pixel(reloaded, centerX, centerY).A > 240);
+        }
+        finally
+        {
+            if (File.Exists(tempPng))
+                File.Delete(tempPng);
+        }
+    }
+
+    [Fact]
+    public async Task Portrait_end_to_end_preset_conversion_generates_pristine_transparent_png()
+    {
+        const string testPhotoPath = "/home/asad/Pictures/IMG_20260811_145737236_HDR_PCT~2.jpg";
+        if (!File.Exists(testPhotoPath) || !SegmentationEngine.IsModelAvailable)
+            return;
+
+        var outputDir = Path.GetDirectoryName(testPhotoPath)!;
+        var expectedOutput = Path.Combine(outputDir, "IMG_20260811_145737236_HDR_PCT~2_transparent.png");
+
+        var job = await fx.ConvertAsync([testPhotoPath], new Preset
+        {
+            Id = "remove-background",
+            TargetFormat = "png",
+            Image = { RemoveBackground = true, BackgroundTolerance = 25 },
+            Output = { Location = OutputLocation.CustomFolder, CustomFolder = outputDir, FileNamePattern = "{name}_transparent", Conflict = ConflictPolicy.Overwrite }
+        });
+
+        Assert.Equal(JobState.Completed, job.State);
+        Assert.True(File.Exists(expectedOutput));
+
+        using var result = new MagickImage(expectedOutput);
+        Assert.Equal(MagickFormat.Png, result.Format);
+        Assert.True(result.HasAlpha);
+        Assert.Equal(2736u, result.Width);
+        Assert.Equal(3648u, result.Height);
+
+        // Verify corner is transparent
+        Assert.Equal(0, Pixel(result, 10, 10).A);
+    }
+
+    private static string GuidanceId() => Guid.NewGuid().ToString("N")[..8];
 }

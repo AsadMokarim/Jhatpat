@@ -1,6 +1,20 @@
 {
   "_comment": "Downloadable conversion engines: pinned URL + SHA-256. Used by the app (Settings > Engines, first-run setup) and by build/fetch-engines.ps1. Bumping a version = change url, sha256 and size together.",
   "components": {
+    "u2netp": {
+      "version": "0.0.1",
+      "url": "https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx",
+      "sha256": "309C8469258DDA742793DCE0EBEA8E6DD393174F89934733ECC8B14C76F4DDD8",
+      "size": 4574861,
+      "kind": "onnx"
+    },
+    "u2net": {
+      "version": "0.0.1",
+      "url": "https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2net.onnx",
+      "sha256": "8D10D2F3BB75AE3B6D527C77944FC5E7DCD94B29809D47A739A7A728A912B491",
+      "size": 175997641,
+      "kind": "onnx"
+    },
     "rhwp": {
       "version": "0.8.7",
       "url": "https://github.com/edwardkim/rhwp/releases/download/v0.8.7/rhwp-v0.8.7-windows-x86_64.zip",
