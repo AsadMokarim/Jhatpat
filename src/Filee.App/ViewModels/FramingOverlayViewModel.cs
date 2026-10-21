@@ -28,6 +28,7 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
     private readonly List<HistoryFailure> _failures = [];
     private bool _closed;
     private bool _historyRecorded;
+    private readonly object _previewLock = new();
     private CancellationTokenSource? _previewCts;
     private SKBitmap? _cachedSourcePreview;
     private int _origWidth;
@@ -290,28 +291,47 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
         try
         {
             _previewCts?.Cancel();
-            _cachedSourcePreview?.Dispose();
-            _cachedSourcePreview = null;
+            lock (_previewLock)
+            {
+                _cachedSourcePreview?.Dispose();
+                _cachedSourcePreview = null;
+            }
 
             await Task.Run(() =>
             {
                 using var fullSource = FramingService.LoadSourceBitmap(path);
-                _origWidth = fullSource.Width;
-                _origHeight = fullSource.Height;
+                var origW = fullSource.Width;
+                var origH = fullSource.Height;
 
                 const int maxPreviewDim = 1600;
+                SKBitmap newCached;
                 if (fullSource.Width > maxPreviewDim || fullSource.Height > maxPreviewDim)
                 {
                     double scale = Math.Min((double)maxPreviewDim / fullSource.Width, (double)maxPreviewDim / fullSource.Height);
                     int scaledW = Math.Max(1, (int)Math.Round(fullSource.Width * scale));
                     int scaledH = Math.Max(1, (int)Math.Round(fullSource.Height * scale));
-                    _cachedSourcePreview = fullSource.Resize(new SKImageInfo(scaledW, scaledH), new SKSamplingOptions(SKFilterMode.Linear));
+                    newCached = fullSource.Resize(new SKImageInfo(scaledW, scaledH), new SKSamplingOptions(SKFilterMode.Linear));
                 }
                 else
                 {
-                    _cachedSourcePreview = fullSource.Copy();
+                    newCached = fullSource.Copy();
+                }
+
+                lock (_previewLock)
+                {
+                    if (_closed)
+                    {
+                        newCached.Dispose();
+                        return;
+                    }
+                    _origWidth = origW;
+                    _origHeight = origH;
+                    _cachedSourcePreview = newCached;
                 }
             });
+
+            if (_closed)
+                return;
 
             UpdatePreviewNow();
         }
@@ -337,27 +357,43 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
 
     public void UpdatePreviewNow()
     {
-        if (_closed || IsFinished || CurrentIndex >= _files.Count || _cachedSourcePreview == null)
+        if (_closed || IsFinished || CurrentIndex >= _files.Count)
             return;
 
         _previewCts?.Cancel();
         _previewCts = new CancellationTokenSource();
         var token = _previewCts.Token;
 
-        var source = _cachedSourcePreview;
         var options = CurrentOptions;
-        var origW = _origWidth > 0 ? _origWidth : source.Width;
-        var origH = _origHeight > 0 ? _origHeight : source.Height;
 
         _ = Task.Run(() =>
         {
-            if (token.IsCancellationRequested)
+            if (token.IsCancellationRequested || _closed)
                 return;
 
-            var (bitmap, w, h, srcW, srcH, tx, ty, tw, th) =
-                FramingService.RenderPreview(source, options, origW, origH);
+            Bitmap bitmap;
+            int w, h, srcW, srcH, tx, ty, tw, th;
+            lock (_previewLock)
+            {
+                if (token.IsCancellationRequested || _closed || _cachedSourcePreview == null)
+                    return;
 
-            if (token.IsCancellationRequested)
+                var source = _cachedSourcePreview;
+                var origW = _origWidth > 0 ? _origWidth : source.Width;
+                var origH = _origHeight > 0 ? _origHeight : source.Height;
+
+                try
+                {
+                    (bitmap, w, h, srcW, srcH, tx, ty, tw, th) =
+                        FramingService.RenderPreview(source, options, origW, origH);
+                }
+                catch (Exception)
+                {
+                    return;
+                }
+            }
+
+            if (token.IsCancellationRequested || _closed)
             {
                 bitmap.Dispose();
                 return;
@@ -672,6 +708,11 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
         var old = PreviewImage;
         PreviewImage = null;
         old?.Dispose();
+        lock (_previewLock)
+        {
+            _cachedSourcePreview?.Dispose();
+            _cachedSourcePreview = null;
+        }
         IsFinished = true;
         OnPropertyChanged(nameof(IsEditing));
     }
@@ -712,8 +753,11 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
     {
         Shutdown();
         _previewCts?.Cancel();
-        _cachedSourcePreview?.Dispose();
-        _cachedSourcePreview = null;
+        lock (_previewLock)
+        {
+            _cachedSourcePreview?.Dispose();
+            _cachedSourcePreview = null;
+        }
         PreviewImage?.Dispose();
         PreviewImage = null;
     }
