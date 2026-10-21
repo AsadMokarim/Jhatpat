@@ -15,8 +15,8 @@ labels: bug
 **Files involved** (formats, sizes — attach a sample if you can share it)
 
 **Environment**
-- Filee version (Settings → About):
-- Windows version:
+- Jhatpat version (Settings → About):
+- OS & Version (Windows / Linux / macOS):
 - Engines page status (screenshot helps):
 
-**Log** – `%APPDATA%\Filee\logs\filee-<date>.log` (last lines)
+**Log** – `%APPDATA%\Filee\logs\filee-<date>.log` / `~/.config/Filee/logs/` (last lines)
