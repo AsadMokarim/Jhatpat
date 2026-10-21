@@ -6,7 +6,7 @@
         x:Class="Filee.App.Views.RenameToolWindow"
         x:DataType="vm:RenameToolViewModel"
         Title="{DynamicResource watch.rename_title}"
-        Icon="avares://Filee/Assets/Icons/filee.ico"
+        Icon="avares://Filee/Assets/Icons/jhatpat.ico"
         Width="880" Height="640" MinWidth="640" MinHeight="420"
         WindowStartupLocation="CenterOwner"
         ShowInTaskbar="False">
@@ -23,10 +23,10 @@
     </Style>
   </Window.Styles>
   <DockPanel>
-    <Border DockPanel.Dock="Bottom" Padding="20,12" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource SubtleBorderBrush}"
-            Background="{DynamicResource SurfaceBrush}">
+    <Border DockPanel.Dock="Bottom" Padding="20,12" BorderThickness="0,1,0,0" BorderBrush="{DynamicResource GlassBorderBrush}"
+            Background="{DynamicResource GlassHeaderBrush}">
       <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-        <Button Content="{DynamicResource common.cancel}" Click="OnCancel" IsCancel="True" />
+        <Button Classes="glass" Content="{DynamicResource common.cancel}" Click="OnCancel" IsCancel="True" />
         <Button Classes="accent" Content="{DynamicResource common.save}" Click="OnSave" IsDefault="True" IsEnabled="{Binding IsValid}" />
       </StackPanel>
     </Border>

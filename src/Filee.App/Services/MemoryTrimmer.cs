@@ -13,7 +13,7 @@ namespace Filee.App.Services;
 public sealed class MemoryTrimmer : IDisposable
 {
     /// <summary>How long no conversion may have run before memory is trimmed.</summary>
-    public static readonly TimeSpan IdleDelay = TimeSpan.FromSeconds(30);
+    public static readonly TimeSpan IdleDelay = TimeSpan.FromSeconds(5);
 
     private readonly Func<bool> _busy;
     private readonly Action _trim;

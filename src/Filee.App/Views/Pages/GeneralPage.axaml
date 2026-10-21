@@ -61,6 +61,26 @@
       </StackPanel>
     </Border>
 
+    <!-- Image Tools & Export Defaults -->
+    <Border Classes="card">
+      <StackPanel Spacing="12">
+        <TextBlock Classes="h2" Text="{DynamicResource settings.image_defaults}" />
+        <TextBlock Classes="caption" TextWrapping="Wrap" Text="{DynamicResource settings.image_defaults_hint}" />
+        <StackPanel>
+          <TextBlock Classes="label" Text="{DynamicResource settings.default_format}" />
+          <ComboBox ItemsSource="{Binding ImageFormats}" SelectedItem="{Binding DefaultImageFormat}" MinWidth="240" />
+        </StackPanel>
+        <StackPanel>
+          <TextBlock Classes="label" Text="{DynamicResource settings.default_quality}" />
+          <DockPanel MaxWidth="420" HorizontalAlignment="Left">
+            <TextBlock DockPanel.Dock="Right" Text="{Binding DefaultQuality, StringFormat={}{0}%}" Width="45" TextAlignment="Right" VerticalAlignment="Center" Margin="8,0,0,0" />
+            <Slider Value="{Binding DefaultQuality}" Minimum="10" Maximum="100" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" MinWidth="240" />
+          </DockPanel>
+        </StackPanel>
+        <ToggleSwitch Content="{DynamicResource settings.maintain_aspect}" IsChecked="{Binding DefaultMaintainAspectRatio}" />
+      </StackPanel>
+    </Border>
+
     <Border Classes="card">
       <StackPanel Spacing="12">
         <TextBlock Classes="h2" Text="{DynamicResource general.history}" />

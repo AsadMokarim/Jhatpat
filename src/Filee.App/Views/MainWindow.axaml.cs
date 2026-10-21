@@ -22,6 +22,22 @@ public partial class MainWindow : Window
         Motion.Track(this);
     }
 
+    protected override void OnKeyDown(Avalonia.Input.KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (e.Key == Avalonia.Input.Key.V && (e.KeyModifiers.HasFlag(Avalonia.Input.KeyModifiers.Control) || e.KeyModifiers.HasFlag(Avalonia.Input.KeyModifiers.Meta)))
+        {
+            if (FocusManager?.GetFocusedElement() is not TextBox)
+            {
+                if (DataContext is MainWindowViewModel vm && vm.CurrentPage is ViewModels.Pages.HomePageViewModel home)
+                {
+                    e.Handled = true;
+                    _ = home.PasteImageAsync();
+                }
+            }
+        }
+    }
+
     private async void OnOpenGitHub(object? sender, RoutedEventArgs e)
     {
         if (DataContext is MainWindowViewModel vm)

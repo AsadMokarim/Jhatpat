@@ -1,5 +1,6 @@
 <!--
-  Filee "soft" look: rounded corners, gentle surfaces, springy press feedback.
+  Jhatpat "soft glass" look: frosted glass surfaces, subtle translucency, rounded corners,
+  gentle depth, and springy press feedback.
   Colours that depend on light/dark live in ThemeDictionaries below; the accent colour, corner radii and
   the UI font are written at runtime by ThemeService (so users can customise them).
 -->
@@ -20,7 +21,16 @@
           <SolidColorBrush x:Key="DangerBrush" Color="#C73A39" />
           <SolidColorBrush x:Key="SuccessBrush" Color="#0F7A5A" />
           <SolidColorBrush x:Key="WarningBrush" Color="#9A5B0C" />
-          <BoxShadows x:Key="CardShadow">0 1 3 0 #12000000, 0 6 18 0 #0D000000</BoxShadows>
+          <SolidColorBrush x:Key="GlassPanelBrush" Color="#E8FFFFFF" />
+          <SolidColorBrush x:Key="GlassHeaderBrush" Color="#DCFFFFFF" />
+          <SolidColorBrush x:Key="GlassCardBrush" Color="#D0FFFFFF" />
+          <SolidColorBrush x:Key="GlassBorderBrush" Color="#28000000" />
+          <SolidColorBrush x:Key="GlassBorderSpecularBrush" Color="#66FFFFFF" />
+          <SolidColorBrush x:Key="GlassBackdropBrush" Color="#E4F5F4F0" />
+          <BoxShadows x:Key="CardShadow">0 2 8 0 #0C000000, 0 8 24 0 #08000000</BoxShadows>
+          <BoxShadows x:Key="GlassShadow">0 6 24 0 #12000000, 0 1 4 0 #08000000</BoxShadows>
+          <BoxShadows x:Key="GlassGlowShadow">0 4 16 0 #28FF7418, 0 1 4 0 #10000000</BoxShadows>
+          <SolidColorBrush x:Key="CheckerboardTileBrush" Color="#0D000000" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
           <SolidColorBrush x:Key="PageBrush" Color="#1B1B19" />
@@ -32,15 +42,24 @@
           <SolidColorBrush x:Key="DangerBrush" Color="#F09595" />
           <SolidColorBrush x:Key="SuccessBrush" Color="#5DCAA5" />
           <SolidColorBrush x:Key="WarningBrush" Color="#EF9F27" />
-          <BoxShadows x:Key="CardShadow">0 1 3 0 #40000000, 0 8 24 0 #33000000</BoxShadows>
+          <SolidColorBrush x:Key="GlassPanelBrush" Color="#D0262624" />
+          <SolidColorBrush x:Key="GlassHeaderBrush" Color="#C41B1B19" />
+          <SolidColorBrush x:Key="GlassCardBrush" Color="#B8262624" />
+          <SolidColorBrush x:Key="GlassBorderBrush" Color="#2AFFFFFF" />
+          <SolidColorBrush x:Key="GlassBorderSpecularBrush" Color="#48FFFFFF" />
+          <SolidColorBrush x:Key="GlassBackdropBrush" Color="#D81B1B19" />
+          <BoxShadows x:Key="CardShadow">0 3 12 0 #45000000, 0 10 30 0 #35000000</BoxShadows>
+          <BoxShadows x:Key="GlassShadow">0 8 32 0 #55000000, 0 2 8 0 #33000000, 0 0 1 1 #18FFFFFF</BoxShadows>
+          <BoxShadows x:Key="GlassGlowShadow">0 6 22 0 #38FF7418, 0 2 6 0 #20000000, 0 0 1 1 #25FFFFFF</BoxShadows>
+          <SolidColorBrush x:Key="CheckerboardTileBrush" Color="#18FFFFFF" />
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
 
       <!-- Defaults; ThemeService overwrites these at startup. -->
-      <SolidColorBrush x:Key="AccentBrush" Color="#7F77DD" />
-      <SolidColorBrush x:Key="AccentSoftBrush" Color="#2E7F77DD" />
-      <SolidColorBrush x:Key="AccentFaintBrush" Color="#177F77DD" />
-      <SolidColorBrush x:Key="AccentStrongBrush" Color="#5F59A6" />
+      <SolidColorBrush x:Key="AccentBrush" Color="#FF7418" />
+      <SolidColorBrush x:Key="AccentSoftBrush" Color="#2EFF7418" />
+      <SolidColorBrush x:Key="AccentFaintBrush" Color="#17FF7418" />
+      <SolidColorBrush x:Key="AccentStrongBrush" Color="#D95A08" />
       <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF" />
       <CornerRadius x:Key="SoftRadius">16</CornerRadius>
       <CornerRadius x:Key="SoftRadiusSmall">9</CornerRadius>
@@ -90,14 +109,62 @@
     <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
   </Style>
 
-  <!-- ───────── Cards ───────── -->
+  <!-- ───────── Cards & Glass Surfaces ───────── -->
   <Style Selector="Border.card">
-    <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
-    <Setter Property="BorderBrush" Value="{DynamicResource SubtleBorderBrush}" />
+    <Setter Property="Background" Value="{DynamicResource GlassCardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
     <Setter Property="BorderThickness" Value="1" />
     <Setter Property="CornerRadius" Value="{DynamicResource SoftRadius}" />
     <Setter Property="Padding" Value="18,16" />
-    <Setter Property="BoxShadow" Value="{DynamicResource CardShadow}" />
+    <Setter Property="BoxShadow" Value="{DynamicResource GlassShadow}" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.18" />
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.18" />
+        <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.22" />
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <!-- Frosted glass card with subtle translucency and delicate border -->
+  <Style Selector="Border.glass-card">
+    <Setter Property="Background" Value="{DynamicResource GlassCardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource SoftRadius}" />
+    <Setter Property="Padding" Value="18,16" />
+    <Setter Property="BoxShadow" Value="{DynamicResource GlassShadow}" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.18" />
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.18" />
+        <BoxShadowsTransition Property="BoxShadow" Duration="0:0:0.22" />
+      </Transitions>
+    </Setter>
+  </Style>
+
+  <!-- Glass overlay container for floating dialogs and tool windows -->
+  <Style Selector="Border.glass-overlay">
+    <Setter Property="Background" Value="{DynamicResource GlassPanelBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource SoftRadius}" />
+    <Setter Property="BoxShadow" Value="{DynamicResource GlassShadow}" />
+    <Setter Property="ClipToBounds" Value="True" />
+  </Style>
+
+  <!-- Glass panel for headers, toolbars, and grouped sections -->
+  <Style Selector="Border.glass-panel">
+    <Setter Property="Background" Value="{DynamicResource GlassPanelBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{DynamicResource SoftRadiusSmall}" />
+  </Style>
+
+  <!-- Specular rim highlight border -->
+  <Style Selector="Border.specular-rim">
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderSpecularBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
   </Style>
 
   <Style Selector="Border.chip">
@@ -131,7 +198,7 @@
     <Setter Property="Background" Value="{DynamicResource AccentFaintBrush}" />
   </Style>
 
-  <!-- ───────── Buttons: soft corners and a springy press ───────── -->
+  <!-- ───────── Buttons: soft corners, glass textures and a springy press ───────── -->
   <Style Selector="Button, ToggleButton, RepeatButton">
     <Setter Property="CornerRadius" Value="{DynamicResource SoftRadiusSmall}" />
     <Setter Property="Padding" Value="14,7" />
@@ -144,6 +211,89 @@
   <Style Selector="Button:pressed, ToggleButton:pressed">
     <Setter Property="RenderTransform" Value="scale(0.95)" />
   </Style>
+
+  <!-- Primary Accent Button (Warm Tangerine Gradient) -->
+  <Style Selector="Button.accent">
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.18" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.22" Easing="{StaticResource SoftEase}" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.accent:pointerover">
+    <Setter Property="Background" Value="{DynamicResource AccentStrongBrush}" />
+    <Setter Property="RenderTransform" Value="scale(1.02)" />
+  </Style>
+  <Style Selector="Button.accent:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.96)" />
+  </Style>
+
+  <!-- Glass button: subtle frosted surface -->
+  <Style Selector="Button.glass">
+    <Setter Property="Background" Value="{DynamicResource GlassCardBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    <Setter Property="CornerRadius" Value="{DynamicResource SoftRadiusSmall}" />
+    <Setter Property="Padding" Value="12,6" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.18" />
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.18" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.22" Easing="{StaticResource SoftEase}" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.glass:pointerover">
+    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="RenderTransform" Value="scale(1.02)" />
+  </Style>
+  <Style Selector="Button.glass:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.96)" />
+  </Style>
+
+  <!-- Aspect and tool toggle buttons (crop, framing, resize overlays) -->
+  <Style Selector="Button.aspect">
+    <Setter Property="Padding" Value="10,5" />
+    <Setter Property="CornerRadius" Value="{DynamicResource SoftRadiusSmall}" />
+    <Setter Property="FontSize" Value="12" />
+    <Setter Property="Background" Value="{DynamicResource GlassCardBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassBorderBrush}" />
+    <Setter Property="Cursor" Value="Hand" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.18" />
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.18" />
+        <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.22" Easing="{StaticResource SoftEase}" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.aspect:pointerover">
+    <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="RenderTransform" Value="scale(1.02)" />
+  </Style>
+  <Style Selector="Button.aspect:pressed">
+    <Setter Property="RenderTransform" Value="scale(0.96)" />
+  </Style>
+  <Style Selector="Button.aspect.active">
+    <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource OnAccentBrush}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+  </Style>
+  <Style Selector="Button.aspect.active:pointerover">
+    <Setter Property="Background" Value="{DynamicResource AccentStrongBrush}" />
+  </Style>
+
   <Style Selector="Button.ghost">
     <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderThickness" Value="0" />

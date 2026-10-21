@@ -70,7 +70,10 @@ public partial class App : Application
         ApplySettings(store.Settings);
         // Every engine's availability, checked once off the UI thread: the first donut or drop otherwise starts
         // every engine's check (FFmpeg -version, folder searches) on the UI thread and freezes it meanwhile.
-        _ = AppHost.Get<ConverterCatalog>().CheckInBackgroundAsync();
+        _ = AppHost.Get<ConverterCatalog>().CheckInBackgroundAsync().ContinueWith(_ =>
+        {
+            AppHost.Get<MemoryTrimmer>().Request();
+        }, TaskScheduler.Default);
 
         // Global gestures → donut toolbar
         var triggers = AppHost.Get<TriggerService>();
@@ -108,7 +111,7 @@ public partial class App : Application
             }
         };
         triggers.Start();
-        log.LogInformation("Filee {Version} started", UpdateService.CurrentVersion);
+        log.LogInformation("Jhatpat {Version} started", UpdateService.CurrentVersion);
         // macOS: ask for Accessibility with the system's own alert when the user opened Filee (not at sign-in) and
         // a drag gesture is on. The home page keeps a reminder until it is given. Asked once the main window is up:
         // asked earlier, the alert ends up behind it.
@@ -183,19 +186,22 @@ public partial class App : Application
     private static void WatchForUpdates(UserDataStore store)
     {
         var updates = AppHost.Get<UpdateService>();
-        // Required: the card every time Filee starts (UpdateFound fires once per run). Recommended: once per version.
-        // Optional: no card, the sidebar button only. Frequent releases no longer ask every day.
-        updates.UpdateFound += (_, version) =>
+        if (UpdateService.UpdatesEnabled)
         {
-            if (updates.Level == UpdateLevel.Optional
-                || updates.Level == UpdateLevel.Recommended && store.Settings.NotifiedUpdateVersion == version)
-                return;
-            store.Settings.NotifiedUpdateVersion = version;
-            store.SaveSettings();
-            AppHost.Get<WindowService>().ShowUpdateNotice(version);
-        };
-        updates.UpdateFailed += async (_, _) => await AppHost.Get<WindowService>().ShowUpdateFailedAsync();
-        updates.StartPeriodicChecks(() => store.Settings.CheckForUpdates, TimeSpan.FromSeconds(20));
+            // Required: the card every time Filee starts (UpdateFound fires once per run). Recommended: once per version.
+            // Optional: no card, the sidebar button only. Frequent releases no longer ask every day.
+            updates.UpdateFound += (_, version) =>
+            {
+                if (updates.Level == UpdateLevel.Optional
+                    || updates.Level == UpdateLevel.Recommended && store.Settings.NotifiedUpdateVersion == version)
+                    return;
+                store.Settings.NotifiedUpdateVersion = version;
+                store.SaveSettings();
+                AppHost.Get<WindowService>().ShowUpdateNotice(version);
+            };
+            updates.UpdateFailed += async (_, _) => await AppHost.Get<WindowService>().ShowUpdateFailedAsync();
+            updates.StartPeriodicChecks(() => store.Settings.CheckForUpdates, TimeSpan.FromSeconds(20));
+        }
         DispatcherTimer.RunOnce(() => NotifyEngineUpdates(store), TimeSpan.FromSeconds(25));
     }
 
@@ -255,7 +261,7 @@ public partial class App : Application
         // Pairs with "A later launch handed over …": the request reached the UI thread too.
         if (forwarded && Throttle.TryEnter("forwarded-handled", out var held))
             AppHost.Get<ILogger<App>>().LogInformation("Handling a later launch: {Request}{Held}",
-                options.Quit ? "quit" : options.ConvertFiles.Count > 0 ? $"convert {options.ConvertFiles.Count} file(s)" : "show Filee",
+                options.Quit ? "quit" : options.ShowRadial ? "radial menu" : options.ShowDropZone ? "drop zone" : options.ConvertFiles.Count > 0 ? $"convert {options.ConvertFiles.Count} file(s)" : "show Jhatpat",
                 LogThrottle.HeldText(held));
         if (options.Quit)
         {
@@ -265,7 +271,7 @@ public partial class App : Application
         }
         // The Windows 11 Explorer menu hands over huge selections in a temp file; its paths are in ConvertFiles now.
         options.DeleteListFile();
-        if (options.ConvertFiles.Count > 0)
+        if (options.ConvertFiles.Count > 0 && !options.ShowRadial)
         {
             // Explorer may start one process per selected file: collect them for a moment, then open once.
             _pendingConvertFiles.AddRange(options.ConvertFiles);
@@ -276,6 +282,17 @@ public partial class App : Application
 
         var store = AppHost.Get<UserDataStore>();
         ApplyInstallerChoices(options, store);
+        if (options.ShowRadial)
+        {
+            var (cx, cy) = AppHost.Get<TriggerService>().LastCursor;
+            AppHost.Get<RadialController>().ShowRadial(cx, cy, options.ConvertFiles.Count > 0 ? options.ConvertFiles : null);
+            return;
+        }
+        if (options.ShowDropZone)
+        {
+            AppHost.Get<WindowService>().ShowMain("home");
+            return;
+        }
         if (!options.Background || options.ShowSettings || !firstLaunch)
             AppHost.Get<WindowService>().ShowMain(store.Settings.FirstRunCompleted ? null : "home");
 
@@ -319,8 +336,8 @@ public partial class App : Application
         var files = _pendingConvertFiles.Distinct(FileSystemPaths.Comparer).ToList();
         _pendingConvertFiles.Clear();
         var (x, y) = AppHost.Get<TriggerService>().LastCursor;
-        if (x == 0 && y == 0 && AppHost.Get<WindowService>().Main is { } main)
-            (x, y) = (main.Position.X + 200, main.Position.Y + 200);
+        if (x == 0 && y == 0 && AppHost.Get<WindowService>().Main is { } main && main.IsVisible)
+            (x, y) = (main.Position.X + (int)(main.Bounds.Width / 2), main.Position.Y + (int)(main.Bounds.Height / 2));
         AppHost.Get<RadialController>().ShowForFiles(x, y, files, forAnotherProcess: true);
     }
 

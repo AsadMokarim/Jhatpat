@@ -40,6 +40,10 @@ public sealed class WindowService(ILocalizer loc, IServiceProvider services, Mem
 
     internal ResizeOverlayWindow? ResizeOverlay => _resizeOverlay;
 
+    private BatchResizeWindow? _batchResize;
+
+    internal BatchResizeWindow? BatchResizeWindow => _batchResize;
+
     public MainWindow? Main => _main;
 
     /// <summary>Opens the interactive background framing overlay for the files.</summary>
@@ -80,6 +84,25 @@ public sealed class WindowService(ILocalizer loc, IServiceProvider services, Mem
                 _resizeOverlay = null;
         };
         _resizeOverlay = win;
+        win.Show();
+        win.Activate();
+    }
+
+    /// <summary>Opens the batch image resizing and compression window for the files.</summary>
+    public void ShowBatchResizeWindow(IReadOnlyList<string> files, Preset preset, PixelPoint? near = null)
+    {
+        _batchResize?.Close();
+        var store = services.GetRequiredService<UserDataStore>();
+        var log = services.GetService<ILogger<BatchResizeViewModel>>();
+        var vm = new BatchResizeViewModel(files, preset, loc, store, log);
+        var win = new BatchResizeWindow { DataContext = vm };
+        win.PositionOnScreen(near);
+        win.Closed += (_, _) =>
+        {
+            if (_batchResize == win)
+                _batchResize = null;
+        };
+        _batchResize = win;
         win.Show();
         win.Activate();
     }
@@ -221,6 +244,56 @@ public sealed class WindowService(ILocalizer loc, IServiceProvider services, Mem
         };
         _engineNotice = notice;
         notice.Show();
+    }
+
+    /// <summary>Shows a brief feedback notification card in the bottom-right corner.</summary>
+    public void ShowToastNotification(string message, int durationMs = 2500)
+    {
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            var win = new Window
+            {
+                Title = loc["app.name"],
+                Width = 280,
+                SizeToContent = SizeToContent.Height,
+                CanResize = false,
+                ShowInTaskbar = false,
+                Topmost = true,
+                WindowDecorations = WindowDecorations.None,
+                Background = Brushes.Transparent,
+                WindowStartupLocation = WindowStartupLocation.Manual,
+            };
+            Motion.Track(win);
+            var border = new Border
+            {
+                Background = win.TryFindResource("CardBackgroundBrush", out var cardBrush) && cardBrush is IBrush cb ? cb : Brushes.Gray,
+                BorderBrush = win.TryFindResource("AccentBrush", out var accBrush) && accBrush is IBrush ab ? ab : Brushes.Purple,
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(8),
+                Padding = new Thickness(14, 10),
+                BoxShadow = new BoxShadows(new BoxShadow { Blur = 12, Spread = 2, Color = Color.FromArgb(80, 0, 0, 0) }),
+                Child = new TextBlock
+                {
+                    Text = message,
+                    TextWrapping = TextWrapping.Wrap,
+                    FontSize = 13,
+                    FontWeight = FontWeight.Medium,
+                    Foreground = win.TryFindResource("TextPrimaryBrush", out var textBrush) && textBrush is IBrush tb ? tb : Brushes.White,
+                }
+            };
+            win.Content = border;
+            var screen = win.Screens.Primary;
+            if (screen is not null)
+            {
+                var work = screen.WorkingArea;
+                var scaling = screen.Scaling;
+                win.Position = new PixelPoint(
+                    work.Right - (int)(300 * scaling),
+                    work.Bottom - (int)(90 * scaling));
+            }
+            win.Show();
+            Avalonia.Threading.DispatcherTimer.RunOnce(() => win.Close(), TimeSpan.FromMilliseconds(durationMs));
+        });
     }
 
     /// <summary>Shows the one-time "Is Filee helping you?" card in the bottom-right corner.</summary>

@@ -3,7 +3,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Filee.App.Views.FeedbackNoticeWindow"
-        Title="Filee"
+        Title="Jhatpat"
         Width="360"
         SizeToContent="Height"
         WindowDecorations="None"
@@ -15,7 +15,7 @@
         CanResize="False">
   <Border Classes="card" Margin="12" Padding="16,14">
     <DockPanel>
-      <Image DockPanel.Dock="Left" Source="avares://Filee/Assets/Icons/filee.png" Width="36" Height="36"
+      <Image DockPanel.Dock="Left" Source="avares://Filee/Assets/Icons/jhatpat.png" Width="36" Height="36"
              VerticalAlignment="Top" Margin="0,2,12,0" />
       <StackPanel Spacing="8">
         <DockPanel>
@@ -28,7 +28,7 @@
         <TextBlock Classes="caption" Text="{DynamicResource feedback.notice_text}" TextWrapping="Wrap" />
         <WrapPanel Margin="0,2,0,0">
           <Button Classes="accent" Click="OnStar" Padding="12,5" Margin="0,0,8,6" Content="{DynamicResource feedback.star}" />
-          <Button Click="OnIssue" Padding="12,5" Margin="0,0,8,6" Content="{DynamicResource feedback.issue}" />
+          <Button Classes="glass" Click="OnIssue" Padding="12,5" Margin="0,0,8,6" Content="{DynamicResource feedback.issue}" />
         </WrapPanel>
       </StackPanel>
     </DockPanel>

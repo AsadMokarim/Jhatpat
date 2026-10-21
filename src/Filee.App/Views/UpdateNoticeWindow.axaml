@@ -3,7 +3,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="Filee.App.Views.UpdateNoticeWindow"
-        Title="Filee"
+        Title="Jhatpat"
         Width="360"
         SizeToContent="Height"
         WindowDecorations="None"
@@ -15,7 +15,7 @@
         CanResize="False">
   <Border Classes="card" Margin="12" Padding="16,14">
     <DockPanel>
-      <Image DockPanel.Dock="Left" Source="avares://Filee/Assets/Icons/filee.png" Width="36" Height="36"
+      <Image DockPanel.Dock="Left" Source="avares://Filee/Assets/Icons/jhatpat.png" Width="36" Height="36"
              VerticalAlignment="Top" Margin="0,2,12,0" />
       <StackPanel Spacing="8">
         <DockPanel>
@@ -41,7 +41,7 @@
               <TextBlock x:Name="DownloadText" />
             </StackPanel>
           </Button>
-          <Button Content="{DynamicResource update.later}" Click="OnClose" Padding="12,5" />
+          <Button Classes="glass" Content="{DynamicResource update.later}" Click="OnClose" Padding="12,5" />
         </StackPanel>
       </StackPanel>
     </DockPanel>

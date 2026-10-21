@@ -319,6 +319,106 @@ public class ToolbarPageTests
     }
 
     [AvaloniaFact]
+    public void Image_tools_group_is_visible_on_images_donut_and_customizable()
+    {
+        TestServices.EnsureInitialized("en");
+        var store = AppHost.Get<UserDataStore>();
+        var presets = store.Presets.ToList();
+        var profiles = store.Profiles.Select(p => p.Clone()).ToList();
+        try
+        {
+            var loc = AppHost.Get<Filee.Core.Localization.ILocalizer>();
+            var windows = AppHost.Get<WindowService>();
+
+            // Ensure images profile has image-tools
+            var imagesProfile = store.Profiles.Single(p => p.Id == "images");
+            if (!imagesProfile.PresetIds.Contains("image-tools"))
+            {
+                imagesProfile.PresetIds.Add("image-tools");
+                store.SaveLibrary();
+            }
+
+            var vm = new ToolbarPageViewModel(store, loc, windows);
+            var item = vm.Profiles.Single(p => p.Profile.Id == "images");
+            vm.SelectedProfile = item;
+
+            // 1. Verify image-tools slice is present on the donut
+            var toolSlice = vm.DonutItems.FirstOrDefault(d => d.Id == "image-tools");
+            Assert.NotNull(toolSlice);
+            Assert.True(toolSlice.IsGroup);
+            Assert.True(toolSlice.IsPromoted);
+            Assert.Equal("Image Options", toolSlice.Label);
+            Assert.NotNull(toolSlice.Children);
+            Assert.True(toolSlice.Children.Count >= 4);
+            Assert.Contains(toolSlice.Children, c => c.Id == "tool-crop");
+            Assert.Contains(toolSlice.Children, c => c.Id == "tool-frame");
+            Assert.Contains(toolSlice.Children, c => c.Id == "tool-resize");
+
+            // 2. Reorder: move image-tools to index 0
+            var currentIndex = vm.DonutItems.Select(d => d.Id).ToList().IndexOf("image-tools");
+            vm.Move(currentIndex, 0);
+            Assert.Equal("image-tools", vm.DonutItems[0].Id);
+            Assert.True(vm.DonutItems[0].IsGroup);
+            Assert.True(vm.DonutItems[0].IsPromoted);
+
+            // 3. Remove to palette: slice is removed from donut, enters palette as a group chip
+            vm.RemoveAt(0);
+            Assert.DoesNotContain(vm.DonutItems, d => d.Id == "image-tools");
+            var paletteChip = vm.VisiblePalette.FirstOrDefault(c => c.PresetId == "image-tools");
+            Assert.NotNull(paletteChip);
+            Assert.Equal("Image Options", paletteChip.Label);
+
+            // 4. Re-insert onto donut from palette
+            var inserted = vm.Insert("image-tools", 1);
+            Assert.True(inserted);
+            Assert.Equal("image-tools", vm.DonutItems[1].Id);
+            Assert.True(vm.DonutItems[1].IsGroup);
+
+            // 5. Test GroupEditorViewModel: customize group members
+            var groupPreset = store.FindPreset("image-tools")!;
+            var originalSubPresets = groupPreset.SubPresetIds.ToList();
+            try
+            {
+                var groupVm = new ViewModels.GroupEditorViewModel(groupPreset, store, loc, isNew: false);
+                Assert.Equal("Image Options", groupVm.Name);
+                var originalCount = groupVm.Members.Count;
+                Assert.True(originalCount >= 4);
+
+                // Reorder inside group: move second member up
+                var secondMember = groupVm.Members[1];
+                groupVm.MoveUpCommand.Execute(secondMember);
+                Assert.Same(secondMember, groupVm.Members[0]);
+
+                // Remove a member
+                groupVm.RemoveCommand.Execute(secondMember);
+                Assert.Equal(originalCount - 1, groupVm.Members.Count);
+
+                // Apply changes
+                groupVm.Apply();
+                Assert.Equal(originalCount - 1, groupPreset.SubPresetIds.Count);
+
+                // Rebuild donut items and verify updated children count
+                vm.SelectedProfile = null;
+                vm.SelectedProfile = item;
+                var updatedSlice = vm.DonutItems.First(d => d.Id == "image-tools");
+                Assert.Equal(originalCount - 1, updatedSlice.Children!.Count);
+            }
+            finally
+            {
+                groupPreset.SubPresetIds = originalSubPresets;
+            }
+        }
+        finally
+        {
+            store.Presets.Clear();
+            store.Presets.AddRange(presets);
+            store.Profiles.Clear();
+            store.Profiles.AddRange(profiles);
+            store.SaveLibrary();
+        }
+    }
+
+    [AvaloniaFact]
     public void The_last_mixed_profile_stays_mixed()
     {
         TestServices.EnsureInitialized("en");

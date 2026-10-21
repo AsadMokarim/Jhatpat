@@ -371,9 +371,27 @@ public sealed partial class ToolbarPageViewModel : ObservableObject
         var profile = Profile;
         var used = profile?.PresetIds ?? [];
         DonutItems = used
-            .Select(_store.FindPreset)
+            .Select(id => _store.FindPreset(id) ?? BuiltInData.CreatePresets().FirstOrDefault(x => x.Id == id))
             .OfType<Preset>()
-            .Select(p => new DonutItem { Id = p.Id, Label = _loc.DisplayName(p), Caption = Caption(p) })
+            .Select(p => new DonutItem
+            {
+                Id = p.Id,
+                Label = _loc.DisplayName(p),
+                Caption = Caption(p),
+                IsPromoted = p.Id == "image-tools",
+                Children = p.IsGroup
+                    ? p.SubPresetIds
+                        .Select(id => _store.FindPreset(id) ?? BuiltInData.CreatePresets().FirstOrDefault(x => x.Id == id))
+                        .OfType<Preset>()
+                        .Select(c => new DonutItem
+                        {
+                            Id = c.Id,
+                            Label = _loc.RingName(c),
+                            Caption = null,
+                        })
+                        .ToList()
+                    : null,
+            })
             .ToList();
 
         Palette.Clear();
