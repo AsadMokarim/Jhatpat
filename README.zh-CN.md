@@ -1,5 +1,9 @@
+> [!NOTE]
+> **Jhatpat 中文文档说明（待手动审核 / Manual Review Required）**
+> 本文为上游 Filee 项目的历史中文文档。反映 Jhatpat v1.0.0 新特性（全新品牌标识、拟态玻璃设计、高级裁剪与背景装裱、开机自启等）的中文文档目前正在审核更新中。最新权威信息请参阅 [英文 README.md](README.md)。
+
 <p align="center">
-  <a href="https://filee.sh/zh-cn/"><img src="docs/media/banner-zh-CN.jpg" alt="Filee：拖一下，放一下，转好了。" width="100%"></a>
+  <img src="docs/media/banner-zh-CN.jpg" alt="Filee：拖一下，放一下，转好了。" width="100%">
 </p>
 
 <p align="center">
@@ -8,8 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://filee.sh/zh-cn/"><b>官网</b></a> ·
-  <a href="https://github.com/KnifeLemon/Filee/releases/latest"><b>下载</b></a> ·
+  <a href="https://github.com/AsadMokarim/Jhatpat/releases/latest"><b>下载 (Releases)</b></a> ·
   <a href="#安装">安装</a> ·
   <a href="#命令行">命令行</a> ·
   <a href="#开发">开发</a>

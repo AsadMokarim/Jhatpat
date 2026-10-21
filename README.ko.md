@@ -1,5 +1,9 @@
+> [!NOTE]
+> **Jhatpat 한국어 안내 (수동 검토 필요 / Manual Review Required)**
+> 본 문서는 업스트림 Filee 프로젝트의 한국어 설명서입니다. Jhatpat v1.0.0의 새로운 기능(새로운 브랜드 아이덴티티, 글래스모피즘 디자인, 고급 자르기 및 배경 프레이밍, 자동 시작 설정 등)을 반영한 한국어 문서는 검토 진행 중입니다. 최신 정보는 [영문 README.md](README.md)를 참조해 주세요.
+
 <p align="center">
-  <a href="https://filee.sh/ko/"><img src="docs/media/banner-ko.jpg" alt="Filee: 끌어서 놓으면, 변환 끝." width="100%"></a>
+  <img src="docs/media/banner-ko.jpg" alt="Filee: 끌어서 놓으면, 변환 끝." width="100%">
 </p>
 
 <p align="center">
@@ -8,8 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://filee.sh/ko/"><b>웹사이트</b></a> ·
-  <a href="https://github.com/KnifeLemon/Filee/releases/latest"><b>다운로드</b></a> ·
+  <a href="https://github.com/AsadMokarim/Jhatpat/releases/latest"><b>다운로드 (Releases)</b></a> ·
   <a href="#설치">설치</a> ·
   <a href="#명령줄">명령줄</a> ·
   <a href="#개발">개발</a>
