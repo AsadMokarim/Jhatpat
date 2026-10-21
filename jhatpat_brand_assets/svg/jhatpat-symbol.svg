@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="jGrad" x1="0.12" y1="0.02" x2="0.82" y2="0.98">
+      <stop offset="0" stop-color="#FFE72E"/>
+      <stop offset="0.28" stop-color="#FFB31A"/>
+      <stop offset="0.62" stop-color="#FF7418"/>
+      <stop offset="1" stop-color="#FF3D32"/>
+    </linearGradient>
+    <linearGradient id="trailGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#FFE62E"/>
+      <stop offset="0.58" stop-color="#FF9B19"/>
+      <stop offset="1" stop-color="#FF4B36"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF98B" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#FFF98B" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.5"/>
+    </filter>
+  </defs>
+  <!-- speed trails -->
+  <g fill="url(#trailGrad)">
+    <rect x="72" y="184" width="136" height="24" rx="12" transform="rotate(-4 72 184)"/>
+    <rect x="38" y="231" width="158" height="24" rx="12" transform="rotate(-4 38 231)"/>
+    <rect x="80" y="282" width="45" height="22" rx="11" transform="rotate(-4 80 282)"/>
+  </g>
+  <!-- J mark -->
+  <path d="M321 61
+           C342 57 356 69 352 91
+           L320 269
+           C308 337 274 383 215 407
+           C173 424 128 414 108 386
+           C91 363 98 333 120 313
+           C137 297 155 300 172 314
+           C190 329 207 329 222 315
+           C235 302 242 282 248 255
+           L266 158
+           L199 160
+           C176 161 161 147 166 127
+           C171 108 187 96 210 91 Z"
+        fill="url(#jGrad)"/>
+  <!-- subtle inner warm highlight -->
+  <path d="M210 100 L319 71 C333 68 342 75 339 91 L309 261
+           C298 320 267 360 220 382 C184 399 147 397 128 378
+           C115 365 116 348 128 334 C142 320 155 325 170 337
+           C193 355 222 344 238 323 C252 305 258 280 264 253
+           L282 149 L202 151 C187 151 178 142 181 130
+           C184 116 195 106 210 100 Z"
+        fill="url(#shine)" opacity=".62"/>
+  <!-- sparkle -->
+  <path d="M407 132
+           C412 153 418 161 440 167
+           C418 173 412 181 407 203
+           C401 181 394 173 373 167
+           C394 161 401 153 407 132 Z"
+        fill="#FFB51B"/>
+  <circle cx="392" cy="222" r="4" fill="#FF6A22"/>
+</svg>

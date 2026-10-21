@@ -1,13 +1,13 @@
 Run ./Filee to test the extracted app, or ./filee-cli help for the command line.
 
 Run ./install.sh to install for the current user. It requires Python 3, creates
-an application launcher and ~/.local/bin/filee, and does not require root.
-Run ./uninstall.sh to remove this installation and Filee-downloaded engines.
+an application launcher and ~/.local/bin/jhatpat, and does not require root.
+Run ./uninstall.sh to remove this installation and Jhatpat-downloaded engines.
 Your settings and converted files are kept. If integration cleanup fails, the
 installation is kept so you can fix the error and run the uninstaller again.
 An existing installation is never overwritten; uninstall it before replacing it.
 
-Filee runs on Ubuntu 22.04 or newer and other distributions with glibc 2.35 or
+Jhatpat runs on Ubuntu 22.04 or newer and other distributions with glibc 2.35 or
 newer. The .NET runtime is bundled; its native system libraries are still
 required. Install the desktop and runtime dependencies with:
 

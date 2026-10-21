@@ -1,4 +1,4 @@
-﻿; Filee installer (Inno Setup 7). Build it with build/build-installer.ps1, which publishes the app, generates
+; Filee installer (Inno Setup 7). Build it with build/build-installer.ps1, which publishes the app, generates
 ; obj\engines.iss (build/tools/make-installer-engines.cs) and runs
 ;   ISCC.exe /DAppVersion=1.2.0 /DPublishDir=<published app> /O<output folder> installer\Filee.iss
 ;
@@ -22,7 +22,7 @@
   #error PublishDir is not defined: build with build/build-installer.ps1
 #endif
 
-#define AppName "Filee"
+#define AppName "Jhatpat"
 #define AppExe "Filee.exe"
 #define RepositoryUrl "https://github.com/KnifeLemon/Filee"
 ; Never change: Windows finds the installed Filee by this id (uninstall key "{<id>}_is1").
@@ -33,11 +33,11 @@ AppId={{{#AppGuid}}
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
-AppPublisher=Filee contributors
+AppPublisher=Jhatpat contributors, Filee contributors
 AppPublisherURL={#RepositoryUrl}
 AppSupportURL={#RepositoryUrl}/issues
 AppUpdatesURL={#RepositoryUrl}/releases
-AppCopyright=Copyright (c) Filee contributors
+AppCopyright=Copyright (c) Jhatpat contributors, Filee contributors
 VersionInfoVersion={#AppVersion}
 VersionInfoProductName={#AppName}
 SetupArchitecture=x64
@@ -50,12 +50,12 @@ DisableWelcomePage=no
 DisableProgramGroupPage=yes
 UninstallDisplayName={#AppName}
 UninstallDisplayIcon={app}\{#AppExe}
-SetupIconFile=..\src\Filee.App\Assets\Icons\filee.ico
+SetupIconFile=..\src\Filee.App\Assets\Icons\jhatpat.ico
 WizardStyle=modern dynamic
 WizardImageFile=wizard-light.png
 WizardImageFileDynamicDark=wizard-dark.png
-WizardSmallImageFile=..\src\Filee.App\Assets\Icons\filee.png
-OutputBaseFilename=Filee-{#AppVersion}-win-Setup
+WizardSmallImageFile=..\src\Filee.App\Assets\Icons\jhatpat.png
+OutputBaseFilename=Jhatpat-{#AppVersion}-win-Setup
 Compression=lzma2/ultra64
 SolidCompression=yes
 ; Filee is closed by PrepareToInstall; Restart Manager is only the fallback, and only for Filee.exe: with DLLs in the

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360">
+      <defs>
+        <linearGradient id="jGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#FFE72E"/><stop offset=".45" stop-color="#FF9B18"/><stop offset="1" stop-color="#FF4432"/>
+        </linearGradient>
+        <linearGradient id="trailGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#FFE62E"/><stop offset="1" stop-color="#FF4B36"/>
+        </linearGradient>
+      </defs>
+      
+      <g transform="translate(12 28) scale(.58)">
+        <g fill="url(#trailGrad)">
+          <rect x="72" y="184" width="136" height="24" rx="12" transform="rotate(-4 72 184)"/>
+          <rect x="38" y="231" width="158" height="24" rx="12" transform="rotate(-4 38 231)"/>
+          <rect x="80" y="282" width="45" height="22" rx="11" transform="rotate(-4 80 282)"/>
+        </g>
+        <path d="M321 61 C342 57 356 69 352 91 L320 269 C308 337 274 383 215 407 C173 424 128 414 108 386 C91 363 98 333 120 313 C137 297 155 300 172 314 C190 329 207 329 222 315 C235 302 242 282 248 255 L266 158 L199 160 C176 161 161 147 166 127 C171 108 187 96 210 91 Z" fill="url(#jGrad)"/>
+        <path d="M407 132 C412 153 418 161 440 167 C418 173 412 181 407 203 C401 181 394 173 373 167 C394 161 401 153 407 132 Z" fill="#FFB51B"/>
+      </g>
+      <text x="310" y="238" font-family="DejaVu Sans, Arial, sans-serif" font-size="168" font-weight="800" letter-spacing="-8" fill="#FFFFFF">Jhatpat</text>
+    </svg>

@@ -1,187 +1,165 @@
 <p align="center">
-  <a href="https://filee.sh"><img src="docs/media/banner-en.jpg" alt="Filee: Drag. Drop. Converted." width="100%"></a>
+  <img src="src/Filee.App/Assets/Icons/jhatpat.svg" alt="Jhatpat" width="128" height="128">
+</p>
+
+<h1 align="center">Jhatpat</h1>
+
+<p align="center">
+  <b>A modern, cross-platform desktop productivity and image-processing application.</b><br>
+  Built by extending the open-source <a href="https://github.com/KnifeLemon/Filee">Filee</a> project with contextual radial tools, advanced cropping, background framing, compression, batch workflows, and clipboard integration.
 </p>
 
 <p align="center">
-  <b>A free, open-source file converter you use by dragging.</b><br>
-  Hold a key (<kbd>Ctrl</kbd>, <kbd>Option</kbd> on macOS), drag files and drop them on a format in the donut that opens at your cursor.
+  <a href="#features"><b>Features</b></a> ·
+  <a href="#technology-stack"><b>Tech Stack</b></a> ·
+  <a href="#upstream-acknowledgement"><b>Upstream Attribution</b></a> ·
+  <a href="#platform-support-status"><b>Platform Support</b></a> ·
+  <a href="#packaging--installation"><b>Install & Packaging</b></a> ·
+  <a href="#development"><b>Development</b></a> ·
+  <a href="#license"><b>License</b></a>
 </p>
 
 <p align="center">
-  <a href="https://filee.sh"><b>Website</b></a> ·
-  <a href="https://github.com/KnifeLemon/Filee/releases/latest"><b>Download</b></a> ·
-  <a href="#install">Install</a> ·
-  <a href="#command-line">Command line</a> ·
-  <a href="#development">Development</a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/KnifeLemon/Filee/actions/workflows/ci.yml"><img src="https://github.com/KnifeLemon/Filee/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/KnifeLemon/Filee/releases/latest"><img src="https://img.shields.io/github/v/release/KnifeLemon/Filee?color=7F77DD&label=release" alt="Latest release"></a>
-  <a href="https://github.com/KnifeLemon/Filee/releases"><img src="https://img.shields.io/github/downloads/KnifeLemon/Filee/total?color=1D9E75" alt="Downloads"></a>
-  <img src="https://img.shields.io/badge/Windows-10%20%7C%2011-3C3489" alt="Windows 10 | 11">
-  <img src="https://img.shields.io/badge/macOS%20%7C%20Linux-preview-534AB7" alt="macOS | Linux preview">
+  <img src="https://img.shields.io/badge/Ubuntu%2024.04%20LTS-verified-1D9E75" alt="Ubuntu 24.04 verified">
+  <img src="https://img.shields.io/badge/Windows-build%20ready%20(preview)-534AB7" alt="Windows build ready">
+  <img src="https://img.shields.io/badge/macOS%2014+-preview-534AB7" alt="macOS preview">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-6A62C9" alt="MIT license"></a>
 </p>
 
-<p align="center">
-  <a href="https://trendshift.io/repositories/276987"><img src="https://trendshift.io/api/badge/trendshift/repositories/276987/weekly?language=C%23&v=2" alt="Filee: #1 C# repository of the week on Trendshift" width="250" height="55"></a>
-  <a href="https://trendshift.io/repositories/276987"><img src="https://trendshift.io/api/badge/trendshift/repositories/276987/daily?language=C%23&v=2" alt="Filee: #1 C# repository of the day on Trendshift" width="250" height="55"></a>
-</p>
+---
 
-<p align="center"><b>English</b> · <a href="README.ko.md">한국어</a> · <a href="README.zh-CN.md">简体中文</a></p>
+> [!NOTE]
+> **Jhatpat is actively under development.** Features described below are implemented in the current codebase and verified through automated test suites and Linux runtime packaging.
 
-<table>
-  <tr>
-    <td width="33%" valign="top"><b>Right at your cursor</b><br>No app window to open. The formats appear where you already are, only the ones that make sense for the files you drag.</td>
-    <td width="33%" valign="top"><b>254 formats, no other software</b><br>Images, PDF, Word, Excel, PowerPoint, HWP, e-books, archives, fonts, CAD, 3D models and geospatial data work without Office, Hancom Office or LibreOffice.</td>
-    <td width="33%" valign="top"><b>Stays on your computer</b><br>Nothing is uploaded. Filee works offline and saves the result next to the original.</td>
-  </tr>
-</table>
-
-## See it in action
-
-<p align="center">
-  <a href="https://filee.sh"><img src="docs/media/demo-en.webp" alt="Dragging trip.jpg with Ctrl held: a donut of formats opens at the cursor, the file is dropped on PNG, a progress ring completes and trip.png appears" width="820"></a><br>
-  <sub>Watch the 27-second video and try the interactive demo on <a href="https://filee.sh">filee.sh</a></sub>
-</p>
-
-## Install
-
-Download from [Releases](https://github.com/KnifeLemon/Filee/releases/latest).
-
-- **Windows 10/11**: run `Filee-<version>-win-Setup.exe`, or unzip the `win-Portable.zip` and run `Filee.exe`.
-  Setup can add the Explorer menu, start at sign-in, the `filee` command and optional engines.
-- **macOS 14+** (preview): unpack the `osx-arm64` or `osx-x64` package and run `./install.sh`.
-  The build isn't notarized yet, so allow the first start in System Settings → Privacy & Security → **Open Anyway**.
-- **Linux x64/ARM64** (preview, Ubuntu 22.04+): unpack the package and run `./install.sh` (no root, needs Python 3).
-  Drag gestures need X11. On Wayland, use the drop zone and the file manager's right-click menu.
-
-Filee shows new releases in its menu and updates itself, keeping your settings and engines.
+---
 
 ## Features
 
-- **A donut at the cursor**: hold a key, drag files and drop them on a format. Only formats that fit the files appear.
-- **One toolbar per file type**, arranged by drag and drop, with presets for quality, size, DPI, PDF pages and compression,
-  video and audio, output folder and file names.
-- **Many files at once**, in parallel. Routes with several steps (HWP → HWPX → DOCX) are found automatically.
-- **Watch folders** convert every file that lands in them.
-- **Other ways in**: the right-click menu, a keyboard shortcut, the drop zone and the [`filee` command](#command-line).
-- Light and dark themes, in English, Español, 日本語, 한국어, 简体中文, Polski and हिन्दी.
+### 1. Contextual Radial Workflows & Image Tools
+- **Cursor-Centric Donut Menu**: Hold a modifier key or trigger via context menu to invoke a circular menu directly under the mouse cursor.
+- **Dedicated Image Tools Submenu**: Provides immediate access to **Crop**, **Background Framing**, and **Compress & Resize** for supported raster images without overcrowding the format conversion slices.
 
-## Screenshots
+### 2. Interactive Image Cropping
+- **Aspect Ratio Presets**: 1:1 (Square), 4:3, 16:9, 3:2, and freeform crop canvas.
+- **Live Preview & Controls**: Precision handle dragging, numeric size indicators, and reset capabilities.
+- **Non-Destructive Export**: Never overwrites the source file silently. Direct native clipboard copying via `Ctrl+C` / toolbar button.
 
-<table>
-  <tr>
-    <td width="50%"><img src="docs/media/page-toolbar-en.png" alt="Donut toolbar editor with profiles and presets"></td>
-    <td width="50%"><img src="docs/media/page-home-en.png" alt="Home screen with the drop zone and recent conversions"></td>
-  </tr>
-  <tr>
-    <td align="center"><sub>Arrange the donut by drag and drop, one profile per file type</sub></td>
-    <td align="center"><sub>Home: drop zone and recent conversions</sub></td>
-  </tr>
-</table>
+### 3. Background Framing
+- **Background Modes**: Solid colors (with visual color picker and hex input), linear gradients, custom image backgrounds, and transparent canvas.
+- **Styling**: Configurable padding, rounded corner radius, drop shadow with adjustable elevation and softness.
+- **Dimensions**: Configurable aspect ratios, preset dimensions, and custom width/height with live preview.
 
-## Formats
+### 4. Image Resizing & Compression
+- **Pixel-Exact Resizing**: Custom width and height fields with aspect ratio lock by default.
+- **Preset Scale Factors**: Quick scaling to 25%, 50%, 75%, and 100%.
+- **Configurable Quality**: Quality slider and presets (High, Balanced, Low) for lossy codecs (JPEG, WebP). Automatic lossless preservation for PNG.
 
-| From | To |
-|---|---|
-| **Images**: JPG, PNG, WEBP, AVIF, TIFF, BMP, GIF, APNG, ICO, ICNS, JPEG XL, JPEG 2000, PSD/PSB, TGA, PPM, HEIC, QOI, DDS, PCX, MNG, CUR, …; GIMP XCF, camera RAW (CR2, CR3, NEF, ARW, DNG, …), DICOM, OpenEXR, HDR, JPEG XR (Windows) read | any of these (HEIC⁵), PDF, SVG (traced), resized, grayscale |
-| **Vector**: SVG, SVGZ, EMF, WMF, AI · EPS, PS¹ · CDR, VSD, CGM, ODG, FODG² | PDF (vector), PNG and other images, SVG ↔ SVGZ, SVG → DXF/DWG, PDF → EPS/PS¹, SVG → EMF, WMF, ODG² |
-| **PDF** | DOCX, HWPX, TXT, PNG, JPG, TIFF, CBZ, PPTX (a picture of each page), SVG²; merge, split, page ranges, compress (smaller PDFs) |
-| **Documents**: DOCX, DOCM, DOTX, EML, Outlook MSG; OFD (Chinese e-invoices, official documents) read · DOC, ODT, FODT, OTT, RTF, WPS, WPD, Pages, ClarisWorks, MacWrite, T602, …² | PDF, DOCX, HWPX, EPUB, TXT, HTML; MSG → EML · ODT, FODT, OTT² |
-| **Spreadsheets**: XLSX, XLSM, XLS, XLT, ODS, CSV, TSV · OTS, FODS, Numbers, ET² | PDF, XLSX, ODS, CSV, TSV, JSON, HWPX, HTML · XLT, OTS² |
-| **Presentations**: PPTX, PPTM, POTX, POTM, PPSX · PPT, ODP, OTP, FODP, Keynote² | PDF, PNG, JPG, DOCX, HWPX · OTP² |
-| **HWP**: HWP, HWPX | PDF, PNG, DOCX, HWPX ↔ HWP, TXT, Markdown, HTML |
-| **Text**: TXT, Markdown, HTML; MHTML (saved web pages) read · reStructuredText, LaTeX, Org, AsciiDoc, Typst, MediaWiki, DocBook, Jupyter, Textile, man, OPML³ | PDF, DOCX, HWPX, EPUB · each other, PPTX slides³ |
-| **E-books**: EPUB, KEPUB, MOBI, AZW3, AZW, AZW4, FB2, CBZ, CBR, CB7, HTMLZ, TXTZ · LIT, LRF, CHM, PDB, …⁴ | PDF, EPUB, KEPUB (Kobo), DOCX, TXT, HTML, HWPX · MOBI, AZW3⁴ |
-| **Video**⁵: MP4, MOV, MKV, WEBM, AVI, WMV, FLV, MPEG, TS, M2TS, 3GP, OGV, VOB, … | MP4 (H.264, HEVC, AV1), WEBM, MOV, MKV, AVI, GIF, APNG, MP3, M4A, 720p, subtitles (SRT, ASS, WebVTT) |
-| **Audio**⁵: MP3, M4A, AAC, WAV, FLAC, OGG, OPUS, WMA, AIFF, AMR, APE, WavPack, TTA, DSD (DSF, DFF), DTS, AC3, E-AC3, … | MP3, M4A (AAC, ALAC), WAV, FLAC, OGG, OPUS, AAC, WavPack, TTA, W64, AC3, E-AC3 |
-| **Subtitles**: SRT, ASS/SSA, WebVTT, SAMI (SMI), LRC, TTML, MicroDVD, SCC | each other as UTF-8 (Korean CP949 files read correctly) |
-| **Archives**: ZIP, 7Z, RAR, TAR, TAR.GZ, TAR.BZ2, TAR.XZ, GZ, ISO, CAB, DMG, ALZ, EGG, … | extract, ZIP, 7Z, TAR, TAR.GZ; any files → one ZIP |
-| **CAD**: DWG, DXF | PDF, SVG, PNG, DWG ↔ DXF |
-| **Fonts**: TTF, OTF, WOFF, WOFF2, EOT | each other |
-| **Data**: JSON, JSON Lines, YAML, TOML, XML · vCard | each other, CSV and XLSX (tables); vCard ↔ CSV |
-| **3D models**: GLB, glTF, STL, OBJ (+ MTL), 3MF, PLY; FBX read | each other, PNG preview |
-| **Geospatial vectors**: Shapefile, GeoJSON, KML, KMZ, GPX · CSV with coordinates | each other and CSV / XLSX / JSON; projected data (UTM, Web Mercator, Lambert, Albers) comes out as WGS 84 longitude / latitude |
+### 5. Multi-File Batch Processing
+- **Queue Management**: Add multiple files or entire folders with drag-and-drop support.
+- **Shared Parameters**: Apply scaling, max dimensions, target formats, and compression quality across all queued images in parallel.
+- **Safe Collision Handling**: Automatic non-destructive renaming (`image (1).png`) or skip existing files.
+- **Progress & Cancellation**: Per-file progress, total percentage indicator, and immediate batch cancellation via `Escape` or button.
 
-Unmarked formats work out of the box, without Office, Hancom Office or LibreOffice.
-Marked ones need an optional engine, downloaded only when needed: ¹ Ghostscript, ² LibreOffice, ³ Pandoc, ⁴ calibre,
-⁵ FFmpeg ([details](docs/ENGINES.md)).
+### 6. System Clipboard & Screen Capture
+- **Clipboard Input**: Paste images directly into Jhatpat using the Home screen button or `Ctrl+V` (`Cmd+V` on macOS). Auto-purges temporary cached images after 24 hours.
+- **Native Clipboard Output**: Copy processed images from Crop, Framing, and Resize overlays directly into system memory as native bitmaps with toast feedback.
+- **Screen Capture**: Interactive region screenshot capture (native Wayland GNOME Shell D-Bus, Spectacle, or X11 ImageMagick `import`), routing captures immediately into Jhatpat's radial toolchain.
 
-## Command line
+### 7. Workflow Polish, Recent Activity & Preferences
+- **Recent History Actions**: Open converted files directly in system viewer (`xdg-open` / `open` / Windows Shell association), delete individual entries, or clear all history.
+- **Persistent Preferences**: Configure default image format (`same`, `png`, `jpg`, `webp`), default compression quality, and maintain-aspect-ratio lock under **Settings → General**.
+- **Session Memory**: Last-used export and batch directories are remembered across launches.
+- **Full 7-Language Localization**: English (`en`), Español (`es`), हिन्दी (`hi`), 日本語 (`ja`), 한국어 (`ko`), Polski (`pl`), and 简体中文 (`zh-CN`).
 
-The `filee` command uses the same engines and presets as the app (Setup or `install.sh` adds it).
+---
 
+## Technology Stack
+
+- **Runtime & Language**: [.NET 10.0](https://dotnet.microsoft.com/) / C# 13
+- **Desktop UI Framework**: [Avalonia UI 12.1.3](https://avaloniaui.net/) (Cross-platform XAML GUI, Fluent Theme)
+- **Architecture Pattern**: Model-View-ViewModel (MVVM) via `CommunityToolkit.Mvvm`
+- **2D Graphics & Rendering**: [SkiaSharp 3.119](https://github.com/mono/SkiaSharp) and [HarfBuzzSharp](https://github.com/mono/SkiaSharp)
+- **Image Processing Engines**: [Magick.NET-Q8-AnyCPU](https://github.com/dlemstra/Magick.NET) (ImageMagick)
+- **Input & Hotkey Capture**: [SharpHook 8.0.1](https://github.com/TolikPylypchuk/SharpHook)
+- **Packaging Tools**: Debian `dpkg-deb`, `tar`, `gzip`, Freedesktop `desktop-file-utils`
+
+---
+
+## Upstream Acknowledgement
+
+Jhatpat is built upon the open-source **Filee** project:
+- **Upstream Repository**: [https://github.com/KnifeLemon/Filee](https://github.com/KnifeLemon/Filee)
+- **Original Author**: Myeonggu Kim ([KnifeLemon](https://github.com/KnifeLemon)) and Filee contributors.
+- **License**: MIT License.
+
+Jhatpat maintains backwards compatibility with Filee's offline conversion catalog (250+ formats), preset schemas, engine infrastructure, and configuration files, while introducing an expanded product direction focused on image manipulation, framing, compression, and enhanced desktop workflows.
+
+---
+
+## Platform Support Status
+
+| Platform | Build Status | Runtime Verification Status | Notes |
+| :--- | :--- | :--- | :--- |
+| **Linux (Ubuntu 24.04 LTS x64)** | **Verified** | **Verified** (Wayland & X11) | Native `.deb` and standalone `.tar.gz` packages available. All features tested. |
+| **Windows 10 / 11 (x64)** | **Verified** | **Preview / Pending Windows Device Testing** | Cross-publishes cleanly (`win-x64` self-contained .NET 10). Bundles `libSkiaSharp.dll` and `Magick.Native`. Full Explorer extension and registry integration require native Windows host testing (see [`docs/windows-compatibility-audit.md`](docs/windows-compatibility-audit.md)). |
+| **macOS 14+ (ARM64 / x64)** | **Inherited** | **Preview** | Inherits upstream Filee macOS backend. Ad-hoc signed. |
+
+> [!WARNING]
+> While Windows x64 compilation and self-contained publishing succeed without errors, Windows-specific features (such as Explorer context menu shell extensions, taskbar notification icons, and registry keys) must be verified on a native Windows installation before claiming full Windows certification.
+
+---
+
+## Packaging & Installation
+
+### Ubuntu 24.04 LTS / Debian (`.deb`)
+Repeatable package builds are produced using [`scripts/package-ubuntu.sh`](scripts/package-ubuntu.sh):
+```bash
+./scripts/package-ubuntu.sh --version 1.0.0
 ```
-filee convert photo.heic --to jpg
-filee convert *.png --to webp --quality 80 -o converted
-filee watch D:\Inbox --to pdf --move-originals
+
+Install via `apt`:
+```bash
+sudo apt install ./build/dist/jhatpat_1.0.0_amd64.deb
 ```
 
-Every command and option: [filee.sh/cli](https://filee.sh/cli/) or `filee help`.
+Or install standalone tarball without root:
+```bash
+tar -xzf build/dist/jhatpat-1.0.0-linux-x64.tar.gz
+cd jhatpat-1.0.0
+./install.sh
+```
+
+For detailed instructions, layout details, and uninstallation procedures, see the [Ubuntu Packaging Guide](docs/ubuntu-packaging.md).
+
+---
 
 ## Development
 
-Build with the .NET 10 SDK on Windows, macOS or Linux:
+### Prerequisites
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
 
+### Building and Running
 ```bash
-git clone https://github.com/KnifeLemon/Filee.git
-cd Filee
-pwsh build/fetch-engines.ps1 -Only rhwp,pandoc   # optional engines
+# Clone the repository
+git clone https://github.com/KnifeLemon/Filee.git Jhatpat
+cd Jhatpat
+
+# Build the solution
+dotnet build Filee.slnx
+
+# Run the desktop application
 dotnet run --project src/Filee.App
-dotnet test
+
+# Run unit tests
+dotnet test tests/Filee.App.Tests
 ```
 
-[Architecture](docs/ARCHITECTURE.md) · [Engines](docs/ENGINES.md) · [Adding a converter](docs/ADDING-A-CONVERTER.md) ·
-[Adding a language](docs/ADDING-A-LANGUAGE.md) · [Contributing](CONTRIBUTING.md)
-
-Pull requests are welcome. If Filee saves you some clicks, a ⭐ helps other people find it.
-
-## Code signing policy
-
-Filee is developed and published by **Myeonggu Kim** ([KnifeLemon](https://github.com/KnifeLemon)).
-
-Windows releases will be signed with a [Certum](https://www.certum.eu/) open source code signing certificate issued
-to Myeonggu Kim. The certificate is being issued; until then, releases are not code-signed and Windows SmartScreen
-may warn when you run the installer ("More info" → "Run anyway"). macOS packages are ad-hoc signed and not notarized.
-
-Only the installer and files built by this repository's GitHub Actions release workflow are signed, and every release
-is approved by hand. Bundled third-party programs (rhwp, 7-Zip) keep their own publishers' files.
-
-### Privacy policy
-
-Filee converts files on your own computer and never uploads them. It collects no usage data and sends no telemetry.
-It connects to the internet only:
-
-- to ask GitHub (`api.github.com`) whether a newer release exists, shortly after start and then every few hours.
-  Turn this off in Settings → About ("Check for updates automatically").
-- to download the conversion engines you choose to install, from the official locations pinned in
-  [`engines.json`](src/Filee.Engines/Infrastructure/engines.json).
-- when you click a link, which opens your web browser.
-
-## Sponsor
-
-Filee is free and stays free. If you'd like to support it, pick whichever way suits you
-([Fairy](https://fairy.hada.io/@filee) takes Korean cards and easy-pay).
-
-**Your name or logo here.** Monthly backers are listed here by name, and sponsors get their logo here and on
-Filee's About page. One-time supporters can ask to be listed too.
+---
 
 <!-- sponsors: src/Filee.App/Assets/Sponsors/sponsors.json -->
 
-<p align="center">
-  <a href="https://github.com/sponsors/KnifeLemon"><img src="https://img.shields.io/badge/GitHub%20Sponsors-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="GitHub Sponsors"></a>
-  <a href="https://patreon.com/KnifeLemon"><img src="https://img.shields.io/badge/Patreon-000000?style=for-the-badge&logo=patreon&logoColor=white" alt="Patreon"></a>
-  <a href="https://ko-fi.com/knifelemon"><img src="https://img.shields.io/badge/Ko--fi-FF6433?style=for-the-badge&logo=kofi&logoColor=white" alt="Ko-fi"></a>
-  <a href="https://paypal.me/knifelemon"><img src="https://img.shields.io/badge/PayPal-002991?style=for-the-badge&logo=paypal&logoColor=white" alt="PayPal"></a>
-  <a href="https://fairy.hada.io/@filee"><img src="https://img.shields.io/badge/Fairy-2E9E6B?style=for-the-badge" alt="Fairy"></a>
-</p>
-
 ## License
 
-MIT, © 2026 Myeonggu Kim (KnifeLemon) and Filee contributors. Bundled third-party components keep their own licenses, listed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
-
-<p align="center">
-  <a href="https://star-history.com/#KnifeLemon/Filee&Date"><img src="https://api.star-history.com/svg?repos=KnifeLemon/Filee&type=Date" alt="Star history" width="600"></a>
-</p>
+Jhatpat is licensed under the [MIT License](LICENSE).
+Copyright (c) 2026 Jhatpat contributors, Myeonggu Kim (KnifeLemon), and Filee contributors.
+Bundled third-party components retain their respective licenses as detailed in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
