@@ -43,6 +43,76 @@ internal static class X11WindowSystem
         }
     }
 
+    /// <summary>
+    /// Checks whether coordinates (x, y) are over a file manager window, desktop icon manager,
+    /// or the desktop background itself.
+    /// </summary>
+    internal static bool IsFileManagerOrDesktopAt(int x, int y, IReadOnlySet<string> fileManagers)
+    {
+        if (!IsAvailable)
+            return false;
+        var display = OpenDisplay();
+        if (display == 0)
+            return false;
+        try
+        {
+            XGrabServer(display);
+            var root = XDefaultRootWindow(display);
+            var desktopAtom = XInternAtom(display, "_NET_WM_WINDOW_TYPE_DESKTOP", 1);
+            var windowTypeAtom = XInternAtom(display, "_NET_WM_WINDOW_TYPE", 1);
+
+            // If coordinates point directly at the root window with no mapped child, it is the root desktop.
+            if (XTranslateCoordinates(display, root, root, x, y, out _, out _, out var child) == 0 || child == 0)
+                return true;
+
+            var window = child;
+            for (var depth = 0; depth < 32; depth++)
+            {
+                if (desktopAtom != 0 && HasWindowType(display, window, windowTypeAtom, desktopAtom))
+                    return true;
+
+                if (ReadProcessName(display, window) is { } name && fileManagers.Contains(name))
+                    return true;
+
+                if (XTranslateCoordinates(display, root, window, x, y, out _, out _, out child) == 0 || child == 0)
+                    break;
+                window = child;
+            }
+            return false;
+        }
+        finally
+        {
+            XUngrabServer(display);
+            XCloseDisplay(display);
+        }
+    }
+
+    private static bool HasWindowType(nint display, nuint window, nuint windowTypeAtom, nuint expectedTypeAtom)
+    {
+        if (windowTypeAtom == 0 || expectedTypeAtom == 0)
+            return false;
+        if (XGetWindowProperty(display, window, windowTypeAtom, 0, 32, 0, 0,
+                out _, out var format, out var count, out _, out var data) != 0)
+            return false;
+        try
+        {
+            if (data == 0 || format != 32 || count == 0)
+                return false;
+            for (var i = 0; i < (int)count; i++)
+            {
+                var atom = (nuint)(ulong)Marshal.ReadIntPtr(data, i * IntPtr.Size);
+                if (atom == expectedTypeAtom)
+                    return true;
+            }
+            return false;
+        }
+        finally
+        {
+            if (data != 0)
+                XFree(data);
+        }
+    }
+
     /// <summary>Process names of the windows the window manager lists (_NET_CLIENT_LIST).</summary>
     internal static IReadOnlyList<string> ClientProcessNames()
     {

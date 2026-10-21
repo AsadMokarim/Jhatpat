@@ -28,14 +28,14 @@ public sealed class LinuxDesktopIntegrationTests : IDisposable
             .Single(action => (string?)action.Element("unique-id") == "other").Element("command")!.Value);
         Assert.Equal("'/opt/new/Filee.App' --convert %F", document.Root.Elements("action")
             .Single(action => (string?)action.Element("unique-id") == LinuxDesktopIntegration.ThunarActionId).Element("command")!.Value);
-        Assert.Contains("exec '/opt/new/Filee.App' --convert \"$@\"", File.ReadAllText(Path.Combine(data, "nautilus", "scripts", "Filee")));
+        Assert.Contains("exec '/opt/new/Filee.App' --convert \"$@\"", File.ReadAllText(Path.Combine(data, "nautilus", "scripts", "Jhatpat")));
 
         integration.SetContextMenu(false, "", "");
 
         document = XDocument.Load(path);
         Assert.Single(document.Root!.Elements("action"));
         Assert.Equal("other", document.Root.Element("action")!.Element("unique-id")!.Value);
-        Assert.False(File.Exists(Path.Combine(data, "kio", "servicemenus", "filee.desktop")));
+        Assert.False(File.Exists(Path.Combine(data, "kio", "servicemenus", "jhatpat.desktop")));
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public sealed class LinuxDesktopIntegrationTests : IDisposable
     {
         var integration = new LinuxDesktopIntegration(_root, Path.Combine(_root, "data"));
         integration.SetAutostart(true, "/opt/Filee test/Filee.App");
-        var path = Path.Combine(_root, "autostart", "filee.desktop");
+        var path = Path.Combine(_root, "autostart", "jhatpat.desktop");
         Assert.Contains("Exec=\"/opt/Filee test/Filee.App\" --background\n", File.ReadAllText(path));
         Assert.Throws<ArgumentException>(() => integration.SetAutostart(true, "/opt/Filee\nExec=bad"));
         Assert.Contains("Exec=\"/opt/Filee test/Filee.App\" --background\n", File.ReadAllText(path));

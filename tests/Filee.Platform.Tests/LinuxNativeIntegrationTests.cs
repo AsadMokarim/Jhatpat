@@ -31,7 +31,7 @@ public sealed class LinuxNativeIntegrationTests
             }
             var data = Path.Combine(root, "data");
             new LinuxDesktopIntegration(Path.Combine(root, "config"), data).SetContextMenu(true, target, "Convert");
-            var processInfo = new ProcessStartInfo(Path.Combine(data, "nautilus", "scripts", "Filee"))
+            var processInfo = new ProcessStartInfo(Path.Combine(data, "nautilus", "scripts", "Jhatpat"))
             {
                 UseShellExecute = false,
                 WorkingDirectory = root,
@@ -60,7 +60,7 @@ public sealed class LinuxNativeIntegrationTests
         }
         var display = XOpenDisplay(0);
         Assert.NotEqual(0, display);
-        var window = XCreateSimpleWindow(display, XDefaultRootWindow(display), 40, 40, 80, 80, 0, 0, 0);
+        var window = XCreateSimpleWindow(display, XDefaultRootWindow(display), 200, 200, 80, 80, 0, 0, 0);
         var pid = Marshal.AllocHGlobal(nint.Size);
         try
         {
@@ -83,6 +83,96 @@ public sealed class LinuxNativeIntegrationTests
             Marshal.FreeHGlobal(pid);
             XDestroyWindow(display, window);
             XCloseDisplay(display);
+        }
+    }
+
+    [Fact]
+    public void IsFileManagerOrDesktopAt_DetectsDesktopAndFileManagerWindows()
+    {
+        if (!OperatingSystem.IsLinux() || !X11WindowSystem.IsAvailable)
+        {
+            Assert.Skip("Requires a Linux X11 desktop session.");
+            return;
+        }
+        var display = XOpenDisplay(0);
+        Assert.NotEqual(0, display);
+        var window = XCreateSimpleWindow(display, XDefaultRootWindow(display), 250, 250, 100, 100, 0, 0, 0);
+        var atomPtr = Marshal.AllocHGlobal(nint.Size);
+        try
+        {
+            var attributes = new XSetWindowAttributes { OverrideRedirect = 1 };
+            XChangeWindowAttributes(display, window, 1 << 9, ref attributes);
+            XMapRaised(display, window);
+            XSync(display, 0);
+            XTranslateCoordinates(display, window, XDefaultRootWindow(display), 50, 50, out var x, out var y, out _);
+
+            // Initially the window has neither desktop atom nor file manager process name
+            var emptySet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            Assert.False(X11WindowSystem.IsFileManagerOrDesktopAt(x, y, emptySet));
+
+            // Setting file manager process name makes it match
+            var matchingSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { Process.GetCurrentProcess().ProcessName };
+            var pid = Marshal.AllocHGlobal(nint.Size);
+            try
+            {
+                Marshal.WriteIntPtr(pid, Environment.ProcessId);
+                XChangeProperty(display, window, XInternAtom(display, "_NET_WM_PID", 0), 6, 32, 0, pid, 1);
+                XSync(display, 0);
+                Assert.True(X11WindowSystem.IsFileManagerOrDesktopAt(x, y, matchingSet));
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(pid);
+            }
+
+            // Setting _NET_WM_WINDOW_TYPE_DESKTOP makes it match even with empty file manager set
+            var desktopAtom = XInternAtom(display, "_NET_WM_WINDOW_TYPE_DESKTOP", 0);
+            var windowType = XInternAtom(display, "_NET_WM_WINDOW_TYPE", 0);
+            Marshal.WriteIntPtr(atomPtr, (nint)(long)desktopAtom);
+            XChangeProperty(display, window, windowType, 4, 32, 0, atomPtr, 1);
+            XSync(display, 0);
+            Assert.True(X11WindowSystem.IsFileManagerOrDesktopAt(x, y, emptySet));
+        }
+        finally
+        {
+            Marshal.FreeHGlobal(atomPtr);
+            XDestroyWindow(display, window);
+            XCloseDisplay(display);
+        }
+    }
+
+    [Fact]
+    public void WaylandGlobalShortcuts_IsPortalAvailable_DoesNotThrow()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Requires Linux.");
+            return;
+        }
+
+        WaylandGlobalShortcuts.ResetCache();
+        var isAvailable = WaylandGlobalShortcuts.IsPortalAvailable();
+        Assert.True(isAvailable || !isAvailable);
+    }
+
+    [Fact]
+    public void LinuxPlatformServices_WaylandFeedback_IsInformative()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            Assert.Skip("Requires Linux.");
+            return;
+        }
+
+        var services = new LinuxPlatformServices();
+        if (LinuxPlatformServices.IsWaylandSession)
+        {
+            var reason = services.GlobalPointerGesturesUnavailableReason;
+            if (!services.SupportsGlobalPointerGestures)
+            {
+                Assert.NotNull(reason);
+                Assert.Contains("Wayland", reason);
+            }
         }
     }
 
