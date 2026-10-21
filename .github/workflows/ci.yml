@@ -79,7 +79,7 @@ jobs:
       - name: Test
         run: dotnet test Filee.slnx --no-build -c Release --filter "FullyQualifiedName!~Filee.App.Tests" --logger "trx" --results-directory TestResults
 
-      # Compiles installer/Filee.iss against a stub app without compression: catches script errors in about a minute.
+      # Compiles installer/Jhatpat.iss against a stub app without compression: catches script errors in about a minute.
       - name: Check installer script
         shell: pwsh
         run: ./build/build-installer.ps1 -CheckOnly

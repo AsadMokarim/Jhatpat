@@ -1,4 +1,4 @@
-// Keeps the installer script (installer/Filee.iss) and the app in step: the options Setup starts Filee with, the
+// Keeps the installer script (installer/Jhatpat.iss) and the app in step: the options Setup starts Filee with, the
 // Explorer menu package it registers and the engine folders it looks into.
 
 using System.Reflection;
@@ -21,7 +21,7 @@ public class InstallerTests
             var dir = AppContext.BaseDirectory;
             while (!File.Exists(Path.Combine(dir, "Filee.slnx")))
                 dir = Path.GetDirectoryName(dir) ?? throw new InvalidOperationException("Repository root not found.");
-            return File.ReadAllText(Path.Combine(dir, "installer", "Filee.iss"));
+            return File.ReadAllText(Path.Combine(dir, "installer", "Jhatpat.iss"));
         }
     }
 

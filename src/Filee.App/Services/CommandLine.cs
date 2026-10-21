@@ -5,7 +5,7 @@
 //   Filee.exe --convert a b ...        open the donut for these files (Explorer context menu / Send To)
 //   Filee.exe --convert-list <file>    same, with one path per line in a UTF-8 file (Windows 11 Explorer menu, for
 //                                      selections too long for a command line); the app deletes the file afterwards
-// Used by the installer (installer/Filee.iss):
+// Used by the installer (installer/Jhatpat.iss):
 //   Filee.exe --install-engines=a,b    download these engine packages (EngineDownloads ids) in the engine window;
 //                                      an empty list means the user chose none, so the first-run choice is skipped
 //   Filee.exe --start-with-windows=on|off, --context-menu=on|off

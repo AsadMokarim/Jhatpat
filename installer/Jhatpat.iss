@@ -1,6 +1,6 @@
-; Filee installer (Inno Setup 7). Build it with build/build-installer.ps1, which publishes the app, generates
+; Jhatpat installer (Inno Setup 7). Build it with build/build-installer.ps1, which publishes the app, generates
 ; obj\engines.iss (build/tools/make-installer-engines.cs) and runs
-;   ISCC.exe /DAppVersion=1.2.0 /DPublishDir=<published app> /O<output folder> installer\Filee.iss
+;   ISCC.exe /DAppVersion=1.2.0 /DPublishDir=<published app> /O<output folder> installer\Jhatpat.iss
 ;
 ; Besides copying files it
 ;  - installs for all users into Program Files (administrator rights, one UAC prompt). Filee itself keeps running as
@@ -89,30 +89,30 @@ en.StatusRemovingOld=Removing the previous version (settings and engines are kep
 ko.StatusRemovingOld=이전 버전을 정리하는 중 (설정과 엔진은 그대로 둬요)...
 zhcn.StatusRemovingOld=正在移除旧版本（保留设置和引擎）...
 ja.StatusRemovingOld=以前のバージョンを削除しています（設定とエンジンは保持されます）...
-en.StatusExplorerMenu=Adding Filee to the File Explorer menu...
-ko.StatusExplorerMenu=탐색기 메뉴에 Filee를 추가하는 중...
-zhcn.StatusExplorerMenu=正在将 Filee 添加到资源管理器菜单...
-ja.StatusExplorerMenu=エクスプローラーのメニューにFileeを追加しています...
-en.ExplorerMenuFailed=Windows did not add Filee to the top of the File Explorer menu:%n%n%1%n%nFilee still appears under “Show more options”. You can try again in Filee under Settings → General.
-ko.ExplorerMenuFailed=Windows가 탐색기 기본 메뉴에 Filee를 추가하지 못했어요:%n%n%1%n%nFilee는 “추가 옵션 표시” 안에는 계속 나타나요. Filee의 설정 → 일반에서 다시 시도할 수 있어요.
-zhcn.ExplorerMenuFailed=Windows 未能将 Filee 添加到资源管理器主菜单：%n%n%1%n%nFilee 仍会出现在“显示更多选项”中。你可以在 Filee 的 设置 → 常规 中重试。
-ja.ExplorerMenuFailed=WindowsがエクスプローラーのメニューのトップにFileeを追加できませんでした：%n%n%1%n%nFileeは引き続き「その他のオプションを確認」の中に表示されます。Fileeの「設定」→「一般」から再試行できます。
-en.ReadyEngines=Conversion engines (Filee downloads them when it starts):
-ko.ReadyEngines=변환 엔진 (Filee가 시작하면서 내려받아요):
-zhcn.ReadyEngines=转换引擎（Filee 启动后下载）：
-ja.ReadyEngines=変換エンジン（Fileeの起動時にダウンロードされます）：
-en.FinishedRunning=Filee is installed and running in the notification area of the taskbar.%n%nTo convert files, drag them while holding the trigger key, or right-click them in File Explorer.
-ko.FinishedRunning=Filee가 설치되어 작업 표시줄 알림 영역에서 실행 중이에요.%n%n파일을 변환하려면 지정한 키를 누른 채 파일을 끌거나, 탐색기에서 파일을 우클릭하세요.
-zhcn.FinishedRunning=Filee 已安装，正在任务栏通知区域运行。%n%n要转换文件，请按住触发键拖动文件，或在资源管理器中右键单击文件。
-ja.FinishedRunning=Fileeがインストールされ、タスクバーの通知領域で実行中です。%n%nファイルを変換するには、設定したキーを押しながらファイルをドラッグするか、エクスプローラーでファイルを右クリックしてください。
-en.TaskCli=Add the "filee" command to PATH (convert from the command line)
-ko.TaskCli="filee" 명령어를 PATH에 추가 (명령줄에서 변환)
-zhcn.TaskCli=将 "filee" 命令添加到 PATH（在命令行中转换）
-ja.TaskCli=「filee」コマンドをPATHに追加する（コマンドラインから変換）
-en.FinishedEngines=The conversion engines you picked are downloading in the Filee window.
-ko.FinishedEngines=선택한 변환 엔진은 Filee 창에서 내려받고 있어요.
-zhcn.FinishedEngines=你选择的转换引擎正在 Filee 窗口中下载。
-ja.FinishedEngines=選択した変換エンジンは、Fileeのウィンドウでダウンロード中です。
+en.StatusExplorerMenu=Adding Jhatpat to the File Explorer menu...
+ko.StatusExplorerMenu=탐색기 메뉴에 Jhatpat을 추가하는 중...
+zhcn.StatusExplorerMenu=正在将 Jhatpat 添加到资源管理器菜单...
+ja.StatusExplorerMenu=エクスプローラーのメニューにJhatpatを追加しています...
+en.ExplorerMenuFailed=Windows did not add Jhatpat to the top of the File Explorer menu:%n%n%1%n%nJhatpat still appears under “Show more options”. You can try again in Jhatpat under Settings → General.
+ko.ExplorerMenuFailed=Windows가 탐색기 기본 메뉴에 Jhatpat을 추가하지 못했어요:%n%n%1%n%nJhatpat은 “추가 옵션 표시” 안에는 계속 나타나요. Jhatpat의 설정 → 일반에서 다시 시도할 수 있어요.
+zhcn.ExplorerMenuFailed=Windows 未能将 Jhatpat 添加到资源管理器主菜单：%n%n%1%n%nJhatpat 仍会出现在“显示更多选项”中。你可以在 Jhatpat 的 设置 → 常规 中重试。
+ja.ExplorerMenuFailed=WindowsがエクスプローラーのメニューのトップにJhatpatを追加できませんでした：%n%n%1%n%nJhatpatは引き続き「その他のオプションを確認」の中に表示されます。Jhatpatの「設定」→「一般」から再試行できます。
+en.ReadyEngines=Conversion engines (Jhatpat downloads them when it starts):
+ko.ReadyEngines=변환 엔진 (Jhatpat이 시작하면서 내려받아요):
+zhcn.ReadyEngines=转换引擎（Jhatpat 启动后下载）：
+ja.ReadyEngines=変換エンジン（Jhatpatの起動時にダウンロードされます）：
+en.FinishedRunning=Jhatpat is installed and running in the notification area of the taskbar.%n%nTo convert files, drag them while holding the trigger key, or right-click them in File Explorer.
+ko.FinishedRunning=Jhatpat이 설치되어 작업 표시줄 알림 영역에서 실행 중이에요.%n%n파일을 변환하려면 지정한 키를 누른 채 파일을 끌거나, 탐색기에서 파일을 우클릭하세요.
+zhcn.FinishedRunning=Jhatpat 已安装，正在任务栏通知区域运行。%n%n要转换文件，请按住触发键拖动文件，或在资源管理器中右键单击文件。
+ja.FinishedRunning=Jhatpatがインストールされ、タスクバーの通知領域で実行中です。%n%nファイルを変換するには、設定したキーを押しながらファイルをドラッグするか、エクスプローラーでファイルを右クリックしてください。
+en.TaskCli=Add the "jhatpat" command to PATH (convert from the command line)
+ko.TaskCli="jhatpat" 명령어를 PATH에 추가 (명령줄에서 변환)
+zhcn.TaskCli=将 "jhatpat" 命令添加到 PATH（在命令行中转换）
+ja.TaskCli=「jhatpat」コマンドをPATHに追加する（コマンドラインから変換）
+en.FinishedEngines=The conversion engines you picked are downloading in the Jhatpat window.
+ko.FinishedEngines=선택한 변환 엔진은 Jhatpat 창에서 내려받고 있어요.
+zhcn.FinishedEngines=你选择的转换引擎正在 Jhatpat 窗口中下载。
+ja.FinishedEngines=選択した変換エンジンは、Jhatpatのウィンドウでダウンロード中です。
 
 [Tasks]
 Name: "contextmenu"; Description: "{cm:TaskContextMenu}"; GroupDescription: "{cm:GroupOptions}"; Check: IsFreshInstall

@@ -24,7 +24,7 @@ The release artifacts are generated under `build/dist/` via `scripts/package-ubu
 > [!IMPORTANT]
 > **Active Verification Scope**:
 > - **Linux x86_64 (Ubuntu 24.04 LTS / X11)** was **actively tested** in an isolated clean environment (`/tmp/jhatpat_release_validation`).
-> - **Windows 10/11** and **macOS (Sonoma/Sequoia)** were **statically audited** via installer definitions (`installer/Filee.iss`, `installer/macos/Info.plist`, PowerShell build scripts) but were not executed on physical Windows/macOS hardware in this session.
+> - **Windows 10/11** and **macOS (Sonoma/Sequoia)** were **statically audited** via installer definitions (`installer/Jhatpat.iss`, `installer/macos/Info.plist`, PowerShell build scripts) but were not executed on physical Windows/macOS hardware in this session.
 
 ---
 
@@ -143,7 +143,7 @@ To uninstall:
 
 ### 4.2. Windows (x64) — Specification & Audit Notes
 
-- **Installer Mechanism**: Built via Inno Setup 7 (`installer/Filee.iss`).
+- **Installer Mechanism**: Built via Inno Setup 7 (`installer/Jhatpat.iss`).
   - Output binary: `Jhatpat-1.0.0-win-Setup.exe`.
   - Installs to: `C:\Program Files\Jhatpat`.
   - Windows 11 Sparse Package: Registers `Filee.ExplorerMenu` package for top-level Windows 11 context menu integration.

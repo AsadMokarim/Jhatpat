@@ -1,8 +1,8 @@
 # Builds the Windows installer and publishes it to GitHub Releases.
 # Trigger: push a tag like v1.0.0  (git tag v1.0.0 && git push origin v1.0.0)
 #
-# Output (build/build-installer.ps1): Filee-<version>-win-Setup.exe (Inno Setup, installer/Filee.iss),
-# Filee-<version>-win-Portable.zip and Filee-<version>-SHA256SUMS.txt.
+# Output (build/build-installer.ps1): Jhatpat-<version>-win-Setup.exe (Inno Setup, installer/Jhatpat.iss),
+# Jhatpat-<version>-win-Portable.zip and Jhatpat-<version>-SHA256SUMS.txt.
 # Release notes: the version's section of CHANGELOG.md (what changed, for people using Filee), then the list GitHub
 # generates from the pull requests merged since the previous release, grouped by label (.github/release.yml), with
 # their authors and new contributors.
@@ -99,8 +99,45 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           $version = '${{ steps.version.outputs.value }}'
-          $jhatpatFiles = @(Get-ChildItem Releases -File -Filter "Jhatpat-$version-*" | ForEach-Object FullName)
-          $files = if ($jhatpatFiles.Count -gt 0) { $jhatpatFiles } else { @(Get-ChildItem Releases -File -Filter "Filee-$version-*" | ForEach-Object FullName) }
+
+          # Inspect all files gathered in Releases/
+          $allFiles = @(Get-ChildItem Releases -File)
+
+          # Safeguard 1: Disallow any asset containing legacy "Filee" branding
+          $fileeAssets = @($allFiles | Where-Object { $_.Name -like "*Filee*" })
+          if ($fileeAssets.Count -gt 0) {
+            $badNames = ($fileeAssets | ForEach-Object Name) -join ", "
+            throw "Security/Branding Violation: Detected legacy Filee asset(s) in release payload: $badNames"
+          }
+
+          # Safeguard 2: Gather verified Jhatpat assets for this version
+          # Matches PascalCase (Jhatpat-$version-*) and lowercase (jhatpat_$version* / jhatpat-$version*)
+          $releaseAssets = @($allFiles | Where-Object {
+            ($_.Name -like "Jhatpat-$version-*" -or $_.Name -like "jhatpat_$version*" -or $_.Name -like "jhatpat-$version*") -and
+            $_.Extension -in @('.exe', '.zip', '.tar.gz', '.deb', '.txt')
+          })
+
+          if ($releaseAssets.Count -eq 0) {
+            throw "Release failed: No Jhatpat assets found matching version '$version' in Releases directory."
+          }
+
+          # Safeguard 3: Require essential Windows release packages
+          $winSetup = $releaseAssets | Where-Object { $_.Name -eq "Jhatpat-$version-win-Setup.exe" }
+          if (-not $winSetup) {
+            throw "Release failed: Required Windows installer 'Jhatpat-$version-win-Setup.exe' is missing."
+          }
+          $winZip = $releaseAssets | Where-Object { $_.Name -eq "Jhatpat-$version-win-Portable.zip" }
+          if (-not $winZip) {
+            throw "Release failed: Required Windows portable archive 'Jhatpat-$version-win-Portable.zip' is missing."
+          }
+          $winSums = $releaseAssets | Where-Object { $_.Name -eq "Jhatpat-$version-SHA256SUMS.txt" }
+          if (-not $winSums) {
+            throw "Release failed: Required checksum file 'Jhatpat-$version-SHA256SUMS.txt' is missing."
+          }
+
+          $files = @($releaseAssets | ForEach-Object FullName)
+          Write-Host "Publishing $($files.Count) verified Jhatpat assets:"
+          $files | ForEach-Object { Write-Host "  - $(Split-Path $_ -Leaf)" }
           # "## 1.4.0" up to the next "## " heading of CHANGELOG.md, without the heading itself.
           $changes = ''
           $changelog = Get-Content CHANGELOG.md -Raw -Encoding utf8
