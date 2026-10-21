@@ -142,6 +142,55 @@ public sealed partial class RadialViewModel(UserDataStore store, ILocalizer loc,
                 }
             }
         }
+        else if (formats.Any(f => f.Id == "pdf"))
+        {
+            if (files.Count > 1 && !presets.Any(p => p.Id is "merge-pdf" or "tool-pdf-merge"))
+            {
+                var mergePreset = store.FindPreset("merge-pdf")
+                    ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "merge-pdf");
+                if (mergePreset is not null)
+                {
+                    if (presets.Count >= ToolbarProfile.MaxSlices)
+                        presets[presets.Count - 1] = mergePreset;
+                    else
+                        presets.Add(mergePreset);
+                }
+            }
+            else if (files.Count == 1 && !presets.Any(p => p.Id == "tool-pdf-organize") && presets.Count < ToolbarProfile.MaxSlices)
+            {
+                var orgPreset = store.FindPreset("tool-pdf-organize")
+                    ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "tool-pdf-organize");
+                if (orgPreset is not null)
+                    presets.Add(orgPreset);
+            }
+        }
+        else if (formats.Any(f => f.Category == Filee.Core.Formats.FormatCategory.Video))
+        {
+            if (!presets.Any(p => p.Id == "tool-video-trim") && presets.Count < ToolbarProfile.MaxSlices)
+            {
+                var trimPreset = store.FindPreset("tool-video-trim")
+                    ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "tool-video-trim");
+                if (trimPreset is not null)
+                    presets.Add(trimPreset);
+            }
+            if (!presets.Any(p => p.Id == "tool-video-tools") && presets.Count < ToolbarProfile.MaxSlices)
+            {
+                var toolsPreset = store.FindPreset("tool-video-tools")
+                    ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "tool-video-tools");
+                if (toolsPreset is not null)
+                    presets.Add(toolsPreset);
+            }
+        }
+        else if (formats.Any(f => f.Category == Filee.Core.Formats.FormatCategory.Audio))
+        {
+            if (!presets.Any(p => p.Id == "tool-audio-tools") && presets.Count < ToolbarProfile.MaxSlices)
+            {
+                var audioPreset = store.FindPreset("tool-audio-tools")
+                    ?? BuiltInData.CreatePresets().FirstOrDefault(p => p.Id == "tool-audio-tools");
+                if (audioPreset is not null)
+                    presets.Add(audioPreset);
+            }
+        }
 
         Presets = presets;
 

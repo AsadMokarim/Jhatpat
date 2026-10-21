@@ -44,6 +44,30 @@ public sealed class WindowService(ILocalizer loc, IServiceProvider services, Mem
 
     internal BatchResizeWindow? BatchResizeWindow => _batchResize;
 
+    private PdfMergeWindow? _pdfMerge;
+    internal PdfMergeWindow? PdfMergeWindow => _pdfMerge;
+
+    private PdfOrganizeWindow? _pdfOrganize;
+    internal PdfOrganizeWindow? PdfOrganizeWindow => _pdfOrganize;
+
+    private EditPhotoWindow? _editPhoto;
+    internal EditPhotoWindow? EditPhotoWindow => _editPhoto;
+
+    private CreateCollageWindow? _collageWindow;
+    internal CreateCollageWindow? CreateCollageWindow => _collageWindow;
+
+    private AnnotateWindow? _annotateWindow;
+    internal AnnotateWindow? AnnotateWindow => _annotateWindow;
+
+    private VideoTrimWindow? _videoTrimWindow;
+    internal VideoTrimWindow? VideoTrimWindow => _videoTrimWindow;
+
+    private VideoToolsWindow? _videoToolsWindow;
+    internal VideoToolsWindow? VideoToolsWindow => _videoToolsWindow;
+
+    private AudioToolsWindow? _audioToolsWindow;
+    internal AudioToolsWindow? AudioToolsWindow => _audioToolsWindow;
+
     public MainWindow? Main => _main;
 
     /// <summary>Opens the interactive background framing overlay for the files.</summary>
@@ -103,6 +127,170 @@ public sealed class WindowService(ILocalizer loc, IServiceProvider services, Mem
                 _batchResize = null;
         };
         _batchResize = win;
+        win.Show();
+        win.Activate();
+    }
+
+    /// <summary>Opens the Merge PDFs window for combining multiple PDF files.</summary>
+    public void ShowPdfMergeWindow(IReadOnlyList<string> files, Preset? preset = null, PixelPoint? near = null)
+    {
+        _pdfMerge?.Close();
+        var store = services.GetRequiredService<UserDataStore>();
+        var log = services.GetService<ILogger<PdfMergeViewModel>>();
+        var vm = new PdfMergeViewModel(files, preset, loc, store, log);
+        var win = new PdfMergeWindow { DataContext = vm };
+        win.PositionOnScreen(near);
+        win.Closed += (_, _) =>
+        {
+            if (_pdfMerge == win)
+                _pdfMerge = null;
+        };
+        _pdfMerge = win;
+        win.Show();
+        win.Activate();
+    }
+
+    /// <summary>Opens the Organise PDF Pages window for reordering, rotating, and deleting pages.</summary>
+    public void ShowPdfOrganizeWindow(string file, Preset? preset = null, PixelPoint? near = null)
+    {
+        if (string.IsNullOrEmpty(file) || !File.Exists(file))
+            return;
+        _pdfOrganize?.Close();
+        var store = services.GetRequiredService<UserDataStore>();
+        var log = services.GetService<ILogger<PdfOrganizeViewModel>>();
+        var vm = new PdfOrganizeViewModel(file, preset, loc, store, log);
+        var win = new PdfOrganizeWindow { DataContext = vm };
+        win.PositionOnScreen(near);
+        win.Closed += (_, _) =>
+        {
+            if (_pdfOrganize == win)
+                _pdfOrganize = null;
+        };
+        _pdfOrganize = win;
+        win.Show();
+        win.Activate();
+    }
+
+    /// <summary>Opens the interactive photo editing window with Light, Color, and Detail adjustments.</summary>
+    public void ShowEditPhotoWindow(string file, Preset? preset = null, PixelPoint? near = null)
+    {
+        if (string.IsNullOrEmpty(file) || !File.Exists(file))
+            return;
+        _editPhoto?.Close();
+        var store = services.GetRequiredService<UserDataStore>();
+        var log = services.GetService<ILogger<EditPhotoViewModel>>();
+        var vm = new EditPhotoViewModel(file, preset, loc, store, log);
+        var win = new EditPhotoWindow { DataContext = vm };
+        win.PositionOnScreen(near);
+        win.Closed += (_, _) =>
+        {
+            if (_editPhoto == win)
+                _editPhoto = null;
+        };
+        _editPhoto = win;
+        win.Show();
+        win.Activate();
+    }
+
+    /// <summary>Opens the Create Collage window for arranging photos into a grid, strip, or featured layout.</summary>
+    public void ShowCollageWindow(IReadOnlyList<string> files, Preset? preset = null, PixelPoint? near = null)
+    {
+        _collageWindow?.Close();
+        var store = services.GetRequiredService<UserDataStore>();
+        var log = services.GetService<ILogger<CreateCollageViewModel>>();
+        var vm = new CreateCollageViewModel(files, preset, loc, store, log);
+        var win = new CreateCollageWindow { DataContext = vm };
+        win.PositionOnScreen(near);
+        win.Closed += (_, _) =>
+        {
+            if (_collageWindow == win)
+                _collageWindow = null;
+        };
+        _collageWindow = win;
+        win.Show();
+        win.Activate();
+    }
+
+    /// <summary>Opens the image annotation window for drawing shapes, arrows, highlights, badges, and redaction.</summary>
+    public void ShowAnnotateWindow(string file, Preset? preset = null, PixelPoint? near = null)
+    {
+        if (string.IsNullOrEmpty(file) || !File.Exists(file))
+            return;
+        _annotateWindow?.Close();
+        var store = services.GetRequiredService<UserDataStore>();
+        var log = services.GetService<ILogger<AnnotateViewModel>>();
+        var vm = new AnnotateViewModel(file, preset, loc, store, log);
+        var win = new AnnotateWindow { DataContext = vm };
+        win.PositionOnScreen(near);
+        win.Closed += (_, _) =>
+        {
+            if (_annotateWindow == win)
+                _annotateWindow = null;
+        };
+        _annotateWindow = win;
+        win.Show();
+        win.Activate();
+    }
+
+    /// <summary>Opens the interactive video trim window with filmstrip timeline and draggable handles.</summary>
+    public void ShowVideoTrimWindow(string file, Preset? preset = null, PixelPoint? near = null)
+    {
+        if (string.IsNullOrEmpty(file) || !File.Exists(file))
+            return;
+        _videoTrimWindow?.Close();
+        var store = services.GetRequiredService<UserDataStore>();
+        var log = services.GetService<ILogger<VideoTrimViewModel>>();
+        var vm = new VideoTrimViewModel(file, preset, loc, store, log);
+        var win = new VideoTrimWindow { DataContext = vm };
+        win.PositionOnScreen(near);
+        win.Closed += (_, _) =>
+        {
+            if (_videoTrimWindow == win)
+                _videoTrimWindow = null;
+        };
+        _videoTrimWindow = win;
+        win.Show();
+        win.Activate();
+    }
+
+    /// <summary>Opens the video tools suite window for crop, speed, join, frame export, and splitting.</summary>
+    public void ShowVideoToolsWindow(IReadOnlyList<string> files, Preset? preset = null, PixelPoint? near = null)
+    {
+        if (files.Count == 0)
+            return;
+        _videoToolsWindow?.Close();
+        var store = services.GetRequiredService<UserDataStore>();
+        var log = services.GetService<ILogger<VideoToolsViewModel>>();
+        var vm = new VideoToolsViewModel(files, preset, loc, store, log);
+        var win = new VideoToolsWindow { DataContext = vm };
+        win.PositionOnScreen(near);
+        win.Closed += (_, _) =>
+        {
+            if (_videoToolsWindow == win)
+                _videoToolsWindow = null;
+        };
+        _videoToolsWindow = win;
+        win.Show();
+        win.Activate();
+    }
+
+    /// <summary>Opens the audio tools window for volume normalization (EBU R128) and audio trimming.</summary>
+    public void ShowAudioToolsWindow(string file, Preset? preset = null, PixelPoint? near = null)
+    {
+        if (string.IsNullOrEmpty(file) || !File.Exists(file))
+            return;
+        _audioToolsWindow?.Close();
+        var store = services.GetRequiredService<UserDataStore>();
+        var log = services.GetService<ILogger<AudioToolsViewModel>>();
+        var vm = new AudioToolsViewModel(file, preset, loc, store, log);
+        var win = new AudioToolsWindow { DataContext = vm };
+        win.PositionOnScreen(near);
+        win.Closed += (_, _) =>
+        {
+            if (_audioToolsWindow == win)
+                _audioToolsWindow = null;
+        };
+        _audioToolsWindow = win;
         win.Show();
         win.Activate();
     }
