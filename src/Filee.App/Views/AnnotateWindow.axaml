@@ -1,0 +1,205 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Filee.App.ViewModels"
+        x:Class="Filee.App.Views.AnnotateWindow"
+        x:DataType="vm:AnnotateViewModel"
+        Title="Annotate Image"
+        Icon="avares://Filee/Assets/Icons/jhatpat.ico"
+        Width="1120" Height="760" MinWidth="900" MinHeight="600"
+        WindowDecorations="None"
+        Background="Transparent"
+        TransparencyLevelHint="Transparent"
+        Topmost="True"
+        CanResize="True">
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Escape" Command="{Binding CloseCommand}" />
+    <KeyBinding Gesture="Ctrl+Z" Command="{Binding UndoCommand}" />
+    <KeyBinding Gesture="Ctrl+Y" Command="{Binding RedoCommand}" />
+  </Window.KeyBindings>
+
+  <Window.Styles>
+    <Style Selector="Button.tool-btn">
+      <Setter Property="Padding" Value="9,6" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SubtleBorderBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.tool-btn:pointerover">
+      <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
+    </Style>
+    <Style Selector="Button.tool-btn.active">
+      <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.color-dot">
+      <Setter Property="Width" Value="22" />
+      <Setter Property="Height" Value="22" />
+      <Setter Property="CornerRadius" Value="11" />
+      <Setter Property="BorderThickness" Value="2" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SubtleBorderBrush}" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.color-dot.active">
+      <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+    </Style>
+  </Window.Styles>
+
+  <Border Margin="16" CornerRadius="{DynamicResource SoftRadius}"
+          Background="{DynamicResource GlassPanelBrush}"
+          BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="1"
+          ClipToBounds="True"
+          BoxShadow="{DynamicResource GlassShadow}">
+    <DockPanel>
+      <!-- Top header bar -->
+      <Border DockPanel.Dock="Top" Height="50" Padding="18,0" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,0,0,1"
+              Background="{DynamicResource GlassHeaderBrush}">
+        <DockPanel VerticalAlignment="Center">
+          <Button DockPanel.Dock="Right" Classes="icon" Command="{Binding CloseCommand}"
+                  ToolTip.Tip="Close" Margin="4,0,0,0">
+            <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Close}" Foreground="{DynamicResource TextSecondaryBrush}" />
+          </Button>
+
+          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="8" Width="30" Height="30">
+              <PathIcon Width="16" Height="16" Data="{StaticResource Icon.Pencil}" Foreground="{DynamicResource AccentBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <TextBlock Text="Annotate Image" FontWeight="SemiBold" FontSize="15" Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center" />
+
+            <Border Background="{DynamicResource SurfaceAltBrush}" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+              <TextBlock Text="{Binding FileName}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" FontWeight="SemiBold" MaxWidth="220" TextTrimming="CharacterEllipsis" />
+            </Border>
+
+            <Border Background="{DynamicResource AccentSoftBrush}" CornerRadius="10" Padding="8,2" VerticalAlignment="Center">
+              <TextBlock Text="{Binding ResolutionText}" FontSize="11" Foreground="{DynamicResource TextPrimaryBrush}" FontWeight="SemiBold" />
+            </Border>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- Annotation Tools Toolbar -->
+      <Border DockPanel.Dock="Top" Padding="14,8" Background="{DynamicResource SurfaceAltBrush}" BorderBrush="{DynamicResource SubtleBorderBrush}" BorderThickness="0,0,0,1">
+        <DockPanel VerticalAlignment="Center">
+          <!-- Undo / Redo / Clear on Right -->
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Button Classes="tool-btn" Command="{Binding UndoCommand}" IsEnabled="{Binding CanUndo}" ToolTip.Tip="Undo (Ctrl+Z)">
+              <PathIcon Width="11" Height="11" Data="{StaticResource Icon.Refresh}" Foreground="{DynamicResource TextPrimaryBrush}" />
+            </Button>
+            <Button Classes="tool-btn" Command="{Binding RedoCommand}" IsEnabled="{Binding CanRedo}" ToolTip.Tip="Redo (Ctrl+Y)">
+              <PathIcon Width="11" Height="11" Data="{StaticResource Icon.ChevronRight}" Foreground="{DynamicResource TextPrimaryBrush}" />
+            </Button>
+            <Button Classes="tool-btn" Command="{Binding ClearAllCommand}" ToolTip.Tip="Clear All Annotations">
+              <PathIcon Width="11" Height="11" Data="{StaticResource Icon.Delete}" Foreground="{DynamicResource TextSecondaryBrush}" />
+            </Button>
+          </StackPanel>
+
+          <!-- Tools and properties on Left -->
+          <WrapPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <!-- Tool selection -->
+            <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,0,12,0">
+              <Button Classes="tool-btn" Classes.active="{Binding IsToolPen}" Command="{Binding SetToolCommand}" CommandParameter="Pen" ToolTip.Tip="Freehand Pen">
+                <TextBlock Text="Pen" />
+              </Button>
+              <Button Classes="tool-btn" Classes.active="{Binding IsToolArrow}" Command="{Binding SetToolCommand}" CommandParameter="Arrow" ToolTip.Tip="Arrow Pointer">
+                <TextBlock Text="Arrow" />
+              </Button>
+              <Button Classes="tool-btn" Classes.active="{Binding IsToolRect}" Command="{Binding SetToolCommand}" CommandParameter="Rect" ToolTip.Tip="Rectangle Box">
+                <TextBlock Text="Box" />
+              </Button>
+              <Button Classes="tool-btn" Classes.active="{Binding IsToolEllipse}" Command="{Binding SetToolCommand}" CommandParameter="Ellipse" ToolTip.Tip="Ellipse / Circle">
+                <TextBlock Text="Circle" />
+              </Button>
+              <Button Classes="tool-btn" Classes.active="{Binding IsToolLine}" Command="{Binding SetToolCommand}" CommandParameter="Line" ToolTip.Tip="Straight Line">
+                <TextBlock Text="Line" />
+              </Button>
+              <Button Classes="tool-btn" Classes.active="{Binding IsToolHighlight}" Command="{Binding SetToolCommand}" CommandParameter="Highlight" ToolTip.Tip="Highlighter Marker">
+                <TextBlock Text="Highlight" />
+              </Button>
+              <Button Classes="tool-btn" Classes.active="{Binding IsToolRedact}" Command="{Binding SetToolCommand}" CommandParameter="Redact" ToolTip.Tip="Redact / Obscure Box">
+                <TextBlock Text="Redact" />
+              </Button>
+              <Button Classes="tool-btn" Classes.active="{Binding IsToolBadge}" Command="{Binding SetToolCommand}" CommandParameter="Badge" ToolTip.Tip="Numbered Callout">
+                <TextBlock Text="1,2,3" />
+              </Button>
+              <Button Classes="tool-btn" Classes.active="{Binding IsToolText}" Command="{Binding SetToolCommand}" CommandParameter="Text" ToolTip.Tip="Text Note">
+                <TextBlock Text="Text" />
+              </Button>
+            </StackPanel>
+
+            <!-- Color Palette -->
+            <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" Margin="0,0,12,0">
+              <Button Classes="color-dot" Classes.active="{Binding IsColorRed}" Command="{Binding SetColorCommand}" CommandParameter="Red" Background="#EF4444" ToolTip.Tip="Red" />
+              <Button Classes="color-dot" Classes.active="{Binding IsColorOrange}" Command="{Binding SetColorCommand}" CommandParameter="Orange" Background="#F97316" ToolTip.Tip="Orange" />
+              <Button Classes="color-dot" Classes.active="{Binding IsColorYellow}" Command="{Binding SetColorCommand}" CommandParameter="Yellow" Background="#EAB308" ToolTip.Tip="Yellow" />
+              <Button Classes="color-dot" Classes.active="{Binding IsColorGreen}" Command="{Binding SetColorCommand}" CommandParameter="Green" Background="#22C55E" ToolTip.Tip="Green" />
+              <Button Classes="color-dot" Classes.active="{Binding IsColorBlue}" Command="{Binding SetColorCommand}" CommandParameter="Blue" Background="#3B82F6" ToolTip.Tip="Blue" />
+              <Button Classes="color-dot" Classes.active="{Binding IsColorPurple}" Command="{Binding SetColorCommand}" CommandParameter="Purple" Background="#A855F7" ToolTip.Tip="Purple" />
+              <Button Classes="color-dot" Classes.active="{Binding IsColorWhite}" Command="{Binding SetColorCommand}" CommandParameter="White" Background="White" ToolTip.Tip="White" />
+              <Button Classes="color-dot" Classes.active="{Binding IsColorBlack}" Command="{Binding SetColorCommand}" CommandParameter="Black" Background="Black" ToolTip.Tip="Black" />
+            </StackPanel>
+
+            <!-- Stroke width chips -->
+            <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center" Margin="0,0,12,0">
+              <Button Classes="tool-btn" Command="{Binding SetStrokeCommand}" CommandParameter="2" Padding="7,4">
+                <TextBlock Text="Thin" FontSize="11" />
+              </Button>
+              <Button Classes="tool-btn" Command="{Binding SetStrokeCommand}" CommandParameter="4" Padding="7,4">
+                <TextBlock Text="Medium" FontSize="11" />
+              </Button>
+              <Button Classes="tool-btn" Command="{Binding SetStrokeCommand}" CommandParameter="8" Padding="7,4">
+                <TextBlock Text="Thick" FontSize="11" />
+              </Button>
+            </StackPanel>
+
+            <!-- Text input field when Text tool active -->
+            <TextBox Text="{Binding TextInput}" Width="160" Height="28" FontSize="12" Padding="6,2" VerticalAlignment="Center"
+                     PlaceholderText="Enter text note..." IsVisible="{Binding IsToolText}" />
+          </WrapPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- Bottom action bar -->
+      <Border DockPanel.Dock="Bottom" Padding="18,12" BorderBrush="{DynamicResource GlassBorderBrush}" BorderThickness="0,1,0,0"
+              Background="{DynamicResource GlassHeaderBrush}">
+        <DockPanel VerticalAlignment="Center">
+          <TextBlock DockPanel.Dock="Left" Text="{Binding StatusMessage}" FontSize="12"
+                     Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
+
+          <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+            <Button Classes="tool-btn" Command="{Binding OpenOutputFolderCommand}" IsVisible="{Binding IsFinished}"
+                    Background="{DynamicResource SurfaceAltBrush}" Foreground="{DynamicResource TextPrimaryBrush}">
+              <StackPanel Orientation="Horizontal" Spacing="6">
+                <PathIcon Width="12" Height="12" Data="{StaticResource Icon.Folder}" Foreground="{DynamicResource TextPrimaryBrush}" />
+                <TextBlock Text="Open Folder" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+
+            <Button Classes="tool-btn" Command="{Binding SaveAnnotatedCopyCommand}" IsEnabled="{Binding !IsSaving}"
+                    Background="{DynamicResource AccentBrush}" Foreground="{DynamicResource OnAccentBrush}" FontWeight="SemiBold" Padding="16,8">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <ProgressBar IsIndeterminate="True" Width="14" Height="14" IsVisible="{Binding IsSaving}" />
+                <PathIcon Width="13" Height="13" Data="{StaticResource Icon.Check}" IsVisible="{Binding !IsSaving}" Foreground="{DynamicResource OnAccentBrush}" />
+                <TextBlock Text="Save Annotated Copy" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+        </DockPanel>
+      </Border>
+
+      <!-- Main Canvas Drawing Area -->
+      <Border Background="#111116" Margin="14" CornerRadius="10" ClipToBounds="True">
+        <Grid x:Name="CanvasContainer" Background="Transparent">
+          <Image x:Name="CanvasImage" Source="{Binding PreviewBitmap}" Stretch="Uniform"
+                 HorizontalAlignment="Center" VerticalAlignment="Center"
+                 RenderOptions.BitmapInterpolationMode="HighQuality" />
+        </Grid>
+      </Border>
+    </DockPanel>
+  </Border>
+</Window>
