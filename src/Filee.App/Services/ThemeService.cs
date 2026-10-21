@@ -16,7 +16,7 @@ public sealed class ThemeService(IPlatformServices platform)
 {
     /// <summary>Accent swatches offered in the Theme page.</summary>
     public static readonly IReadOnlyList<string> Swatches =
-        ["#FA4616", "#FF7418", "#FF3D32", "#FFB31A", "#7F77DD", "#1D9E75", "#378ADD", "#639922"];
+        ["#3B82F6", "#6366F1", "#8B5CF6", "#7F77DD", "#EC4899", "#EF4444", "#FA4616", "#F59E0B", "#10B981", "#14B8A6", "#64748B"];
 
     /// <summary>Embedded Noto fonts (see build/fetch-fonts.ps1). Missing files fall back to system fonts.</summary>
     private const string Latin = "fonts:Filee#Noto Sans";
@@ -60,13 +60,15 @@ public sealed class ThemeService(IPlatformServices platform)
         };
 
         // Accent colour + derived shades. Fluent controls read the System* keys.
-        var accent = Color.TryParse(theme.Accent, out var parsed) ? parsed : Color.Parse("#FF7418");
+        var accent = Color.TryParse(theme.Accent, out var parsed) ? parsed : Color.Parse("#3B82F6");
         res["AccentColor"] = accent;
         res["AccentBrush"] = new SolidColorBrush(accent);
         res["AccentSoftBrush"] = new SolidColorBrush(accent, 0.18);
         res["AccentFaintBrush"] = new SolidColorBrush(accent, 0.09);
         res["AccentStrongBrush"] = new SolidColorBrush(Shade(accent, -0.25));
         res["OnAccentBrush"] = new SolidColorBrush(Luminance(accent) > 0.6 ? Color.Parse("#1F1E1D") : Colors.White);
+        var glow = Color.FromArgb(0x35, accent.R, accent.G, accent.B);
+        res["GlassGlowShadow"] = new BoxShadows(new BoxShadow { OffsetX = 0, OffsetY = 6, Blur = 24, Spread = 0, Color = glow });
         res["SystemAccentColor"] = accent;
         res["SystemAccentColorLight1"] = Shade(accent, 0.15);
         res["SystemAccentColorLight2"] = Shade(accent, 0.30);

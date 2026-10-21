@@ -23,7 +23,7 @@ public sealed partial class ThemePageViewModel : ObservableObject
         var theme = store.Settings.Theme;
         Modes = Enum.GetValues<ThemeMode>().Select(m => new Choice<ThemeMode>(m, loc[$"theme.mode.{m}"])).ToList();
         Mode = Modes.First(m => m.Value == theme.Mode);
-        Accent = Color.TryParse(theme.Accent, out var c) ? c : Colors.MediumPurple;
+        Accent = Color.TryParse(theme.Accent, out var c) ? c : Color.Parse("#3B82F6");
         AccentHex = $"#{Accent.R:X2}{Accent.G:X2}{Accent.B:X2}";
         CornerRadius = theme.CornerRadius;
         ReduceMotion = theme.ReduceMotion ?? platform.PrefersReducedMotion;

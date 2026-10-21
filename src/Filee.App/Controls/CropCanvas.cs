@@ -73,12 +73,21 @@ public sealed class CropCanvas : Control
     private static readonly IPen HandlePen = new Pen(new SolidColorBrush(Color.Parse("#FA4616")), 4.0, lineCap: PenLineCap.Round);
     private static readonly IPen HandleShadowPen = new Pen(new SolidColorBrush(Color.FromArgb(120, 0, 0, 0)), 5.5, lineCap: PenLineCap.Round);
 
+    public static readonly StyledProperty<IBrush?> AccentBrushProperty =
+        AvaloniaProperty.Register<CropCanvas, IBrush?>(nameof(AccentBrush));
+
+    public IBrush? AccentBrush
+    {
+        get => GetValue(AccentBrushProperty);
+        set => SetValue(AccentBrushProperty, value);
+    }
+
     private static double SafeClamp(double val, double min, double max) =>
         min > max ? Math.Clamp(val, max, min) : Math.Clamp(val, min, max);
 
     static CropCanvas()
     {
-        AffectsRender<CropCanvas>(SourceImageProperty, NormalizedCropRectProperty, AspectRatioProperty);
+        AffectsRender<CropCanvas>(SourceImageProperty, NormalizedCropRectProperty, AspectRatioProperty, AccentBrushProperty);
     }
 
     public void ResetCrop()
@@ -223,7 +232,7 @@ public sealed class CropCanvas : Control
         }
 
         // 4. Draw Crop Rectangle Border
-        context.DrawRectangle(null, CropBorderPen, crop);
+        context.DrawRectangle(null, ResolveBorderPen(), crop);
 
         // 5. Corner brackets and edge bars
         DrawCornerBracket(context, crop.TopLeft, 1, 1);
@@ -237,6 +246,16 @@ public sealed class CropCanvas : Control
         DrawEdgeBar(context, new Point(crop.Right, crop.Center.Y), isHorizontal: false);
     }
 
+    private IPen ResolveHandlePen() =>
+        AccentBrush is not null
+            ? new Pen(AccentBrush, 4.0, lineCap: PenLineCap.Round)
+            : HandlePen;
+
+    private IPen ResolveBorderPen() =>
+        AccentBrush is not null
+            ? new Pen(AccentBrush, 1.5)
+            : CropBorderPen;
+
     private void DrawCornerBracket(DrawingContext context, Point corner, int dirX, int dirY)
     {
         const double length = 18;
@@ -247,9 +266,10 @@ public sealed class CropCanvas : Control
         context.DrawLine(HandleShadowPen, new Point(corner.X - dirX * 0.5, corner.Y), pHoriz);
         context.DrawLine(HandleShadowPen, new Point(corner.X, corner.Y - dirY * 0.5), pVert);
 
-        // Crisp white bracket
-        context.DrawLine(HandlePen, corner, pHoriz);
-        context.DrawLine(HandlePen, corner, pVert);
+        // Dynamic accent bracket
+        var pen = ResolveHandlePen();
+        context.DrawLine(pen, corner, pHoriz);
+        context.DrawLine(pen, corner, pVert);
     }
 
     private void DrawEdgeBar(DrawingContext context, Point center, bool isHorizontal)
@@ -268,7 +288,7 @@ public sealed class CropCanvas : Control
         }
 
         context.DrawLine(HandleShadowPen, p1, p2);
-        context.DrawLine(HandlePen, p1, p2);
+        context.DrawLine(ResolveHandlePen(), p1, p2);
     }
 
     private CropHandle HitTestHandle(Point pt, Rect crop, Rect imgBounds)
