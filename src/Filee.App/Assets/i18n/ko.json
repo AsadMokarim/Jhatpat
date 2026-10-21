@@ -165,6 +165,7 @@
   "profile.models": "3D 모델",
   "profile.geo": "지리 정보 (GIS)",
   "profile.mixed": "혼합 파일",
+  "preset.tool": "대화형 도구",
   "preset.crop": "자르기",
   "crop.save": "자르기 및 저장",
   "crop.reset": "초기화",

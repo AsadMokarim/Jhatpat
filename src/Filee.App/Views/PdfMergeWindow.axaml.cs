@@ -47,14 +47,24 @@ public partial class PdfMergeWindow : Window
             {
                 var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
                 {
-                    Title = "Select PDF Documents",
+                    Title = "Select Documents and Images to Merge",
                     AllowMultiple = true,
                     FileTypeFilter =
                     [
+                        new FilePickerFileType("PDF & Image Files")
+                        {
+                            Patterns = ["*.pdf", "*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp", "*.tiff", "*.tif", "*.gif", "*.avif", "*.heic", "*.ico", "*.svg"],
+                            MimeTypes = ["application/pdf", "image/*"]
+                        },
                         new FilePickerFileType("PDF Documents (*.pdf)")
                         {
                             Patterns = ["*.pdf"],
                             MimeTypes = ["application/pdf"]
+                        },
+                        new FilePickerFileType("Image Files")
+                        {
+                            Patterns = ["*.png", "*.jpg", "*.jpeg", "*.webp", "*.bmp", "*.tiff", "*.tif", "*.gif", "*.avif", "*.heic", "*.ico", "*.svg"],
+                            MimeTypes = ["image/*"]
                         }
                     ]
                 });

@@ -24,7 +24,8 @@ public sealed partial class PresetListItem(Preset preset, ILocalizer loc) : Obse
     }
 
     private static string TargetLabel(Preset p, ILocalizer l) =>
-        p.TargetFormat == BuiltInData.SameAsSource ? l["presets.same_as_source"]
+        p.IsTool ? l["preset.tool"]
+        : p.TargetFormat == BuiltInData.SameAsSource ? l["presets.same_as_source"]
         : "→ " + (FormatLabels.NameOf(l, p.TargetFormat) ?? p.TargetFormat);
 }
 
@@ -43,8 +44,8 @@ public sealed partial class PresetsPageViewModel : ObservableObject, IFitsWindow
         _loc = loc;
         _windows = windows;
         VisiblePresets = new FilteredList<PresetListItem>(Presets, p => [p.Name, p.Target, p.Preset.TargetFormat]);
-        // Groups and tools convert nothing: they live on the donut only (Settings → Toolbar).
-        foreach (var preset in store.Presets.Where(p => !p.IsGroup && !p.IsTool))
+        // Groups fan out subpresets on the donut; tools and conversions are listed here.
+        foreach (var preset in store.Presets.Where(p => !p.IsGroup))
             Presets.Add(new PresetListItem(preset, loc));
         SelectedPreset = Presets.FirstOrDefault();
     }

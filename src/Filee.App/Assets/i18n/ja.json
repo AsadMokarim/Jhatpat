@@ -165,6 +165,7 @@
   "profile.models": "3Dモデル",
   "profile.geo": "地理空間データ",
   "profile.mixed": "複数形式のファイル",
+  "preset.tool": "インタラクティブツール",
   "preset.crop": "トリミング",
   "crop.save": "トリミングして保存",
   "crop.reset": "リセット",

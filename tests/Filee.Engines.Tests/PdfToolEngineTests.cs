@@ -2,6 +2,7 @@
 
 using Filee.Engines.Pdf;
 using PdfSharp.Pdf.IO;
+using SkiaSharp;
 
 namespace Filee.Engines.Tests;
 
@@ -49,6 +50,47 @@ public class PdfToolEngineTests(EngineFixture fx) : IClassFixture<EngineFixture>
 
         using var doc = PdfReader.Open(mergedPath, PdfDocumentOpenMode.Import);
         Assert.Equal(5, doc.PageCount);
+    }
+
+    [Fact]
+    public void MergePdfFiles_combines_images_and_pdf_documents()
+    {
+        var folder = fx.NewFolder();
+        var img1 = Path.Combine(folder, "image1.png");
+        var img2 = Path.Combine(folder, "image2.jpg");
+        var pdfDoc = CreateTestPdf(folder, "doc.pdf", 2);
+        var mergedPath = Path.Combine(folder, "mixed_merged.pdf");
+
+        // Create image 1 (PNG)
+        using (var bmp = new SKBitmap(100, 100))
+        using (var canvas = new SKCanvas(bmp))
+        {
+            canvas.Clear(SKColors.Blue);
+            using var img = SKImage.FromBitmap(bmp);
+            using var data = img.Encode(SKEncodedImageFormat.Png, 100);
+            using var stream = File.OpenWrite(img1);
+            data.SaveTo(stream);
+        }
+
+        // Create image 2 (JPG)
+        using (var bmp = new SKBitmap(200, 150))
+        using (var canvas = new SKCanvas(bmp))
+        {
+            canvas.Clear(SKColors.Red);
+            using var img = SKImage.FromBitmap(bmp);
+            using var data = img.Encode(SKEncodedImageFormat.Jpeg, 90);
+            using var stream = File.OpenWrite(img2);
+            data.SaveTo(stream);
+        }
+
+        PdfToolEngine.MergePdfFiles([img1, pdfDoc, img2], mergedPath);
+
+        Assert.True(File.Exists(mergedPath));
+        var count = PdfToolEngine.GetPageCount(mergedPath);
+        Assert.Equal(4, count); // 1 + 2 + 1 = 4 pages
+
+        using var doc = PdfReader.Open(mergedPath, PdfDocumentOpenMode.Import);
+        Assert.Equal(4, doc.PageCount);
     }
 
     [Fact]

@@ -165,6 +165,7 @@
   "profile.models": "3D 模型",
   "profile.geo": "地理信息 (GIS)",
   "profile.mixed": "混合文件",
+  "preset.tool": "交互式工具",
   "preset.crop": "裁剪",
   "crop.save": "裁剪并保存",
   "crop.reset": "重置",

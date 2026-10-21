@@ -1,7 +1,9 @@
 // PDF tool engine: merging documents, organizing pages, page rotation and thumbnail rendering.
 
 using Filee.Engines.Infrastructure;
+using ImageMagick;
 using PDFtoImage;
+using PdfSharp.Drawing;
 using PdfSharp.Pdf;
 using PdfSharp.Pdf.IO;
 using SkiaSharp;
@@ -33,14 +35,83 @@ public static class PdfToolEngine
             if (!File.Exists(input))
                 continue;
 
-            using var source = PdfReader.Open(input, PdfDocumentOpenMode.Import);
-            for (var i = 0; i < source.PageCount; i++)
+            var ext = Path.GetExtension(input).ToLowerInvariant();
+            if (ext == ".pdf")
             {
-                output.AddPage(source.Pages[i]);
+                using var source = PdfReader.Open(input, PdfDocumentOpenMode.Import);
+                for (var i = 0; i < source.PageCount; i++)
+                {
+                    output.AddPage(source.Pages[i]);
+                }
+            }
+            else
+            {
+                AddImageAsPdfPage(output, input);
             }
         }
 
         output.Save(outputPath);
+    }
+
+    private static void AddImageAsPdfPage(PdfDocument document, string imagePath)
+    {
+        try
+        {
+            using var bitmap = SKBitmap.Decode(imagePath);
+            if (bitmap != null)
+            {
+                using var image = SKImage.FromBitmap(bitmap);
+                using var data = image.Encode(SKEncodedImageFormat.Jpeg, 95);
+                using var stream = new MemoryStream(data.ToArray());
+                using var xImage = XImage.FromStream(stream);
+
+                var w = xImage.PointWidth;
+                var h = xImage.PointHeight;
+                if (w <= 0 || h <= 0)
+                {
+                    w = bitmap.Width * 0.75;
+                    h = bitmap.Height * 0.75;
+                }
+
+                var page = document.AddPage();
+                page.Width = XUnit.FromPoint(w);
+                page.Height = XUnit.FromPoint(h);
+                using var gfx = XGraphics.FromPdfPage(page);
+                gfx.DrawImage(xImage, 0, 0, w, h);
+                return;
+            }
+        }
+        catch
+        {
+            // Fall back to ImageMagick if SkiaSharp cannot decode
+        }
+
+        try
+        {
+            using var magick = new MagickImage(imagePath);
+            using var ms = new MemoryStream();
+            magick.Write(ms, MagickFormat.Png32);
+            ms.Position = 0;
+            using var xImage = XImage.FromStream(ms);
+
+            var w = xImage.PointWidth;
+            var h = xImage.PointHeight;
+            if (w <= 0 || h <= 0)
+            {
+                w = magick.Width * 0.75;
+                h = magick.Height * 0.75;
+            }
+
+            var page = document.AddPage();
+            page.Width = XUnit.FromPoint(w);
+            page.Height = XUnit.FromPoint(h);
+            using var gfx = XGraphics.FromPdfPage(page);
+            gfx.DrawImage(xImage, 0, 0, w, h);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Could not load image '{Path.GetFileName(imagePath)}' into PDF: {ex.Message}", ex);
+        }
     }
 
     /// <summary>
