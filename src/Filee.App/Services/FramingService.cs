@@ -1,6 +1,7 @@
 // Background framing processing service: layouts, backgrounds, padding, corners, shadows, and exports.
 
 using System.IO;
+using Avalonia;
 using Avalonia.Media.Imaging;
 using Filee.Core.Localization;
 using Filee.Core.Platform;
@@ -187,11 +188,22 @@ public static class FramingService
     /// </summary>
     public static SKBitmap RenderFramedBitmap(SKBitmap source, FramingOptions options)
     {
-        var (canvasW, canvasH, targetX, targetY, targetW, targetH) =
+        var (canvasW, canvasH, _, _, _, _) =
             CalculateLayout(source.Width, source.Height, options);
 
         var output = new SKBitmap(canvasW, canvasH, SKColorType.Rgba8888, SKAlphaType.Premul);
         using var canvas = new SKCanvas(output);
+        DrawFramedContent(canvas, source, options);
+        return output;
+    }
+
+    /// <summary>
+    /// Renders the background, drop shadow, and rounded corner inner image onto a target SKCanvas.
+    /// </summary>
+    public static void DrawFramedContent(SKCanvas canvas, SKBitmap source, FramingOptions options)
+    {
+        var (canvasW, canvasH, targetX, targetY, targetW, targetH) =
+            CalculateLayout(source.Width, source.Height, options);
 
         // 1. Draw Background
         DrawBackground(canvas, canvasW, canvasH, options);
@@ -228,8 +240,6 @@ public static class FramingService
         };
         canvas.DrawBitmap(source, destRect, imagePaint);
         canvas.Restore();
-
-        return output;
     }
 
     private static void DrawBackground(SKCanvas canvas, int width, int height, FramingOptions options)
@@ -303,6 +313,7 @@ public static class FramingService
 
     /// <summary>
     /// Loads a source image file as an SKBitmap, auto-orienting according to EXIF.
+    /// Fast-paths SkiaSharp decoding for PNG, JPG, WebP, and BMP.
     /// </summary>
     public static SKBitmap LoadSourceBitmap(string inputPath)
     {
@@ -313,7 +324,26 @@ public static class FramingService
         if (fi.Length == 0)
             throw new InvalidDataException("The file is empty (0 bytes).");
 
-        // Read through Magick to ensure proper EXIF orientation and format support
+        try
+        {
+            var skBmp = SKBitmap.Decode(inputPath);
+            if (skBmp != null && skBmp.Width > 0 && skBmp.Height > 0)
+            {
+                using var codec = SKCodec.Create(inputPath);
+                if (codec != null && codec.EncodedOrigin != SKEncodedOrigin.TopLeft)
+                {
+                    var oriented = AutoOrient(skBmp, codec.EncodedOrigin);
+                    skBmp.Dispose();
+                    return oriented;
+                }
+                return skBmp;
+            }
+        }
+        catch
+        {
+            // Fall back to ImageMagick
+        }
+
         using var magick = new MagickImage(inputPath);
         magick.AutoOrient();
 
@@ -326,6 +356,72 @@ public static class FramingService
         return bitmap;
     }
 
+    private static SKBitmap AutoOrient(SKBitmap bitmap, SKEncodedOrigin origin)
+    {
+        return origin switch
+        {
+            SKEncodedOrigin.RightTop => Rotate(bitmap, 90),
+            SKEncodedOrigin.BottomRight => Rotate(bitmap, 180),
+            SKEncodedOrigin.LeftBottom => Rotate(bitmap, 270),
+            _ => bitmap,
+        };
+    }
+
+    private static SKBitmap Rotate(SKBitmap source, int degrees)
+    {
+        bool swap = degrees == 90 || degrees == 270;
+        int w = swap ? source.Height : source.Width;
+        int h = swap ? source.Width : source.Height;
+        var rotated = new SKBitmap(w, h);
+        using var canvas = new SKCanvas(rotated);
+        canvas.Translate(w / 2f, h / 2f);
+        canvas.RotateDegrees(degrees);
+        canvas.Translate(-source.Width / 2f, -source.Height / 2f);
+        canvas.DrawBitmap(source, 0, 0);
+        return rotated;
+    }
+
+    /// <summary>
+    /// Renders an in-memory preview directly into an Avalonia WriteableBitmap from pre-cached source SKBitmap.
+    /// Executes in milliseconds without disk I/O or PNG compression.
+    /// </summary>
+    public static (Bitmap Bitmap, int Width, int Height, int SourceWidth, int SourceHeight, int TargetX, int TargetY, int TargetWidth, int TargetHeight) RenderPreview(
+        SKBitmap sourcePreview,
+        FramingOptions options,
+        int origWidth,
+        int origHeight)
+    {
+        double factor = origWidth > 0 ? (double)sourcePreview.Width / origWidth : 1.0;
+        FramingOptions previewOptions = factor < 0.999 ? options with
+        {
+            Padding = Math.Max(0, (int)Math.Round(options.Padding * factor)),
+            CornerRadius = Math.Max(0.0, options.CornerRadius * factor),
+            ShadowBlur = Math.Max(1.0, options.ShadowBlur * factor),
+            ShadowOffsetY = (int)Math.Round(options.ShadowOffsetY * factor),
+            CustomWidth = options.CustomWidth > 0 ? (int)Math.Round(options.CustomWidth * factor) : 0,
+            CustomHeight = options.CustomHeight > 0 ? (int)Math.Round(options.CustomHeight * factor) : 0,
+        } : options;
+
+        var (prevCanvasW, prevCanvasH, prevTargetX, prevTargetY, prevTargetW, prevTargetH) =
+            CalculateLayout(sourcePreview.Width, sourcePreview.Height, previewOptions);
+
+        var wb = new WriteableBitmap(
+            new PixelSize(prevCanvasW, prevCanvasH),
+            new Vector(96, 96),
+            Avalonia.Platform.PixelFormat.Bgra8888,
+            Avalonia.Platform.AlphaFormat.Premul);
+
+        using (var fb = wb.Lock())
+        {
+            var info = new SKImageInfo(prevCanvasW, prevCanvasH, SKColorType.Bgra8888, SKAlphaType.Premul);
+            using var surface = SKSurface.Create(info, fb.Address, fb.RowBytes);
+            DrawFramedContent(surface.Canvas, sourcePreview, previewOptions);
+        }
+
+        var (fullW, fullH, fullX, fullY, fullTargetW, fullTargetH) = CalculateLayout(origWidth, origHeight, options);
+        return (wb, fullW, fullH, origWidth, origHeight, fullX, fullY, fullTargetW, fullTargetH);
+    }
+
     /// <summary>
     /// Generates a fluid in-memory preview bitmap for UI display.
     /// </summary>
@@ -335,8 +431,7 @@ public static class FramingService
         {
             using var source = LoadSourceBitmap(inputPath);
 
-            // Scale down huge sources for live preview rendering
-            const int maxPreviewDim = 1920;
+            const int maxPreviewDim = 1600;
             SKBitmap renderSource = source;
             bool disposeRenderSource = false;
 
@@ -351,33 +446,8 @@ public static class FramingService
 
             try
             {
-                // Adjust padding & radius proportionally for preview if downscaled
-                FramingOptions previewOptions = options;
-                if (disposeRenderSource)
-                {
-                    double factor = (double)renderSource.Width / source.Width;
-                    previewOptions = options with
-                    {
-                        Padding = Math.Max(0, (int)Math.Round(options.Padding * factor)),
-                        CornerRadius = Math.Max(0.0, options.CornerRadius * factor),
-                        ShadowBlur = Math.Max(1.0, options.ShadowBlur * factor),
-                        ShadowOffsetY = (int)Math.Round(options.ShadowOffsetY * factor),
-                        CustomWidth = options.CustomWidth > 0 ? (int)Math.Round(options.CustomWidth * factor) : 0,
-                        CustomHeight = options.CustomHeight > 0 ? (int)Math.Round(options.CustomHeight * factor) : 0,
-                    };
-                }
-
-                using var framed = RenderFramedBitmap(renderSource, previewOptions);
-                using var image = SKImage.FromBitmap(framed);
-                using var data = image.Encode(SKEncodedImageFormat.Png, 90);
-                using var mem = new MemoryStream();
-                data.SaveTo(mem);
-                mem.Position = 0;
-                var avaloniaBitmap = new Bitmap(mem);
-
-                // Full-resolution dimensions for display readout
-                var (fullW, fullH, _, _, _, _) = CalculateLayout(source.Width, source.Height, options);
-                return (avaloniaBitmap, fullW, fullH, source.Width, source.Height);
+                var (wb, fullW, fullH, srcW, srcH, _, _, _, _) = RenderPreview(renderSource, options, source.Width, source.Height);
+                return (wb, fullW, fullH, srcW, srcH);
             }
             finally
             {

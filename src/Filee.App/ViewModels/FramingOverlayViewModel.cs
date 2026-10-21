@@ -12,6 +12,7 @@ using Filee.Core.Localization;
 using Filee.Core.Presets;
 using Filee.Core.Settings;
 using Microsoft.Extensions.Logging;
+using SkiaSharp;
 
 namespace Filee.App.ViewModels;
 
@@ -28,11 +29,23 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
     private bool _closed;
     private bool _historyRecorded;
     private CancellationTokenSource? _previewCts;
+    private SKBitmap? _cachedSourcePreview;
+    private int _origWidth;
+    private int _origHeight;
     private int _sourceWidth;
     private int _sourceHeight;
     private int _lastCanvasWidth;
     private int _lastCanvasHeight;
     private bool _isSyncingColor;
+
+    public event Action? LayoutUpdated;
+
+    [ObservableProperty] private int _targetX;
+    [ObservableProperty] private int _targetY;
+    [ObservableProperty] private int _targetWidth;
+    [ObservableProperty] private int _targetHeight;
+    [ObservableProperty] private int _canvasWidth;
+    [ObservableProperty] private int _canvasHeight;
 
     [ObservableProperty] private int _currentIndex;
     [ObservableProperty] private string _currentFileName = "";
@@ -276,7 +289,31 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
 
         try
         {
-            await RefreshPreviewAsync();
+            _previewCts?.Cancel();
+            _cachedSourcePreview?.Dispose();
+            _cachedSourcePreview = null;
+
+            await Task.Run(() =>
+            {
+                using var fullSource = FramingService.LoadSourceBitmap(path);
+                _origWidth = fullSource.Width;
+                _origHeight = fullSource.Height;
+
+                const int maxPreviewDim = 1600;
+                if (fullSource.Width > maxPreviewDim || fullSource.Height > maxPreviewDim)
+                {
+                    double scale = Math.Min((double)maxPreviewDim / fullSource.Width, (double)maxPreviewDim / fullSource.Height);
+                    int scaledW = Math.Max(1, (int)Math.Round(fullSource.Width * scale));
+                    int scaledH = Math.Max(1, (int)Math.Round(fullSource.Height * scale));
+                    _cachedSourcePreview = fullSource.Resize(new SKImageInfo(scaledW, scaledH), new SKSamplingOptions(SKFilterMode.Linear));
+                }
+                else
+                {
+                    _cachedSourcePreview = fullSource.Copy();
+                }
+            });
+
+            UpdatePreviewNow();
         }
         catch (Exception ex)
         {
@@ -296,70 +333,69 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
         }
     }
 
-    private void SchedulePreviewUpdate()
+    private void SchedulePreviewUpdate() => UpdatePreviewNow();
+
+    public void UpdatePreviewNow()
     {
-        if (_closed || IsFinished || CurrentIndex >= _files.Count)
+        if (_closed || IsFinished || CurrentIndex >= _files.Count || _cachedSourcePreview == null)
             return;
 
         _previewCts?.Cancel();
         _previewCts = new CancellationTokenSource();
         var token = _previewCts.Token;
 
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(40, token); // small debounce for slider fluidness
-                if (token.IsCancellationRequested)
-                    return;
+        var source = _cachedSourcePreview;
+        var options = CurrentOptions;
+        var origW = _origWidth > 0 ? _origWidth : source.Width;
+        var origH = _origHeight > 0 ? _origHeight : source.Height;
 
-                var (bitmap, w, h, srcW, srcH) = await FramingService.GeneratePreviewAsync(_files[CurrentIndex], CurrentOptions);
-                if (token.IsCancellationRequested)
+        _ = Task.Run(() =>
+        {
+            if (token.IsCancellationRequested)
+                return;
+
+            var (bitmap, w, h, srcW, srcH, tx, ty, tw, th) =
+                FramingService.RenderPreview(source, options, origW, origH);
+
+            if (token.IsCancellationRequested)
+            {
+                bitmap.Dispose();
+                return;
+            }
+
+            Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+            {
+                if (token.IsCancellationRequested || _closed)
                 {
                     bitmap.Dispose();
                     return;
                 }
 
-                await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() =>
-                {
-                    if (token.IsCancellationRequested || _closed)
-                    {
-                        bitmap.Dispose();
-                        return;
-                    }
-                    _sourceWidth = srcW;
-                    _sourceHeight = srcH;
-                    _lastCanvasWidth = w;
-                    _lastCanvasHeight = h;
-                    var old = PreviewImage;
-                    PreviewImage = bitmap;
-                    old?.Dispose();
-                    DimensionsText = $"{w} × {h} px";
-                });
-            }
-            catch (OperationCanceledException) { }
-            catch (Exception ex)
-            {
-                _log?.LogDebug(ex, "Preview update cancelled or failed");
-            }
+                _sourceWidth = srcW;
+                _sourceHeight = srcH;
+                _lastCanvasWidth = w;
+                _lastCanvasHeight = h;
+                CanvasWidth = w;
+                CanvasHeight = h;
+                TargetX = tx;
+                TargetY = ty;
+                TargetWidth = tw;
+                TargetHeight = th;
+
+                var old = PreviewImage;
+                PreviewImage = bitmap;
+                old?.Dispose();
+                DimensionsText = $"{w} × {h} px";
+                OnPropertyChanged(nameof(HasOffset));
+                LayoutUpdated?.Invoke();
+            });
         }, token);
     }
 
-    public async Task RefreshPreviewAsync()
+    public Task RefreshPreviewAsync()
     {
-        if (CurrentIndex >= _files.Count)
-            return;
-
-        var path = _files[CurrentIndex];
-        var (bitmap, w, h, srcW, srcH) = await FramingService.GeneratePreviewAsync(path, CurrentOptions);
-        _sourceWidth = srcW;
-        _sourceHeight = srcH;
-        _lastCanvasWidth = w;
-        _lastCanvasHeight = h;
-        var old = PreviewImage;
-        PreviewImage = bitmap;
-        old?.Dispose();
-        DimensionsText = $"{w} × {h} px";
+        UpdatePreviewNow();
+        return Task.CompletedTask;
     }
 
     [RelayCommand]
@@ -412,6 +448,14 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
         SelectedAspect = aspect;
     }
 
+    public void SetRelativeOffset(double relX, double relY)
+    {
+        RelativeOffsetX = Math.Clamp(relX, -1.0, 1.0);
+        RelativeOffsetY = Math.Clamp(relY, -1.0, 1.0);
+        OnPropertyChanged(nameof(HasOffset));
+        UpdatePreviewNow();
+    }
+
     public void MoveImageOffset(double deltaX, double deltaY, double displayedCanvasWidth, double displayedCanvasHeight)
     {
         if (displayedCanvasWidth <= 0 || displayedCanvasHeight <= 0 || CurrentIndex >= _files.Count)
@@ -434,7 +478,7 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
         RelativeOffsetX = Math.Clamp(RelativeOffsetX + deltaRelX, -1.0, 1.0);
         RelativeOffsetY = Math.Clamp(RelativeOffsetY + deltaRelY, -1.0, 1.0);
         OnPropertyChanged(nameof(HasOffset));
-        SchedulePreviewUpdate();
+        UpdatePreviewNow();
     }
 
     [RelayCommand]
@@ -443,7 +487,7 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
         RelativeOffsetX = 0.0;
         RelativeOffsetY = 0.0;
         OnPropertyChanged(nameof(HasOffset));
-        SchedulePreviewUpdate();
+        UpdatePreviewNow();
     }
 
     [RelayCommand]
@@ -667,6 +711,9 @@ public sealed partial class FramingOverlayViewModel : ObservableObject, IDisposa
     public void Dispose()
     {
         Shutdown();
+        _previewCts?.Cancel();
+        _cachedSourcePreview?.Dispose();
+        _cachedSourcePreview = null;
         PreviewImage?.Dispose();
         PreviewImage = null;
     }

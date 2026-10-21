@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Filee.App.ViewModels"
         xmlns:svc="using:Filee.App.Services"
+        xmlns:c="using:Filee.App.Controls"
         x:Class="Filee.App.Views.FramingOverlayWindow"
         x:DataType="vm:FramingOverlayViewModel"
         Title="{DynamicResource frame.title}"
@@ -285,13 +286,20 @@
       <Grid Background="{DynamicResource PageBrush}">
         <!-- Checkerboard pattern for transparency clarity -->
         <Border x:Name="PreviewBorder" Margin="24" CornerRadius="8" ClipToBounds="True" BoxShadow="0 2 12 #20000000"
-                Background="Transparent" Cursor="SizeAll">
-          <Image x:Name="PreviewImageControl"
-                 Source="{Binding PreviewImage}"
-                 Stretch="Uniform"
-                 HorizontalAlignment="Center"
-                 VerticalAlignment="Center"
-                 IsVisible="{Binding IsEditing}" />
+                Background="Transparent">
+          <Grid>
+            <Image x:Name="PreviewImageControl"
+                   Source="{Binding PreviewImage}"
+                   Stretch="Uniform"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   IsVisible="{Binding IsEditing}" />
+            <c:FramingTransformControl x:Name="TransformOverlay"
+                                       AccentBrush="{DynamicResource AccentBrush}"
+                                       HorizontalAlignment="Stretch"
+                                       VerticalAlignment="Stretch"
+                                       IsVisible="{Binding IsEditing}" />
+          </Grid>
         </Border>
 
         <!-- Summary panel when finished -->
