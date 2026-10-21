@@ -550,4 +550,111 @@ public class JobQueueTests
 
         Assert.Equal(JobState.Completed, done.State);
     }
+
+    [Fact]
+    public async Task Missing_source_file_fails_with_file_not_found_error()
+    {
+        var nonExistent = Path.Combine(Path.GetTempPath(), $"missing_{Guid.NewGuid():N}.jpg");
+        var catalog = new ConverterCatalog([new FakeConverter("magick", new ConversionEdge("jpg", "png"))]);
+        await using var queue = new JobQueue(catalog);
+
+        var job = await Run(queue, [nonExistent], new Preset { TargetFormat = "png" });
+
+        Assert.Equal(JobState.Failed, job.State);
+        var file = job.Files.Single();
+        Assert.Equal(FileState.Failed, file.State);
+        Assert.Equal("error.file_not_found", file.ErrorKey);
+    }
+
+    [Fact]
+    public async Task Zero_byte_file_fails_with_empty_file_error()
+    {
+        using var dir = new TempDir();
+        var empty = Path.Combine(dir.Path, "empty.jpg");
+        File.WriteAllBytes(empty, []);
+        var catalog = new ConverterCatalog([new FakeConverter("magick", new ConversionEdge("jpg", "png"))]);
+        await using var queue = new JobQueue(catalog);
+
+        var job = await Run(queue, [empty], new Preset { TargetFormat = "png" });
+
+        Assert.Equal(JobState.Failed, job.State);
+        var file = job.Files.Single();
+        Assert.Equal(FileState.Failed, file.State);
+        Assert.Equal("error.empty_file", file.ErrorKey);
+    }
+
+    [Fact]
+    public async Task Unauthorized_exception_fails_with_permission_denied()
+    {
+        using var dir = new TempDir();
+        var a = dir.File("a.jpg");
+        var fake = new FakeConverter("magick", new ConversionEdge("jpg", "png"))
+        {
+            Failure = new UnauthorizedAccessException("Access to destination is denied.")
+        };
+        await using var queue = new JobQueue(new ConverterCatalog([fake]));
+
+        var job = await Run(queue, [a], new Preset { TargetFormat = "png" });
+
+        Assert.Equal(JobState.Failed, job.State);
+        var file = job.Files.Single();
+        Assert.Equal(FileState.Failed, file.State);
+        Assert.Equal("error.permission_denied", file.ErrorKey);
+    }
+
+    [Fact]
+    public async Task Disk_full_exception_fails_with_not_enough_space()
+    {
+        using var dir = new TempDir();
+        var a = dir.File("a.jpg");
+        var fake = new FakeConverter("magick", new ConversionEdge("jpg", "png"))
+        {
+            Failure = new IOException("No space left on device")
+        };
+        await using var queue = new JobQueue(new ConverterCatalog([fake]));
+
+        var job = await Run(queue, [a], new Preset { TargetFormat = "png" });
+
+        Assert.Equal(JobState.Failed, job.State);
+        var file = job.Files.Single();
+        Assert.Equal(FileState.Failed, file.State);
+        Assert.Equal("error.not_enough_space", file.ErrorKey);
+    }
+
+    [Fact]
+    public async Task Conversion_failure_cleans_up_allocated_output_files()
+    {
+        using var dir = new TempDir();
+        var a = dir.File("a.jpg");
+        var expectedOutput = Path.Combine(dir.Path, "a.png");
+
+        var failingConverter = new FailingAfterAllocateConverter("failing", new ConversionEdge("jpg", "png"));
+        await using var queue = new JobQueue(new ConverterCatalog([failingConverter]));
+
+        var job = await Run(queue, [a], new Preset { TargetFormat = "png" });
+
+        Assert.Equal(JobState.Failed, job.State);
+        // The partially created output file must be cleaned up and not left corrupt on disk
+        Assert.False(File.Exists(expectedOutput));
+    }
+
+    private sealed class FailingAfterAllocateConverter(string id, params ConversionEdge[] edges) : IConverter
+    {
+        public string Id => id;
+        public string DisplayName => id;
+        public IReadOnlyList<ConversionEdge> Edges => edges;
+        public int MaxParallelism => 0;
+        public EngineStatus GetStatus() => EngineStatus.Available();
+
+        public Task<IReadOnlyList<string>> ConvertAsync(ConversionStep step, IProgress<double>? progress, CancellationToken cancellationToken)
+        {
+            var path = step.Output.Allocate(step.To);
+            if (path is not null)
+            {
+                // Write partial corrupt data
+                File.WriteAllText(path, "partial corrupt data");
+            }
+            throw new IOException("Mid-conversion stream corruption or write failure");
+        }
+    }
 }
