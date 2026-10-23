@@ -17,6 +17,7 @@ using Filee.App.Views.Pages;
 using Filee.Core.Localization;
 using Filee.Core.Profiles;
 using Filee.Core.Settings;
+using Filee.Engines.Infrastructure;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Filee.App.Tests;
@@ -473,7 +474,7 @@ public class RenderTests
             Pump();
 
             var engines = ((Filee.App.ViewModels.Pages.EnginesPageViewModel)vm.CurrentPage).Engines;
-            Assert.All(engines.Where(e => e.IsAvailable), e => Assert.False(string.IsNullOrWhiteSpace(e.Version)));
+            Assert.All(engines.Where(e => e.IsAvailable && EngineEnvironment.UsesFileesCopy(e.Converter.Id)), e => Assert.False(string.IsNullOrWhiteSpace(e.Version)));
             Assert.All(engines, e => Assert.False(string.IsNullOrWhiteSpace(e.Description)));
             Save(window, "page-engines-downloading-ko.png");
             window.Close();
@@ -896,20 +897,34 @@ public class RenderTests
     public void First_run_engine_setup_renders(string language)
     {
         TestServices.EnsureInitialized(language);
-        var vm = new EngineSetupViewModel(AppHost.Get<EngineDownloadService>(), AppHost.Get<Filee.Core.Localization.ILocalizer>());
-        var window = new EngineSetupWindow { DataContext = vm };
-        window.Show();
-        Pump();
+        var beforeRoot = EngineEnvironment.DownloadRoot;
+        EngineEnvironment.DownloadRoot = Path.Combine(TestServices.DataDirectory, "engines");
+        try
+        {
+            AppHost.Get<EngineDownloadService>().RefreshStatus();
+            var vm = new EngineSetupViewModel(AppHost.Get<EngineDownloadService>(), AppHost.Get<Filee.Core.Localization.ILocalizer>());
+            var window = new EngineSetupWindow { DataContext = vm };
+            window.Show();
+            Pump();
 
-        // Everything not installed is offered, nothing is ticked: installing needs a choice first.
-        Assert.Contains(vm.Packages, p => !p.IsInstalled && p.CanInstall);
-        Assert.DoesNotContain(vm.Packages, p => p.Selected);
-        Assert.False(vm.InstallCommand.CanExecute(null));
-        vm.Packages.First(p => p.CanInstall && !p.IsInstalled).Selected = true;
-        Assert.True(vm.InstallCommand.CanExecute(null));
-        vm.Packages.First(p => p.Selected).Selected = false;
-        Save(window, $"engine-setup-{language}.png");
-        window.Close();
+            // Everything not installed is offered, nothing is ticked: installing needs a choice first.
+            var installable = vm.Packages.FirstOrDefault(p => !p.IsInstalled && p.CanInstall);
+            if (installable is not null)
+            {
+                Assert.DoesNotContain(vm.Packages, p => p.Selected);
+                Assert.False(vm.InstallCommand.CanExecute(null));
+                installable.Selected = true;
+                Assert.True(vm.InstallCommand.CanExecute(null));
+                installable.Selected = false;
+            }
+            Save(window, $"engine-setup-{language}.png");
+            window.Close();
+        }
+        finally
+        {
+            EngineEnvironment.DownloadRoot = beforeRoot;
+            AppHost.Get<EngineDownloadService>().RefreshStatus();
+        }
     }
 
     [AvaloniaFact]

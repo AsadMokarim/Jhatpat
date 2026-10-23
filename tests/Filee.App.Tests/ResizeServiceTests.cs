@@ -172,7 +172,9 @@ public class ResizeServiceTests
         finally
         {
             if (Directory.Exists(folder))
-                Directory.Delete(folder, recursive: true);
+            {
+                try { Directory.Delete(folder, recursive: true); } catch (IOException) { }
+            }
         }
     }
 
@@ -223,7 +225,9 @@ public class ResizeServiceTests
         finally
         {
             if (Directory.Exists(folder))
-                Directory.Delete(folder, recursive: true);
+            {
+                try { Directory.Delete(folder, recursive: true); } catch (IOException) { }
+            }
         }
     }
 
@@ -268,7 +272,9 @@ public class ResizeServiceTests
         finally
         {
             if (Directory.Exists(folder))
-                Directory.Delete(folder, recursive: true);
+            {
+                try { Directory.Delete(folder, recursive: true); } catch (IOException) { }
+            }
         }
     }
 
@@ -342,7 +348,9 @@ public class ResizeServiceTests
         finally
         {
             if (Directory.Exists(folder))
-                Directory.Delete(folder, recursive: true);
+            {
+                try { Directory.Delete(folder, recursive: true); } catch (IOException) { }
+            }
         }
     }
 
@@ -387,7 +395,9 @@ public class ResizeServiceTests
         finally
         {
             if (Directory.Exists(folder))
-                Directory.Delete(folder, recursive: true);
+            {
+                try { Directory.Delete(folder, recursive: true); } catch (IOException) { }
+            }
         }
     }
 
@@ -412,7 +422,9 @@ public class ResizeServiceTests
         finally
         {
             if (Directory.Exists(folder))
-                Directory.Delete(folder, recursive: true);
+            {
+                try { Directory.Delete(folder, recursive: true); } catch (IOException) { }
+            }
         }
     }
 
@@ -468,7 +480,9 @@ public class ResizeServiceTests
         finally
         {
             if (Directory.Exists(folder))
-                Directory.Delete(folder, recursive: true);
+            {
+                try { Directory.Delete(folder, recursive: true); } catch (IOException) { }
+            }
         }
     }
 
@@ -508,7 +522,9 @@ public class ResizeServiceTests
         finally
         {
             if (Directory.Exists(folder))
-                Directory.Delete(folder, recursive: true);
+            {
+                try { Directory.Delete(folder, recursive: true); } catch (IOException) { }
+            }
         }
     }
 
@@ -560,7 +576,9 @@ public class ResizeServiceTests
         finally
         {
             if (Directory.Exists(folder))
-                Directory.Delete(folder, recursive: true);
+            {
+                try { Directory.Delete(folder, recursive: true); } catch (IOException) { }
+            }
         }
     }
 }

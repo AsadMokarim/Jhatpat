@@ -107,11 +107,10 @@ public sealed class TriggerService : IDisposable
         LinuxBackendMissing = false;
         try
         {
-            // On Linux, enable the libinput/uinput backend so SharpHook automatically selects the
-            // Wayland backend (libuiohook-wayland.so) on Wayland sessions and the libinput-based
-            // X11 backend otherwise. This call is a no-op on Windows and macOS.
+            // On Linux, automatically select the Wayland backend (libuiohook-wayland.so) on Wayland
+            // sessions and the XRecord backend (libuiohook-xrecord.so) on X11 sessions.
             if (OperatingSystem.IsLinux())
-                UioHookProvider.Instance.SetLinuxMode(LinuxMode.AutoLowLevel);
+                UioHookProvider.Instance.SetLinuxMode(LinuxMode.AutoXRecord);
 
             // Background threads: a hook that fails to stop can never keep Filee running after it quits.
             _hook = _createHook();
