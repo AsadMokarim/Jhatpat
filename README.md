@@ -14,6 +14,16 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/InnoverseAMU/Jhatpat/releases/latest"><strong>⬇️ Download Latest Release</strong></a> ·
+  <a href="https://jhatpat.innoverseamu.in/"><strong>🌐 Website</strong></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/InnoverseAMU/Jhatpat/releases/latest"><img src="https://img.shields.io/badge/Download-Latest%20Release-2EA043?style=for-the-badge&logo=github" alt="Download latest release"></a>
+  <a href="https://jhatpat.innoverseamu.in/"><img src="https://img.shields.io/badge/Visit-Website-0969DA?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Visit website"></a>
+</p>
+
+<p align="center">
   <a href="#features"><strong>Features</strong></a> ·
   <a href="#technology-stack"><strong>Tech Stack</strong></a> ·
   <a href="#project-background--development"><strong>Development Approach</strong></a> ·
@@ -23,7 +33,6 @@
   <a href="#development"><strong>Development</strong></a> ·
   <a href="#license"><strong>License</strong></a>
 </p>
-
 <p align="center">
   <img src="https://img.shields.io/badge/status-in%20development-D97706" alt="Status: in development">
   <img src="https://img.shields.io/badge/Ubuntu%2024.04-Linux%20target-1D9E75" alt="Ubuntu 24.04 Linux target">
