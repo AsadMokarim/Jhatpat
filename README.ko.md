@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/AsadMokarim/Jhatpat/releases/latest"><b>다운로드 (Releases)</b></a> ·
+  <a href="https://github.com/InnoverseAMU/Jhatpat/releases/latest"><b>다운로드 (Releases)</b></a> ·
   <a href="#설치">설치</a> ·
   <a href="#명령줄">명령줄</a> ·
   <a href="#개발">개발</a>
@@ -129,7 +129,7 @@ filee watch D:\Inbox --to pdf --move-originals
 Windows, macOS, Linux에서 .NET 10 SDK로 빌드해요.
 
 ```bash
-git clone https://github.com/AsadMokarim/Jhatpat.git
+git clone https://github.com/InnoverseAMU/Jhatpat.git
 cd Filee
 pwsh build/fetch-engines.ps1 -Only rhwp,pandoc   # optional engines
 dotnet run --project src/Filee.App

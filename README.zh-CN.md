@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/AsadMokarim/Jhatpat/releases/latest"><b>下载 (Releases)</b></a> ·
+  <a href="https://github.com/InnoverseAMU/Jhatpat/releases/latest"><b>下载 (Releases)</b></a> ·
   <a href="#安装">安装</a> ·
   <a href="#命令行">命令行</a> ·
   <a href="#开发">开发</a>
@@ -128,7 +128,7 @@ filee watch D:\Inbox --to pdf --move-originals
 在 Windows、macOS 或 Linux 上使用 .NET 10 SDK 构建。
 
 ```bash
-git clone https://github.com/AsadMokarim/Jhatpat.git
+git clone https://github.com/InnoverseAMU/Jhatpat.git
 cd Filee
 pwsh build/fetch-engines.ps1 -Only rhwp,pandoc   # optional engines
 dotnet run --project src/Filee.App

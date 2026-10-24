@@ -455,7 +455,7 @@ Installed-Size: ${INSTALLED_SIZE}
 Maintainer: Jhatpat Developers <info@jhatpat.app>
 Depends: libc6 (>= 2.34), libgcc-s1, libfontconfig1, libx11-6, libice6, libsm6
 Recommends: imagemagick
-Homepage: https://github.com/AsadMokarim/Jhatpat
+Homepage: https://github.com/InnoverseAMU/Jhatpat
 Description: Image cropping, background framing, resize, compression, and conversion
  Jhatpat is an extensible cross-platform desktop productivity application featuring
  contextual radial workflows, image crop presets, customizable background framing,

@@ -24,7 +24,7 @@
 
 #define AppName "Jhatpat"
 #define AppExe "Filee.exe"
-#define RepositoryUrl "https://github.com/AsadMokarim/Jhatpat"
+#define RepositoryUrl "https://github.com/InnoverseAMU/Jhatpat"
 ; Never change: Windows finds the installed Filee by this id (uninstall key "{<id>}_is1").
 #define AppGuid "C8686E06-8327-40A2-B0F7-3DEDD61D9248"
 

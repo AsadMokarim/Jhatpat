@@ -85,6 +85,26 @@ public class UpdateServiceTests
     }
 
     [Fact]
+    public void Release_files_picks_installer_and_correct_checksums_with_multiplatform_assets()
+    {
+        using var release = JsonDocument.Parse($$"""
+            {"tag_name": "v1.0.0", "assets": [
+              {"name": "Jhatpat-1.0.0-linux-arm64-SHA256SUMS.txt", "size": 99, "browser_download_url": "{{Base}}Jhatpat-1.0.0-linux-arm64-SHA256SUMS.txt"},
+              {"name": "Jhatpat-1.0.0-linux-x64-SHA256SUMS.txt", "size": 97, "browser_download_url": "{{Base}}Jhatpat-1.0.0-linux-x64-SHA256SUMS.txt"},
+              {"name": "Jhatpat-1.0.0-SHA256SUMS.txt", "size": 193, "browser_download_url": "{{Base}}Jhatpat-1.0.0-SHA256SUMS.txt"},
+              {"name": "Jhatpat-1.0.0-osx-arm64-SHA256SUMS.txt", "size": 97, "browser_download_url": "{{Base}}Jhatpat-1.0.0-osx-arm64-SHA256SUMS.txt"},
+              {"name": "Jhatpat-1.0.0-osx-x64-SHA256SUMS.txt", "size": 95, "browser_download_url": "{{Base}}Jhatpat-1.0.0-osx-x64-SHA256SUMS.txt"},
+              {"name": "Jhatpat-1.0.0-win-Setup.exe", "size": 113886617, "browser_download_url": "{{Base}}Jhatpat-1.0.0-win-Setup.exe"}
+            ]}
+            """);
+
+        var (installer, checksums) = UpdateService.FindFiles(release.RootElement);
+
+        Assert.Equal(new UpdateService.ReleaseFile("Jhatpat-1.0.0-win-Setup.exe", Base + "Jhatpat-1.0.0-win-Setup.exe", 113886617), installer);
+        Assert.Equal("Jhatpat-1.0.0-SHA256SUMS.txt", checksums?.Name);
+    }
+
+    [Fact]
     public void Release_without_files_or_with_plain_http_links_has_no_installer()
     {
         using var empty = JsonDocument.Parse("""{"tag_name": "v9.9.9"}""");
@@ -275,6 +295,24 @@ public class UpdateServiceTests
                 ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") }
                 : new HttpResponseMessage(HttpStatusCode.NotFound));
         }
+    }
+
+    [Fact]
+    public void Canonical_repository_url_points_to_InnoverseAMU()
+    {
+        Assert.Equal("https://github.com/InnoverseAMU/Jhatpat", UpdateService.RepositoryUrl);
+        Assert.Equal("https://github.com/InnoverseAMU/Jhatpat/releases/latest", UpdateService.LatestReleaseUrl);
+    }
+
+    [AvaloniaFact] // the check publishes its answer on the UI thread
+    public async Task Live_update_check_resolves_release_assets_from_canonical_repo()
+    {
+        var updates = new UpdateService(NullLogger<UpdateService>.Instance);
+        var refreshed = await updates.RefreshAsync(announce: false, TestContext.Current.CancellationToken);
+        Assert.True(refreshed);
+        Assert.NotNull(updates.Installer);
+        Assert.Equal("Jhatpat-1.0.0-win-Setup.exe", updates.Installer.Name);
+        Assert.Equal("https://github.com/InnoverseAMU/Jhatpat/releases/download/v1.0.0/Jhatpat-1.0.0-win-Setup.exe", updates.Installer.Url);
     }
 
     [Fact]

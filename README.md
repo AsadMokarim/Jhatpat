@@ -10,6 +10,11 @@
 </p>
 
 <p align="center">
+  <strong>Built by <a href="https://github.com/AsadMokarim">AsadMokarim</a></strong>
+</p>
+
+<p align="center">
+  <a href="https://github.com/InnoverseAMU/Jhatpat/releases/latest"><strong>Download</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
   <a href="#technology-stack"><strong>Tech Stack</strong></a> ·
   <a href="#project-background--development"><strong>Development Approach</strong></a> ·
@@ -23,7 +28,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-in%20development-D97706" alt="Status: in development">
   <img src="https://img.shields.io/badge/Ubuntu%2024.04-Linux%20target-1D9E75" alt="Ubuntu 24.04 Linux target">
-  <img src="https://img.shields.io/badge/Windows-preview-534AB7" alt="Windows preview">
+  <img src="https://img.shields.io/badge/Windows%2010%20%7C%2011-preview-534AB7" alt="Windows 10 and Windows 11 preview">
   <img src="https://img.shields.io/badge/macOS-preview-534AB7" alt="macOS preview">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-6A62C9" alt="MIT license"></a>
 </p>
@@ -44,6 +49,7 @@ The following describes functionality present in the current codebase; individua
 ### 1. Contextual Radial Workflows & Image Tools
 
 - **Cursor-centric radial menu:** A circular menu designed to appear near the mouse cursor, invoked through a modifier key or context-menu workflow.
+- **Ctrl + drag-and-drop conversion:** Hold **Ctrl**, drag files, and drop them onto a format in the donut menu that opens at your cursor to quickly start the relevant file workflow.
 - **Image tools submenu:** Entry points for cropping, background framing, and compression/resizing of supported raster images.
 
 ### 2. Interactive Image Cropping
@@ -89,10 +95,13 @@ The following describes functionality present in the current codebase; individua
 Add screenshots or a short GIF of the current application here. Prefer images captured from a real, working build and label any experimental workflows.
 
 <!-- Example:
-<p align="center">
-  <img src="docs/images/jhatpat-home.png" alt="Jhatpat home screen" width="800">
-</p>
 -->
+<p align="center">
+  <img src="docs/images/jhatpat-donut-toolbar.png" alt="Jhatpat donut toolbar" width="600">
+  <img src="docs/images/jhatpat-home.png" alt="Jhatpat home screen" width="800">
+  <img src="docs/images/jhatpat-donut-toolbar-control.png" alt="Jhatpat donut toolbar control" width="800">
+
+</p>
 
 ## Project Background & Development
 
@@ -184,7 +193,7 @@ Additional platform-specific tools may be needed for screen capture, packaging, 
 ### Clone the repository
 
 ```bash
-git clone https://github.com/AsadMokarim/Jhatpat.git
+git clone https://github.com/InnoverseAMU/Jhatpat.git
 cd Jhatpat
 ```
 

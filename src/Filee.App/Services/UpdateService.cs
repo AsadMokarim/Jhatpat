@@ -68,7 +68,7 @@ public sealed partial class UpdateService : ObservableObject
     /// <summary>GitHub repository from Directory.Build.props (FileeRepositoryUrl).</summary>
     public static string RepositoryUrl =>
         typeof(UpdateService).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
-            .FirstOrDefault(a => a.Key == "RepositoryUrl")?.Value ?? "https://github.com/AsadMokarim/Jhatpat";
+            .FirstOrDefault(a => a.Key == "RepositoryUrl")?.Value ?? "https://github.com/InnoverseAMU/Jhatpat";
 
     public static string CurrentVersion =>
         typeof(UpdateService).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion.Split('+')[0]
@@ -447,7 +447,13 @@ public sealed partial class UpdateService : ObservableObject
             if (name.EndsWith("-win-Setup.exe", StringComparison.OrdinalIgnoreCase))
                 installer = new ReleaseFile(name, url, size);
             else if (name.EndsWith("-SHA256SUMS.txt", StringComparison.OrdinalIgnoreCase))
-                checksums = new ReleaseFile(name, url, size);
+            {
+                var isPlatformSpecific = name.Contains("-linux-", StringComparison.OrdinalIgnoreCase)
+                                         || name.Contains("-osx-", StringComparison.OrdinalIgnoreCase)
+                                         || name.Contains("-macos-", StringComparison.OrdinalIgnoreCase);
+                if (checksums is null || !isPlatformSpecific)
+                    checksums = new ReleaseFile(name, url, size);
+            }
         }
         return (installer, checksums);
     }
