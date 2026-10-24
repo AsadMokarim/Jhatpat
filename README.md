@@ -14,7 +14,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/InnoverseAMU/Jhatpat/releases/latest"><strong>Download</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
   <a href="#technology-stack"><strong>Tech Stack</strong></a> ·
   <a href="#project-background--development"><strong>Development Approach</strong></a> ·
@@ -44,64 +43,88 @@ The project is not yet a stable, fully validated release. Feature availability a
 
 ## Features
 
-The following describes functionality present in the current codebase; individual workflows and platform-specific behaviour still require ongoing validation.
+Jhatpat combines the file-conversion foundation inherited from [Filee](https://github.com/KnifeLemon/Filee) with an expanding set of image, PDF, and video tools. Feature availability can vary by platform and optional engine.
 
-### 1. Contextual Radial Workflows & Image Tools
+### Cursor-first workflows
 
-- **Cursor-centric radial menu:** A circular menu designed to appear near the mouse cursor, invoked through a modifier key or context-menu workflow.
-- **Ctrl + drag-and-drop conversion:** Hold **Ctrl**, drag files, and drop them onto a format in the donut menu that opens at your cursor to quickly start the relevant file workflow.
-- **Image tools submenu:** Entry points for cropping, background framing, and compression/resizing of supported raster images.
+- **Donut menu at your cursor:** Hold **Ctrl**, drag files, and drop them onto a format or tool in the donut menu that opens at your cursor.
+- **Contextual actions:** Surface relevant formats and workflows for the files you select.
+- **Clipboard workflows:** Paste supported images into the app and copy processed results.
+- **Recent activity:** Reopen recent outputs, open them with the system's default application, and manage history.
+- **Batch workflows:** Process multiple images with shared settings instead of repeating the same action file by file.
 
-### 2. Interactive Image Cropping
+### Image tools
 
-- **Aspect-ratio presets:** 1:1, 4:3, 16:9, 3:2, and freeform cropping.
-- **Live preview and controls:** Crop handles, size indicators, and reset controls.
-- **Export and clipboard workflows:** Designed to avoid silently overwriting the source image and to support copying processed images to the clipboard.
+- **Crop images:** Use aspect-ratio presets such as 1:1, 4:3, 16:9 and 3:2, or crop freely with an interactive preview.
+- **Frame images:** Add a background around an image using solid colours, gradients, custom image backgrounds or transparency. Adjust padding, corner radius, shadows and canvas dimensions.
+- **Resize and compress:** Set custom dimensions, preserve aspect ratio, choose scale presets, and adjust quality for supported lossy formats.
+- **Batch image compression:** Queue multiple images and apply common output, dimension and quality settings in one workflow.
+- **Remove backgrounds:** Use the background-removal workflow where its required engine or integration is available. Results and dependencies may vary by setup.
+- **Annotate images:** Add annotations to supported images using the image-annotation workflow.
+- **Photo editing:** Adjust window/light effects, colour and detail controls to refine the look of a photo.
+- **Create photo collages:** Arrange multiple photos into a single collage.
+- **Presets:** Use the evolving collection of image and workflow presets, including framing, crop, compression and photo-adjustment options.
 
-### 3. Background Framing
+### PDF tools
 
-- **Background options:** Solid colours, linear gradients, custom image backgrounds, and transparency.
-- **Styling controls:** Padding, corner radius, and drop-shadow settings.
-- **Canvas dimensions:** Aspect-ratio presets, preset dimensions, and custom width and height.
+- **Merge PDFs:** Combine multiple PDF files into one document.
+- **Reorder pages:** Arrange pages in the desired order before exporting a merged PDF.
+- **Split PDFs:** Separate documents into smaller outputs where supported.
+- **PDF conversion and compression:** Use the inherited Filee conversion infrastructure and available engines for supported PDF workflows.
 
-### 4. Image Resizing & Compression
+### Video tools
 
-- **Custom dimensions:** Width and height controls with aspect-ratio locking.
-- **Scale presets:** 25%, 50%, 75%, and 100%.
-- **Quality controls:** Quality settings for lossy formats such as JPEG and WebP, with PNG handling intended to preserve lossless output.
+- **Trim video:** Select the portion of a clip to keep.
+- **Crop video:** Adjust the visible frame for the desired composition.
+- **Change speed:** Speed up or slow down supported clips.
+- **Join videos:** Combine multiple clips into one output where supported.
+- **Export frames:** Extract frames from a video as image files.
+- **Split video:** Divide a video into separate segments.
+- **Convert media:** Filee's existing media conversion infrastructure provides additional video and audio format workflows when the required engine is available.
 
-### 5. Multi-File Batch Processing
+### File conversion and format presets
 
-- **Queue management:** Add multiple files or folders, with drag-and-drop support where available.
-- **Shared parameters:** Apply resizing, maximum dimensions, output formats, and quality settings to queued images.
-- **Collision handling:** Options intended to avoid overwriting existing files, including renamed outputs or skipping collisions.
-- **Progress and cancellation:** Per-file progress, overall progress, and cancellation controls.
+- **Broad format coverage:** Retains Filee's conversion catalogue and preset/engine infrastructure for images, documents, spreadsheets, presentations, PDFs, e-books, audio, video, subtitles, archives, fonts, CAD, 3D models, structured data and geospatial files.
+- **Per-file-type presets:** Configure relevant options such as image quality and dimensions, PDF pages and compression, video/audio settings, output folders and file naming.
+- **Optional engines:** Some conversions require tools such as LibreOffice, Pandoc, calibre, Ghostscript or FFmpeg. These are not necessarily installed by default; see [the upstream engine documentation](https://github.com/KnifeLemon/Filee/blob/main/docs/ENGINES.md) and the repository's own packaging instructions.
+- **Automatic multi-step conversions:** The inherited conversion engine can find supported routes that require more than one conversion step.
 
-### 6. Clipboard & Screen Capture
+### Linux and Wayland
 
-- **Clipboard input:** Paste images into the application using the interface or keyboard shortcuts where supported.
-- **Clipboard output:** Copy processed images from supported image-tool workflows.
-- **Screen capture:** Region capture integrations for supported Linux desktop environments, including Wayland GNOME Shell D-Bus, Spectacle, or X11 ImageMagick `import`, depending on the installed environment.
+- **Wayland-aware workflows:** Jhatpat has received improvements intended to make it work better in Wayland sessions, including screen-capture integrations for supported desktop environments.
+- **Desktop-specific behaviour:** Global drag gestures, screen capture and window/input behaviour can differ between Wayland compositors and X11. Available integrations depend on the desktop environment and installed utilities; not every workflow is guaranteed to behave identically everywhere.
 
-### 7. Recent Activity, Preferences & Localization
+> Jhatpat is actively developed. The feature list describes implemented or integrated workflows, but each feature and platform combination still needs continued testing. Optional engines, desktop-session limitations and release packaging may affect availability.
 
-- **Recent activity:** Open output files using the operating system's default handler, remove individual history entries, or clear history.
-- **Persistent preferences:** Configure default image format, compression quality, and aspect-ratio behaviour.
-- **Session state:** Remember recent export and batch directories between launches.
-- **Localization:** Language resources are present for English (`en`), Spanish (`es`), Hindi (`hi`), Japanese (`ja`), Korean (`ko`), Polish (`pl`), and Simplified Chinese (`zh-CN`). Translation completeness and consistency may vary.
+## Formats
+
+Jhatpat builds on Filee's existing conversion catalogue. The categories below summarise the inherited format coverage; exact input/output pairs depend on the selected conversion, installed optional engines and the current build.
+
+| Category | Representative formats and workflows |
+|---|---|
+| **Images** | JPG/JPEG, PNG, WEBP, AVIF, TIFF, BMP, GIF, ICO, HEIC and other raster formats; resizing, compression, crop and framing workflows |
+| **Vector graphics** | SVG, SVGZ, EMF, WMF and other supported vector formats; conversion to PDF or raster images where supported |
+| **PDF** | PDF to images and supported document formats; merge, page reordering, splitting and compression workflows |
+| **Documents** | DOCX, ODT, RTF, TXT, HTML and other formats supported by the installed conversion engines |
+| **Spreadsheets** | XLSX, XLS, ODS, CSV and TSV, plus other supported tabular formats |
+| **Presentations** | PPTX, PPT, ODP and other supported presentation formats |
+| **E-books** | EPUB, MOBI, AZW3, FB2, CBZ and other formats supported by the relevant engine |
+| **Video** | MP4, MOV, MKV, WEBM, AVI and other formats supported by the available media engine; trim, crop, speed, join, frame export and split tools |
+| **Audio** | MP3, M4A, AAC, WAV, FLAC, OGG, OPUS and other supported audio formats |
+| **Subtitles** | SRT, ASS/SSA, WebVTT and other supported subtitle formats |
+| **Archives** | ZIP, 7Z, TAR, TAR.GZ and other supported archive formats; extract or package files where supported |
+| **Fonts** | TTF, OTF, WOFF and WOFF2, where supported |
+| **CAD and 3D** | DWG, DXF, GLB, glTF, STL, OBJ and other formats supported by the inherited converters |
+| **Structured and geospatial data** | JSON, YAML, TOML, XML, vCard, iCalendar, GeoJSON, KML, GPX and other supported data formats |
+
+**Important:** This is a category-level overview, not a guarantee that every listed format converts to every other format. Some workflows require optional engines, and support can differ between platforms. Check the current release and engine documentation for exact compatibility.
 
 ## Screenshots
 
-Add screenshots or a short GIF of the current application here. Prefer images captured from a real, working build and label any experimental workflows.
-
-<!-- Example:
--->
 <p align="center">
   <img src="docs/images/jhatpat-donut-toolbar.png" alt="Jhatpat donut toolbar" width="600">
   <img src="docs/images/jhatpat-home.png" alt="Jhatpat home screen" width="800">
-  <img src="docs/images/jhatpat-donut-toolbar-control.png" alt="Jhatpat donut toolbar control" width="800">
-
-</p>
+  
 
 ## Project Background & Development
 
@@ -143,7 +166,7 @@ Platform support is still being validated. The table below distinguishes the cur
 
 | Platform | Current status | Notes |
 | :--- | :--- | :--- |
-| **Linux — Ubuntu 24.04 LTS x64** | Primary development target | Linux packaging and runtime behaviour should be validated on the target machine and desktop session. Wayland and X11 integrations may behave differently. |
+| **Linux — Ubuntu 24.04 LTS x64** | Primary development target | Wayland compatibility has been improved, including supported desktop-specific screen-capture paths. Validate drag gestures, capture and input behaviour on the target compositor; Wayland and X11 integrations can differ. |
 | **Windows 10 / 11 x64** | Preview; native testing required | A successful cross-platform build or publish does not confirm runtime behaviour. Explorer context-menu integration, notification icons, registry changes, and other Windows-specific features need testing on Windows. See [`docs/windows-compatibility-audit.md`](docs/windows-compatibility-audit.md), if present. |
 | **macOS 14+ — ARM64 / x64** | Preview; validation required | Some platform infrastructure may be inherited from upstream Filee. Jhatpat-specific behaviour must be verified on supported macOS hardware before claiming compatibility. |
 
